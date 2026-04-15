@@ -1,0 +1,2096 @@
+<!DOCTYPE html>
+<html lang="en" class="Internet-Draft">
+<head>
+<meta charset="utf-8">
+<meta content="Common,Latin" name="scripts">
+<meta content="initial-scale=1.0" name="viewport">
+<title>SCIM Group Member Resource Type Extension</title>
+<meta content="Danny Zollner" name="author">
+<meta content='
+       This document extends the System for Cross-domain Identity Management (SCIM) 2.0 standard by defining a new "GroupMember" top-level resource. Under the existing model defined in  , group memberships are represented as values in a multi-valued attribute within a Group resource. This architecture lacks native support for server-side pagination, filtering, or sorting of individual members. In deployments managing large-scale groups (e.g., 100,000 to 1,000,000 members or more), retrieving a Group resource results in massive HTTP response payloads that can exceed 100MB in size. This can lead to service timeouts, memory exhaustion, and network instability, and has led to many major SCIM implementations choosing to not support returning the value of the "members" attribute for Group resources. This extension introduces a flattened resource model that enables group memberships to benefit from pagination and other SCIM protocol features, ensuring interoperability and performance at scale. 
+    ' name="description">
+<meta content="xml2rfc 3.32.0" name="generator">
+<meta content="Internet-Draft" name="keyword">
+<meta content="SCIM" name="keyword">
+<meta content="draft-zollner-scim-group-members-latest" name="ietf.draft">
+<!-- Generator version information:
+  xml2rfc 3.32.0
+    Python 3.12.12
+    ConfigArgParse 1.7
+    google-i18n-address 3.1.1
+    intervaltree 3.2.1
+    Jinja2 3.1.6
+    lxml 6.0.2
+    platformdirs 4.9.4
+    pycountry 24.6.1
+    PyYAML 6.0.3
+    requests 2.32.5
+    wcwidth 0.6.0
+-->
+<link href="draft-zollner-scim-group-members.xml" rel="alternate" type="application/rfc+xml">
+<link href="#copyright" rel="license">
+<style type="text/css">@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-cyrillic.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-cyrillic.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Lora SemiBold'), local('Lora-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-semibold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Oxygen Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Oxygen Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+}
+
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-greek.woff2') format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-greek.woff2') format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  color-scheme: light dark;
+  --background-color: #fff;
+  --text-color: #222;
+  --title-color: #191919;
+  --link-color: #2a6496;
+  --highlight-color: #f9f9f9;
+  --line-color: #eee;
+  --pilcrow-weak: #ddd;
+  --pilcrow-strong: #bbb;
+  --small-font-size: 14.5px;
+  --font-mono: 'Oxygen Mono', monospace;
+  --font-title: "Sofia Sans Semi Condensed", sans-serif;
+  scrollbar-color: #bbb #eee;
+}
+body {
+  max-width: 600px;
+  margin: 75px auto;
+  padding: 0 5px;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  font: 16px/22px "Lora", serif;
+  scroll-behavior: smooth;
+}
+
+.ears {
+  display: none;
+}
+
+/* headings */
+section {
+  clear: both;
+}
+.section-number {
+  padding-right: 0.5em;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-title);
+  font-weight: 680;
+  margin: 0.8em 0 0.3em;
+  font-size-adjust: 0.5;
+  color: var(--title-color);
+}
+h1#title {
+  font-size: 32px;
+  line-height: 40px;
+  clear: both;
+}
+h1#title, h1#rfcnum {
+  margin: 1.5em 0 0.2em;
+}
+h1#rfcnum + h1#title {
+  margin: 0.2em 0;
+}
+
+h1, h2, h3 {
+  font-size: 22px;
+  line-height: 27px;
+}
+h4, h5, h6 {
+  font-size: 20px;
+  line-height: 24px;
+}
+
+/* general structure */
+.author {
+  padding-bottom: 0.3em;
+  vertical-align: top;
+}
+#abstract+p {
+  font-size: 18px;
+  line-height: 24px;
+}
+#abstract+p code, #abstract+p samp, #abstract+p tt {
+  font-size: 16px;
+  line-height: 0;
+}
+
+p {
+  padding: 0;
+  margin: 0.5em 0;
+  text-align: left;
+}
+div {
+  margin: 0;
+}
+.alignRight.art-text {
+  background-color: var(--highlight-color);
+  border: 1px solid var(--line-color);
+  border-radius: 3px;
+  padding: 0.5em 1em 0;
+  margin-bottom: 0.5em;
+}
+.alignRight.art-text pre {
+  padding: 0;
+  width: auto;
+}
+.alignRight {
+  margin: 1em 0;
+}
+.alignRight > *:first-child {
+  border: none;
+  margin: 0;
+  float: right;
+  clear: both;
+}
+.alignRight > *:nth-child(2) {
+  clear: both;
+  display: block;
+  border: none;
+}
+svg {
+  display: block;
+}
+/* font-family isn't space-separated, but =~ will have to do */
+svg[font-family~="monospace" i], svg [font-family~="monospace" i] {
+  font-family: var(--font-mono);
+}
+.alignCenter.art-text {
+  background-color: var(--highlight-color);
+  border: 1px solid var(--line-color);
+  border-radius: 3px;
+  padding: 0.5em 1em 0;
+  margin-bottom: 0.5em;
+}
+.alignCenter.art-text pre {
+  padding: 0;
+  width: auto;
+}
+.alignCenter {
+  margin: 1em 0;
+}
+.alignCenter > *:first-child {
+  border: none;
+  /* this isn't optimal, but it's an existence proof.  PrinceXML doesn't
+     support flexbox yet.
+  */
+  display: table;
+  margin: 0 auto;
+}
+
+/* lists */
+ol, ul {
+  padding: 0;
+  margin: 0 0 0.5em 2em;
+  & :is(ol, ul) {
+    margin-left: 1em;
+  }
+}
+li {
+  margin: 0 0 0.25em 0;
+}
+ul.empty, .ulEmpty {
+  list-style-type: none;
+  & li {
+    margin-top: 0.5em;
+  }
+}
+:is(ul, ol).compact, .ulCompact, .olCompact {
+  margin: 0 0 0 2em;
+  & li {
+    margin: 0;
+    & :first-child { margin-top: 0; }
+    & :last-child { margin-bottom: 0; }
+  }
+}
+
+/* definition lists */
+dl {
+  clear: left;
+  --indent: 3ch;
+  /* --indent: attr(indent ch); not supported in any browser, but we can dream */
+  &.olPercent {
+    --indent: 5ch;
+    & > dt {
+      min-width: calc(var(--indent) - 2ch);
+    }
+  }
+  &.olPercent > dt {
+    float: none;
+  }
+
+  dl > dd > & {
+    margin-top: 0.5em;
+    margin-bottom: 0;
+  }
+}
+dl:not(.dlNewline) > dt {
+  float: left;
+  margin-right: 2ch;
+  min-width: 8ch;
+}
+dl > dd {
+  margin-bottom: .8em;
+  margin-left: var(--indent) !important; /* stupid element overrides */
+  min-height: 2ex;
+}
+:is(dl.compact, .dlCompact) > dd {
+  margin-bottom: 0;
+  & > :is(:first-child, .break:first-child + *) {
+    margin-top: 0;
+  }
+  & > :is(:last-child) {
+    margin-bottom: 0;
+  }
+}
+:is(dd, span).break {
+  display: none;
+}
+
+/* links */
+a, a[href].selfRef:hover {
+  text-decoration: none;
+}
+a[href] {
+  color: var(--link-color);
+}
+a[href].selfRef, .iref + a[href].internal {
+  color: var(--text-color);
+}
+a[href]:hover {
+  text-decoration: underline;
+}
+a[href].selfRef:hover {
+  background-color: var(--highlight-color);
+}
+a.xref:is(.cite, .auto), :is(#status-of-memo, #copyright) a {
+  white-space: nowrap;
+}
+
+/* Figures */
+tt, code, pre {
+  background-color: var(--highlight-color);
+  font: 14px/22px var(--font-mono);
+}
+tt, code {
+  /* changing the font for inline elements leads to different ascender
+     and descender heights; as we want to retain baseline alignment,
+     remove leading to avoid altering the final height of lines
+     note: this fails if these blocks take an entire line,
+     a different solution would be great */
+  line-height: 0;
+}
+:is(h1, h2, h3, h4, h5, h6) :is(tt, code) {
+  font-size: 84%;
+}
+pre {
+  border: 1px solid var(--line-color);
+  font-size: 13.5px;
+  line-height: 16px;
+  letter-spacing: -0.2px;
+  margin: 5px;
+  padding: 5px;
+}
+img {
+  max-width: 100%;
+}
+figure {
+  margin: 0.5em 0;
+  padding: 0;
+}
+figure blockquote {
+  margin: 0.8em 0.4em 0.4em;
+}
+figcaption, caption {
+  font-style: italic;
+  margin: 0.5em 1.5em;
+  text-align: left;
+  caption-side: bottom;
+}
+@media screen {
+  /* Auto-collapse boilerplate. */
+  :is(#status-of-memo, #copyright) p {
+    margin: -2px 0;
+    max-height: 0;
+    transition: max-height 2s ease, margin 0.5s ease 0.5s;
+    overflow: hidden;
+  }
+  :is(#status-of-memo, #copyright):hover p,
+  :is(#status-of-memo, #copyright) h2:target ~ p {
+    margin: 0.5em 0;
+    max-height: 500px;
+    overflow: auto;
+  }
+  pre, svg {
+    display: inline-block;
+    /* In the horizontal direction, sometimes people make over-sized figures.
+       Scrollbars for those is therefore necessary: auto adds them as necessary..
+       In the vertical direction, the line-height can combine with the font
+       asender/descender height to produce scrollbars: hidden avoids that. */
+    overflow: auto hidden;
+  }
+  pre {
+    max-width: 100%;
+    width: calc(100% - 22px - 1em);
+  }
+  svg {
+    max-width: calc(100% - 22px - 1em);
+  }
+  figure pre {
+    display: block;
+    width: calc(100% - 25px);
+  }
+  :is(pre, svg) + .pilcrow {
+    display: inline-block;
+    vertical-align: text-bottom;
+    padding-bottom: 8px;
+  }
+}
+
+/* aside, blockquote */
+aside, blockquote {
+  margin-left: 0;
+  padding: 0 2em;
+  font-style: italic;
+}
+blockquote {
+  margin: 1em 0;
+  border-left: 2px var(--pilcrow-strong) solid;
+}
+cite {
+  display: block;
+  text-align: right;
+  font-style: italic;
+}
+
+/* tables */
+table {
+  width: auto;
+  max-width: 100%;
+  margin: 0 0 1em;
+  border-collapse: collapse;
+}
+table.right {
+  margin-left: auto;
+}
+table.center {
+  margin-left: auto;
+  margin-right: auto;
+}
+table.left {
+  margin-right: auto;
+}
+table .text-left {
+  text-align: left;
+}
+table .text-center {
+  text-align: center;
+}
+table .text-right {
+  text-align: right;
+}
+
+thead, tbody {
+  border: 1px solid var(--line-color);
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 5px 10px;
+}
+th {
+  background-color: var(--line-color);
+}
+:is(tr:nth-child(2n), thead+tbody > tr:nth-child(2n+1)) > td {
+  background-color: var(--background-color);
+}
+:is(tr:nth-child(2n+1), thead+tbody > tr:nth-child(2n)) > td {
+  background-color: var(--highlight-color);
+}
+table caption {
+  margin: 0;
+  padding: 3px 0 3px 1em;
+}
+table p {
+  margin: 0;
+}
+
+/* pilcrow */
+a.pilcrow {
+  margin-left: 3px;
+  opacity: 0.2;
+  user-select: none;
+  &[href] {
+    color: var(--pilcrow-weak);
+    &:hover { text-decoration: none; }
+  }
+}
+@media not print {
+  :hover > a.pilcrow, a.pilcrow:focus {
+    opacity: 1;
+  }
+  a.pilcrow[href]:hover {
+    color: var(--pilcrow-strong);
+    background-color: transparent;
+  }
+}
+@media print {
+  a.pilcrow {
+    display: none;
+  }
+}
+
+/* misc */
+hr {
+  border: 0;
+  border-top: 1px solid var(--line-color);
+}
+.bcp14 {
+  font-variant: small-caps;
+  font-weight: 600;
+  font-size: var(--small-font-size);
+}
+.role {
+  font-variant: all-small-caps;
+}
+sub, sup {
+  line-height: 1;
+  font-size: 80%;
+}
+
+/* info block */
+#identifiers {
+  margin: 0;
+  font-size: var(--small-font-size);
+  line-height: 18px;
+  --identifier-width: 15ch;
+  & dt {
+    width: var(--identifier-width);
+    min-width: var(--identifier-width);
+    clear: left;
+    float: left;
+    text-align: right;
+    margin-right: 1ch;
+  }
+  & dd {
+    margin: 0;
+    margin-left: calc(1em + var(--identifier-width)) !important;
+    min-width: 5em;
+  }
+  & .authors {
+    & .author {
+      display: inline-block;
+      margin-right: 1.5em;
+    }
+    & .org {
+      font-style: italic;
+    }
+  }
+}
+
+/* The prepared/rendered info at the very bottom of the page */
+.docInfo {
+  color: #999;
+  font-size: 0.9em;
+  font-style: italic;
+  margin-top: 2em;
+}
+.docInfo .prepared {
+  float: right;
+}
+
+/* table of contents */
+#toc {
+  padding: 0.75em 0 2em 0;
+  margin-bottom: 1em;
+
+  & nav {
+    & ul {
+      margin: 0 0.5em 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    & li {
+      line-height: 1.3em;
+      margin: 2px 0;
+      padding-left: 1.2em;
+      text-indent: -1.2em;
+    }
+  }
+  & a.xref {
+    white-space: normal;
+  }
+}
+
+.references {
+  & > dt {
+    text-align: right;
+    font-weight: bold;
+    min-width: 10ch;
+    margin-right: 1.5ch;
+    &:target::before {
+      content: "⇒";
+      margin: 0 10px 0 -25px;
+    }
+  }
+  & > dd {
+    margin-left: 12ch !important;
+    overflow: visible;
+    & .refInstance {
+      margin-bottom: 0.8em;
+    }
+    & .ascii {
+      margin-bottom: 0.25em;
+    }
+  }
+}
+
+#rfc\.index\.index + ul {
+  margin-left: 0;
+}
+
+/* authors */
+address.vcard {
+  font-style: normal;
+  max-width: 20em;
+  margin: 1em auto 1em 0;
+
+  & .nameRole {
+    font-weight: 700;
+    margin-left: 0;
+  }
+  & .label {
+    margin: 0.5em 0;
+  }
+  & .type {
+    display: none;
+  }
+  & .alternative-contact {
+    margin: 0.5em 0 0.25em 0;
+  }
+  & .non-ascii {
+    margin: 0 0 0 2em;
+  }
+  & div.left {
+    text-align: left;
+  }
+  & div.right {
+    text-align: right;
+  }
+}
+
+hr.addr {
+  border-top: 1px dashed;
+  margin: 0;
+  color: #ddd;
+  max-width: calc(100% - 16px);
+}
+@media (min-width: 500px) {
+  #authors-addresses > section {
+    column-count: 2;
+    column-gap: 20px;
+  }
+  #authors-addresses > section > h2 {
+    column-span: all;
+  }
+  /* hack for break-inside: avoid-column */
+  #authors-addresses address {
+    display: inline-block;
+    break-inside: avoid-column;
+  }
+}
+
+/* Comments */
+.rfcEditorRemove p:first-of-type {
+  font-style: italic;
+}
+.cref {
+  background-color: rgba(249, 232, 105, 0.3);
+  padding: 2px 4px;
+}
+.crefSource {
+  font-style: italic;
+}
+
+@media screen {
+  #toc nav {
+    font-family: var(--font-title);
+    font-weight: 360;
+    & > ul { margin-bottom: 2em; }
+    & ul {
+      margin: 0 0 0 4px;
+      & :is(p, li) {
+        margin: 2px 0;
+      }
+    }
+  }
+  #toc a.toplink {
+    float: right;
+  }
+}
+@media not screen {
+  #toc a.toplink {
+    display: none;
+  }
+}
+
+
+/* TOC layout for smaller screens */
+@media screen and (max-width: 929px) {
+  #toc {
+    position: fixed;
+    z-index: 2;
+    top: 0;
+    right: 0;
+    padding: 1px 0 0 0;
+    margin: 0;
+    border-bottom: 1px solid #ccc;
+    opacity: 0.6;
+  }
+  #toc h2 {
+    margin: 0;
+    padding: 2px 0 2px 6px;
+    padding-right: 1em;
+    font-size: 18px;
+    line-height: 24px;
+    min-width: 190px;
+    text-align: right;
+    background-color: #444;
+    color: white;
+    cursor: pointer;
+    &::before { /* css hamburger */
+      float: right;
+      position: relative;
+      width: 1em;
+      height: 1px;
+      left: -164px;
+      margin: 8px 0 0 0;
+      background: white none repeat scroll 0 0;
+      box-shadow: 0 4px 0 0 white, 0 8px 0 0 white;
+      content: "";
+    }
+  }
+  #toc nav {
+    display: none;
+    background-color: var(--background-color);
+    padding: 0.5em 1em 1em;
+    overflow: auto;
+    overscroll-behavior: contain;
+    height: calc(100vh - 48px);
+    border-left: 1px solid #ddd;
+  }
+  #toc.active {
+    opacity: 1;
+    & nav { display: block; }
+  }
+  /* Make the collapsed ToC header render white on gray also when it's a link */
+  #toc h2 a,
+  #toc h2 a:is(:link, :focus, :hover),
+  #toc a.toplink,
+  #toc a.toplink:hover {
+    color: white;
+    background-color: #444;
+    text-decoration: none;
+  }
+  #toc a.toplink {
+    margin: 2px 0.5em 0;
+  }
+}
+
+/* TOC layout for wide screens */
+@media screen and (min-width: 930px) {
+  body {
+    padding-right: 360px;
+    padding-right: calc(min(180px + 20%, 500px));
+  }
+  #toc {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    right: calc(50vw - 480px);
+    width: 312px;
+    margin: 0;
+    padding: 0;
+    z-index: 1;
+  }
+  #toc h2 {
+    margin: 0;
+    padding: 0.25em 1em 1em 0;
+  }
+  #toc nav {
+    display: block;
+    height: calc(90vh - 84px);
+    bottom: 0;
+    padding: 0.5em 0 2em;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+  img { /* future proofing */
+    max-width: 100%;
+    height: auto;
+  }
+  #toc a.toplink {
+    margin: 8px 0.5em 0;
+  }
+}
+
+/* pagination */
+@media print {
+  body {
+    width: 100%;
+  }
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+  #n-copyright-notice {
+    border-bottom: none;
+  }
+  #toc, #n-introduction {
+    page-break-before: always;
+  }
+  #toc {
+    border-top: none;
+    padding-top: 0;
+  }
+  figure, pre, .vcard {
+    page-break-inside: avoid;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+  :is(h2, h3, h4, h5, h6)+*, dd {
+    page-break-before: avoid;
+  }
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 10pt;
+  }
+  table {
+    border: 1px solid #ddd;
+  }
+  td {
+    border-top: 1px solid #ddd;
+  }
+}
+
+@page :first {
+  padding-top: 0;
+  @top-left {
+    content: normal;
+    border: none;
+  }
+  @top-center {
+    content: normal;
+    border: none;
+  }
+  @top-right {
+    content: normal;
+    border: none;
+  }
+}
+
+@page {
+  size: A4;
+  margin-bottom: 45mm;
+  padding-top: 20px;
+}
+
+/* Dark mode. */
+@media (prefers-color-scheme: dark) {
+:root {
+  --background-color: #121212;
+  --text-color: #f0f0f0;
+  --title-color: #fff;
+  --link-color: #4da4f0;
+  --highlight-color: #282828;
+  --line-color: #444;
+  --pilcrow-weak: #444;
+  --pilcrow-strong: #666;
+  scrollbar-color: #777 #333;
+}
+}
+
+/* SVG Trick: a prefix match works because only black and white are allowed */
+svg :is([stroke="black"], [stroke^="#000"]) {
+  stroke: var(--text-color);
+}
+svg :is([stroke="white"], [stroke^="#fff"]) {
+  stroke: var(--background-color);
+}
+svg :is([fill="black"], [fill^="#000"], :not([fill])) {
+  fill: var(--text-color);
+}
+svg :is([fill="white"], [fill^="#fff"]) {
+  fill: var(--background-color);
+}
+</style>
+
+</head>
+<body class="xml2rfc">
+<table class="ears">
+<thead><tr>
+<td class="left">Internet-Draft</td>
+<td class="center">SCIM Group Member Resource</td>
+<td class="right">April 2026</td>
+</tr></thead>
+<tfoot><tr>
+<td class="left">Zollner</td>
+<td class="center">Expires 17 October 2026</td>
+<td class="right">[Page]</td>
+</tr></tfoot>
+</table>
+<div id="external-metadata" class="document-information"></div>
+<div id="internal-metadata" class="document-information">
+<dl id="identifiers">
+<dt class="label-workgroup">Workgroup:</dt>
+<dd class="workgroup">SCIM</dd>
+<dt class="label-internet-draft">Internet-Draft:</dt>
+<dd class="internet-draft">draft-zollner-scim-group-members-latest</dd>
+<dt class="label-published">Published:</dt>
+<dd class="published">
+<time datetime="2026-04-15" class="published">15 April 2026</time>
+    </dd>
+<dt class="label-intended-status">Intended Status:</dt>
+<dd class="intended-status">Standards Track</dd>
+<dt class="label-expires">Expires:</dt>
+<dd class="expires"><time datetime="2026-10-17">17 October 2026</time></dd>
+<dt class="label-authors">Author:</dt>
+<dd class="authors">
+<div class="author">
+      <div class="author-name">D. Zollner</div>
+<div class="org">Okta</div>
+</div>
+</dd>
+</dl>
+</div>
+<h1 id="title">SCIM Group Member Resource Type Extension</h1>
+<section id="section-abstract">
+      <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
+<p id="section-abstract-1">This document extends the System for Cross-domain Identity Management (SCIM) 2.0 standard by defining a new "GroupMember" top-level resource. Under the existing model defined in <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span>, group memberships are represented as values in a multi-valued attribute within a Group resource. This architecture lacks native support for server-side pagination, filtering, or sorting of individual members. In deployments managing large-scale groups (e.g., 100,000 to 1,000,000 members or more), retrieving a Group resource results in massive HTTP response payloads that can exceed 100MB in size. This can lead to service timeouts, memory exhaustion, and network instability, and has led to many major SCIM implementations choosing to not support returning the value of the "members" attribute for Group resources. This extension introduces a flattened resource model that enables group memberships to benefit from pagination and other SCIM protocol features, ensuring interoperability and performance at scale.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+</section>
+<div id="status-of-memo">
+<section id="section-boilerplate.1">
+        <h2 id="name-status-of-this-memo">
+<a href="#name-status-of-this-memo" class="section-name selfRef">Status of This Memo</a>
+        </h2>
+<p id="section-boilerplate.1-1">
+        This Internet-Draft is submitted in full conformance with the
+        provisions of BCP 78 and BCP 79.<a href="#section-boilerplate.1-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-2">
+        Internet-Drafts are working documents of the Internet Engineering Task
+        Force (IETF). Note that other groups may also distribute working
+        documents as Internet-Drafts. The list of current Internet-Drafts is
+        at <span><a href="https://datatracker.ietf.org/drafts/current/">https://datatracker.ietf.org/drafts/current/</a></span>.<a href="#section-boilerplate.1-2" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-3">
+        Internet-Drafts are draft documents valid for a maximum of six months
+        and may be updated, replaced, or obsoleted by other documents at any
+        time. It is inappropriate to use Internet-Drafts as reference
+        material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-4">
+        This Internet-Draft will expire on 17 October 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="copyright">
+<section id="section-boilerplate.2">
+        <h2 id="name-copyright-notice">
+<a href="#name-copyright-notice" class="section-name selfRef">Copyright Notice</a>
+        </h2>
+<p id="section-boilerplate.2-1">
+            Copyright (c) 2026 IETF Trust and the persons identified as the
+            document authors. All rights reserved.<a href="#section-boilerplate.2-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.2-2">
+            This document is subject to BCP 78 and the IETF Trust's Legal
+            Provisions Relating to IETF Documents
+            (<span><a href="https://trustee.ietf.org/license-info">https://trustee.ietf.org/license-info</a></span>) in effect on the date of
+            publication of this document. Please review these documents
+            carefully, as they describe your rights and restrictions with
+            respect to this document. Code Components extracted from this
+            document must include Revised BSD License text as described in
+            Section 4.e of the Trust Legal Provisions and are provided without
+            warranty as described in the Revised BSD License.<a href="#section-boilerplate.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="toc">
+<section id="section-toc.1">
+        <a href="#" onclick="scroll(0,0)" class="toplink">▲</a><h2 id="name-table-of-contents">
+<a href="#name-table-of-contents" class="section-name selfRef">Table of Contents</a>
+        </h2>
+<nav class="toc"><ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1">
+            <p id="section-toc.1-1.1.1" class="keepWithNext"><a href="#section-1" class="auto internal xref">1</a>.  <a href="#name-discussion-venues" class="internal xref">Discussion Venues</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2">
+            <p id="section-toc.1-1.2.1" class="keepWithNext"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-introduction" class="internal xref">Introduction</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
+            <p id="section-toc.1-1.3.1" class="keepWithNext"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-notational-conventions" class="internal xref">Notational Conventions</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-the-groupmember-resource" class="internal xref">The GroupMember Resource</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1">
+                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-resource-properties" class="internal xref">Resource Properties</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2">
+                <p id="section-toc.1-1.4.2.2.1"><a href="#section-4.2" class="auto internal xref">4.2</a>.  <a href="#name-json-representation" class="internal xref">JSON Representation</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.3">
+                <p id="section-toc.1-1.4.2.3.1"><a href="#section-4.3" class="auto internal xref">4.3</a>.  <a href="#name-resource-type-representatio" class="internal xref">Resource Type Representation</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-membersmetadata-group-schem" class="internal xref">membersMetadata Group Schema Extension</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1">
+                <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="auto internal xref">5.1</a>.  <a href="#name-the-membersmetadata-attribu" class="internal xref">The <code>membersMetadata</code> Attribute</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2">
+                <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="auto internal xref">5.2</a>.  <a href="#name-example-group-resources" class="internal xref">Example Group Resources</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2.2.1">
+                    <p id="section-toc.1-1.5.2.2.2.1.1"><a href="#section-5.2.1" class="auto internal xref">5.2.1</a>.  <a href="#name-example-of-an-external-poli" class="internal xref">Example of an "External" Policy</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2.2.2">
+                    <p id="section-toc.1-1.5.2.2.2.2.1"><a href="#section-5.2.2" class="auto internal xref">5.2.2</a>.  <a href="#name-example-of-a-hybrid-policy" class="internal xref">Example of a "Hybrid" Policy</a></p>
+</li>
+                </ul>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-managing-groupmember-resour" class="internal xref">Managing GroupMember Resources</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.1">
+                <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="auto internal xref">6.1</a>.  <a href="#name-creating-groupmember-resour" class="internal xref">Creating GroupMember Resources (POST)</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.2">
+                <p id="section-toc.1-1.6.2.2.1"><a href="#section-6.2" class="auto internal xref">6.2</a>.  <a href="#name-retrieving-groupmember-reso" class="internal xref">Retrieving GroupMember Resources (GET)</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.2.2.1">
+                    <p id="section-toc.1-1.6.2.2.2.1.1"><a href="#section-6.2.1" class="auto internal xref">6.2.1</a>.  <a href="#name-pagination" class="internal xref">Pagination</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.2.2.2">
+                    <p id="section-toc.1-1.6.2.2.2.2.1"><a href="#section-6.2.2" class="auto internal xref">6.2.2</a>.  <a href="#name-filtering" class="internal xref">Filtering</a></p>
+</li>
+                </ul>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.3">
+                <p id="section-toc.1-1.6.2.3.1"><a href="#section-6.3" class="auto internal xref">6.3</a>.  <a href="#name-deleting-groupmember-resour" class="internal xref">Deleting GroupMember Resources (DELETE)</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.4">
+                <p id="section-toc.1-1.6.2.4.1"><a href="#section-6.4" class="auto internal xref">6.4</a>.  <a href="#name-bulk-operations" class="internal xref">Bulk Operations</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-service-provider-considerat" class="internal xref">Service Provider Considerations</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.1">
+                <p id="section-toc.1-1.7.2.1.1"><a href="#section-7.1" class="auto internal xref">7.1</a>.  <a href="#name-discovering-support-for-the" class="internal xref">Discovering Support for the GroupMember Resource</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.1.2.1">
+                    <p id="section-toc.1-1.7.2.1.2.1.1"><a href="#section-7.1.1" class="auto internal xref">7.1.1</a>.  <a href="#name-schema-endpoint" class="internal xref">Schema Endpoint</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.1.2.2">
+                    <p id="section-toc.1-1.7.2.1.2.2.1"><a href="#section-7.1.2" class="auto internal xref">7.1.2</a>.  <a href="#name-impact-on-the-group-resourc" class="internal xref">Impact on the Group Resource</a></p>
+</li>
+                </ul>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-schema-representation" class="internal xref">Schema Representation</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.1">
+                <p id="section-toc.1-1.8.2.1.1"><a href="#section-8.1" class="auto internal xref">8.1</a>.  <a href="#name-groupmember-core-schema" class="internal xref">GroupMember Core Schema</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.2">
+                <p id="section-toc.1-1.8.2.2.1"><a href="#section-8.2" class="auto internal xref">8.2</a>.  <a href="#name-membersmetadata-schema-exte" class="internal xref">membersMetadata Schema Extension</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.2.2.1">
+                    <p id="section-toc.1-1.8.2.2.2.1.1"><a href="#section-8.2.1" class="auto internal xref">8.2.1</a>.  <a href="#name-the-membersmetadata-attribut" class="internal xref">The <code>membersMetadata</code> Attribute Definition</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.2.2.2">
+                    <p id="section-toc.1-1.8.2.2.2.2.1"><a href="#section-8.2.2" class="auto internal xref">8.2.2</a>.  <a href="#name-usage" class="internal xref">Usage</a></p>
+</li>
+                </ul>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.3">
+                <p id="section-toc.1-1.8.2.3.1"><a href="#section-8.3" class="auto internal xref">8.3</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.4">
+                <p id="section-toc.1-1.8.2.4.1"><a href="#section-8.4" class="auto internal xref">8.4</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
+            <p id="section-toc.1-1.10.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-authors-address" class="internal xref">Author's Address</a></p>
+</li>
+        </ul>
+</nav>
+</section>
+</div>
+<div id="discussion-venues">
+<section id="section-1">
+      <h2 id="name-discussion-venues">
+<a href="#section-1" class="section-number selfRef">1. </a><a href="#name-discussion-venues" class="section-name selfRef">Discussion Venues</a>
+      </h2>
+<p id="section-1-1">This note is to be removed before publishing as an RFC.<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-2">Source for this draft and an issue tracker can be found at https://github.com/Zollnerd/scim-group-membership.<a href="#section-1-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="introduction">
+<section id="section-2">
+      <h2 id="name-introduction">
+<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
+      </h2>
+<p id="section-2-1">The System for Cross-domain Identity Management (SCIM) 2.0 protocol <span><a href="#RFC7644" class="internal xref">RFC7643</a> [<a href="#RFC7644" class="cite xref">RFC7644</a>]</span> is widely used for automating the provisioning of identities across disparate systems. While SCIM excels at managing individual User and Group resources, its design for representing relationships, specifically group memberships, encounters significant performance bottlenecks in large-scale enterprise environments.<a href="#section-2-1" class="pilcrow">¶</a></p>
+<p id="section-2-2">Currently, the "members" attribute of a Group resource is a multi-valued attribute. Because SCIM only supports paginating resources, a client requesting a Group resource must receive the entire list of group members in a single HTTP response. For a group with one million members, an HTTP response can reach approximately 200MB in size. These large payloads create several critical failure points including memory pressure and network timeouts.<a href="#section-2-2" class="pilcrow">¶</a></p>
+<p id="section-2-3">This document proposes the "GroupMember" resource type. By treating a membership as a first-class, top-level resource, Service Providers can leverage existing SCIM query parameters including filter, count, and multiple pagination methods, allowing them to implement a scaleable and reliable interface for managing groups of any size.<a href="#section-2-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="notational-conventions">
+<section id="section-3">
+      <h2 id="name-notational-conventions">
+<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-notational-conventions" class="section-name selfRef">Notational Conventions</a>
+      </h2>
+<p id="section-3-1">The key words "<span class="bcp14">MUST</span>", "<span class="bcp14">MUST NOT</span>", "<span class="bcp14">REQUIRED</span>", "<span class="bcp14">SHALL</span>", "<span class="bcp14">SHALL NOT</span>", "<span class="bcp14">SHOULD</span>", "<span class="bcp14">SHOULD NOT</span>", "<span class="bcp14">RECOMMENDED</span>", "<span class="bcp14">NOT RECOMMENDED</span>",
+"<span class="bcp14">MAY</span>", and "<span class="bcp14">OPTIONAL</span>" in this document are to be interpreted as
+described in BCP 14 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="cite xref">RFC8174</a>]</span> when, and only when, they
+appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="the-groupmember-resource">
+<section id="section-4">
+      <h2 id="name-the-groupmember-resource">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-the-groupmember-resource" class="section-name selfRef">The GroupMember Resource</a>
+      </h2>
+<p id="section-4-1">This section defines the <code>GroupMember</code> resource, which represents a single membership relationship between a SCIM Group and a member. By representing each membership as a distinct, top-level resource, Service Providers can manage group memberships individually, allowing for pagination, filtering, and other operations at scale.<a href="#section-4-1" class="pilcrow">¶</a></p>
+<p id="section-4-2">A <code>GroupMember</code> resource represents a direct membership only. Indirect memberships, as defined in <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span> Section 4.1.2, <span class="bcp14">MUST NOT</span> be represented as <code>GroupMember</code> resources.<a href="#section-4-2" class="pilcrow">¶</a></p>
+<div id="resource-properties">
+<section id="section-4.1">
+        <h3 id="name-resource-properties">
+<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-resource-properties" class="section-name selfRef">Resource Properties</a>
+        </h3>
+<p id="section-4.1-1">The <code>GroupMember</code> resource is defined by the following properties:<a href="#section-4.1-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlNewline" id="section-4.1-2">
+          <dt id="section-4.1-2.1">schemas</dt>
+          <dd style="margin-left: 1.5em" id="section-4.1-2.2">
+            <p id="section-4.1-2.2.1">A multi-valued attribute that contains the SCIM schema URNs for this resource. The URN for the GroupMember resource's core schema is <code>urn:ietf:params:scim:schemas:core:2.0:GroupMember</code>. This is a <strong><span class="bcp14">REQUIRED</span></strong> attribute. This attribute is a common attribute inherited from <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span>.<a href="#section-4.1-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<span class="break"></span><dl class="dlNewline" id="section-4.1-3">
+          <dt id="section-4.1-3.1">id</dt>
+          <dd style="margin-left: 1.5em" id="section-4.1-3.2">
+            <p id="section-4.1-3.2.1">A unique identifier for the <code>GroupMember</code> resource, generated by the Service Provider. This is a <strong><span class="bcp14">REQUIRED</span></strong>, read-only attribute. Clients <span class="bcp14">MUST</span> treat this value as opaque. The <code>id</code> serves as the stable identifier for a membership link — it uniquely identifies the relationship between a specific group and a specific member, and is the value used to address the resource at the <code>/GroupMembers/{id}</code> URI. This attribute is a common attribute inherited from <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span>.<a href="#section-4.1-3.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<span class="break"></span><dl class="dlNewline" id="section-4.1-4">
+          <dt id="section-4.1-4.1">group</dt>
+          <dd style="margin-left: 1.5em" id="section-4.1-4.2">
+            <p id="section-4.1-4.2.1">A complex attribute that provides a reference to the parent Group resource. This attribute contains the following sub-attributes:<a href="#section-4.1-4.2.1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlNewline" id="section-4.1-4.2.2">
+              <dt id="section-4.1-4.2.2.1">value</dt>
+              <dd style="margin-left: 1.5em" id="section-4.1-4.2.2.2">
+                <p id="section-4.1-4.2.2.2.1">The <code>id</code> of the referenced Group resource. <strong><span class="bcp14">REQUIRED</span></strong>.<a href="#section-4.1-4.2.2.2.1" class="pilcrow">¶</a></p>
+</dd>
+              <dd class="break"></dd>
+<dt id="section-4.1-4.2.2.3">$ref</dt>
+              <dd style="margin-left: 1.5em" id="section-4.1-4.2.2.4">
+                <p id="section-4.1-4.2.2.4.1">The URI of the referenced Group resource. Read-only.<a href="#section-4.1-4.2.2.4.1" class="pilcrow">¶</a></p>
+</dd>
+              <dd class="break"></dd>
+<dt id="section-4.1-4.2.2.5">display</dt>
+              <dd style="margin-left: 1.5em" id="section-4.1-4.2.2.6">
+                <p id="section-4.1-4.2.2.6.1">A human-readable name for the referenced Group resource, generally corresponding to the Group's <code>displayName</code> attribute. Read-only.<a href="#section-4.1-4.2.2.6.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+</dl>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<span class="break"></span><dl class="dlNewline" id="section-4.1-5">
+          <dt id="section-4.1-5.1">member</dt>
+          <dd style="margin-left: 1.5em" id="section-4.1-5.2">
+            <p id="section-4.1-5.2.1">A complex attribute that provides a reference to the member resource, which can be a User, another Group, or any other resource type that can be a member of a group. This attribute contains the following sub-attributes:<a href="#section-4.1-5.2.1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlNewline" id="section-4.1-5.2.2">
+              <dt id="section-4.1-5.2.2.1">value</dt>
+              <dd style="margin-left: 1.5em" id="section-4.1-5.2.2.2">
+                <p id="section-4.1-5.2.2.2.1">The <code>id</code> of the referenced member resource. <strong><span class="bcp14">REQUIRED</span></strong>.<a href="#section-4.1-5.2.2.2.1" class="pilcrow">¶</a></p>
+</dd>
+              <dd class="break"></dd>
+<dt id="section-4.1-5.2.2.3">$ref</dt>
+              <dd style="margin-left: 1.5em" id="section-4.1-5.2.2.4">
+                <p id="section-4.1-5.2.2.4.1">The URI of the referenced member resource. Read-only.<a href="#section-4.1-5.2.2.4.1" class="pilcrow">¶</a></p>
+</dd>
+              <dd class="break"></dd>
+<dt id="section-4.1-5.2.2.5">type</dt>
+              <dd style="margin-left: 1.5em" id="section-4.1-5.2.2.6">
+                <p id="section-4.1-5.2.2.6.1">A string that specifies the resource type of the member, e.g., "User" or "Group". Read-only.<a href="#section-4.1-5.2.2.6.1" class="pilcrow">¶</a></p>
+</dd>
+              <dd class="break"></dd>
+<dt id="section-4.1-5.2.2.7">display</dt>
+              <dd style="margin-left: 1.5em" id="section-4.1-5.2.2.8">
+                <p id="section-4.1-5.2.2.8.1">A human-readable name for the referenced member resource, generally corresponding to the member's <code>displayName</code> attribute. Read-only.<a href="#section-4.1-5.2.2.8.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+</dl>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<span class="break"></span><dl class="dlNewline" id="section-4.1-6">
+          <dt id="section-4.1-6.1">meta</dt>
+          <dd style="margin-left: 1.5em" id="section-4.1-6.2">
+            <p id="section-4.1-6.2.1">A complex attribute containing metadata about the resource. This includes the <code>resourceType</code> (which <span class="bcp14">MUST</span> be "GroupMember"), <code>created</code>, <code>lastModified</code>, and <code>location</code> attributes. This is a <span class="bcp14">REQUIRED</span>, read-only attribute. This attribute is a common attribute inherited from <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span>.<a href="#section-4.1-6.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<p id="section-4.1-7">If a Service Provider's implementation does not support creating or deleting <code>GroupMember</code> resources, all attributes in the schema definition returned from <code>/Schemas</code> <span class="bcp14">MUST</span> have their <code>mutability</code> property set to <code>readOnly</code>.<a href="#section-4.1-7" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="json-representation">
+<section id="section-4.2">
+        <h3 id="name-json-representation">
+<a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-json-representation" class="section-name selfRef">JSON Representation</a>
+        </h3>
+<p id="section-4.2-1">The following is an example of a <code>GroupMember</code> resource in JSON format. This example represents the membership of a User in a Group. ($ref values truncated for formatting purposes):<a href="#section-4.2-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.2-2">
+<pre>
+{
+  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMember"],
+  "id": "gm12345",
+  "group": {
+    "value": "e9e30dba-f08f-4139-944c-2e6949b80b05",
+    "$ref": "https://example.com/scim/v2/Groups/e9e3xxx"
+  },
+  "member": {
+    "value": "2819c223-7f76-453a-919d-413861904646",
+    "$ref": "https://example.com/scim/v2/Users/2819xxx",
+    "type": "User"
+  },
+  "meta": {
+    "resourceType": "GroupMember",
+    "created": "2026-02-24T20:26:44Z",
+    "lastModified": "2026-02-24T20:26:44Z",
+    "location": "https://example.com/scim/v2/GroupMembers/gm12345"
+  }
+}
+</pre><a href="#section-4.2-2" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+<div id="resource-type-representation">
+<section id="section-4.3">
+        <h3 id="name-resource-type-representatio">
+<a href="#section-4.3" class="section-number selfRef">4.3. </a><a href="#name-resource-type-representatio" class="section-name selfRef">Resource Type Representation</a>
+        </h3>
+<p id="section-4.3-1">The Service Provider's <code>ResourceType</code> schema, available at the <code>/ResourceTypes</code> endpoint, <span class="bcp14">MUST</span> include an entry for "GroupMember".<a href="#section-4.3-1" class="pilcrow">¶</a></p>
+<p id="section-4.3-2"><strong>Example ResourceType entry:</strong><a href="#section-4.3-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.3-3">
+<pre>
+{
+  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:ResourceType"],
+  "id": "GroupMember",
+  "name": "GroupMember",
+  "endpoint": "/GroupMembers",
+  "description": "Resource representing a single group membership.",
+  "schema": "urn:ietf:params:scim:schemas:core:2.0:GroupMember",
+  "meta": {
+    "resourceType": "ResourceType",
+    "location": "https://example.com/scim/v2/ResourceTypes/GroupMember"
+  }
+}
+</pre><a href="#section-4.3-3" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+</section>
+</div>
+<div id="membersmetadata-group-schema-extension">
+<section id="section-5">
+      <h2 id="name-membersmetadata-group-schem">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-membersmetadata-group-schem" class="section-name selfRef">membersMetadata Group Schema Extension</a>
+      </h2>
+<p id="section-5-1">To prevent ambiguity and provide a clear path for clients, this specification also defines an extension schema for the <code>Group</code> resource. This extension introduces a new complex attribute, <code>membersMetadata</code>, which signals how group memberships are managed and provides metadata about those memberships.<a href="#section-5-1" class="pilcrow">¶</a></p>
+<p id="section-5-2">When a Service Provider supports the <code>/GroupMembers</code> endpoint, it <span class="bcp14">SHOULD</span> include the <code>membersMetadata</code> attribute on <code>Group</code> resources to declare its membership management policy for that group. The schema URN for the membersMetadata schema extension is <code>urn:ietf:params:scim:schemas:extension:groupMembers:2.0:Group</code><a href="#section-5-2" class="pilcrow">¶</a></p>
+<div id="the-membersmetadata-attribute">
+<section id="section-5.1">
+        <h3 id="name-the-membersmetadata-attribu">
+<a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-the-membersmetadata-attribu" class="section-name selfRef">The <code>membersMetadata</code> Attribute</a>
+        </h3>
+<p id="section-5.1-1">The <code>membersMetadata</code> attribute is a complex attribute with the following sub-attributes:<a href="#section-5.1-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlNewline" id="section-5.1-2">
+          <dt id="section-5.1-2.1">policy</dt>
+          <dd style="margin-left: 1.5em" id="section-5.1-2.2">
+            <p id="section-5.1-2.2.1">A <span class="bcp14">REQUIRED</span> string that specifies how membership for this group is represented. It <span class="bcp14">MUST</span> have one of the following values:<a href="#section-5.1-2.2.1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlNewline" id="section-5.1-2.2.2">
+              <dt id="section-5.1-2.2.2.1">inline</dt>
+              <dd style="margin-left: 1.5em" id="section-5.1-2.2.2.2">
+                <p id="section-5.1-2.2.2.2.1">Indicates that this group's members are fully represented in the <code>members</code> attribute. Clients <span class="bcp14">SHOULD NOT</span> use the <code>/GroupMembers</code> endpoint for this group.<a href="#section-5.1-2.2.2.2.1" class="pilcrow">¶</a></p>
+</dd>
+              <dd class="break"></dd>
+<dt id="section-5.1-2.2.2.3">external</dt>
+              <dd style="margin-left: 1.5em" id="section-5.1-2.2.2.4">
+                <p id="section-5.1-2.2.2.4.1">Indicates that this group's members are managed exclusively via the <code>/GroupMembers</code> endpoint. The <code>members</code> attribute <span class="bcp14">MUST</span> be omitted from this <code>Group</code> resource representation.<a href="#section-5.1-2.2.2.4.1" class="pilcrow">¶</a></p>
+</dd>
+              <dd class="break"></dd>
+<dt id="section-5.1-2.2.2.5">hybrid</dt>
+              <dd style="margin-left: 1.5em" id="section-5.1-2.2.2.6">
+                <p id="section-5.1-2.2.2.6.1">Indicates that the Service Provider <span class="bcp14">MAY</span> return members in the <code>members</code> attribute, but the canonical method for managing memberships is via <code>/GroupMembers</code>. Clients <span class="bcp14">SHOULD</span> prefer using the <code>/GroupMembers</code> endpoint for reliability and scale.<a href="#section-5.1-2.2.2.6.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+</dl>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<span class="break"></span><dl class="dlNewline" id="section-5.1-3">
+          <dt id="section-5.1-3.1">ref</dt>
+          <dd style="margin-left: 1.5em" id="section-5.1-3.2">
+            <p id="section-5.1-3.2.1">A <span class="bcp14">REQUIRED</span> URI that a client can use to query for the group's members. It <span class="bcp14">MUST</span> be the URI of the <code>/GroupMembers</code> endpoint with a pre-populated filter for the current group's ID. Its format is <code>[GroupMembers_Endpoint]?filter=group.value eq "[Group_ID]"</code>.<a href="#section-5.1-3.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<span class="break"></span><dl class="dlNewline" id="section-5.1-4">
+          <dt id="section-5.1-4.1">memberCount</dt>
+          <dd style="margin-left: 1.5em" id="section-5.1-4.2">
+            <p id="section-5.1-4.2.1">An <span class="bcp14">OPTIONAL</span> non-negative integer indicating the total number of members in the group.<a href="#section-5.1-4.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<span class="break"></span><dl class="dlNewline" id="section-5.1-5">
+          <dt id="section-5.1-5.1">allowedMemberTypes</dt>
+          <dd style="margin-left: 1.5em" id="section-5.1-5.2">
+            <p id="section-5.1-5.2.1">An <span class="bcp14">OPTIONAL</span> multi-valued attribute containing a list of strings that specify the resource types (<code>resourceType</code>) of members allowed in this group.<a href="#section-5.1-5.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="example-group-resources">
+<section id="section-5.2">
+        <h3 id="name-example-group-resources">
+<a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-example-group-resources" class="section-name selfRef">Example Group Resources</a>
+        </h3>
+<div id="example-of-an-external-policy">
+<section id="section-5.2.1">
+          <h4 id="name-example-of-an-external-poli">
+<a href="#section-5.2.1" class="section-number selfRef">5.2.1. </a><a href="#name-example-of-an-external-poli" class="section-name selfRef">Example of an "External" Policy</a>
+          </h4>
+<p id="section-5.2.1-1">The following is a <code>Group</code> with a large number of members. The <code>policy</code> is <code>"external"</code>, the <code>members</code> attribute is absent, and the client is directed to use the <code>ref</code> URI.<a href="#section-5.2.1-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-5.2.1-2">
+<pre>
+{
+  "schemas": [
+    "urn:ietf:params:scim:schemas:core:2.0:Group",
+    "urn:ietf:params:scim:schemas:extension:groupMembers:2.0:Group"
+  ],
+  "id": "e9e30dba-f08f-4139-944c-2e6949b80b05",
+  "displayName": "All Employees",
+  "urn:ietf:params:scim:schemas:extension:groupMembers:2.0:Group": {
+    "membersMetadata": {
+      "policy": "external",
+      "ref": "https://example.com/scim/v2/GroupMembers?filter= \
+        group.value%20eq%20%22e9e30dba-f08f-4139-944c-2e6949b80b05%22",
+      "memberCount": 150321
+    }
+  },
+  "meta": {
+    "resourceType": "Group",
+    "location": "https://example.com/scim/v2/Groups/ \
+      e9e30dba-f08f-4139-944c-2e6949b80b05"
+  }
+}
+</pre><a href="#section-5.2.1-2" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+<div id="example-of-a-hybrid-policy">
+<section id="section-5.2.2">
+          <h4 id="name-example-of-a-hybrid-policy">
+<a href="#section-5.2.2" class="section-number selfRef">5.2.2. </a><a href="#name-example-of-a-hybrid-policy" class="section-name selfRef">Example of a "Hybrid" Policy</a>
+          </h4>
+<p id="section-5.2.2-1">The following is a <code>Group</code> with a small number of members. The <code>policy</code> is <code>"hybrid"</code>, indicating that while the members are included inline for convenience, clients should still prefer using the <code>/GroupMembers</code> endpoint for management operations.<a href="#section-5.2.2-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-5.2.2-2">
+<pre>
+{
+  "schemas": [
+    "urn:ietf:params:scim:schemas:core:2.0:Group",
+    "urn:ietf:params:scim:schemas:extension:groupMembers:2.0:Group"
+  ],
+  "id": "a0b1c2d3-f08f-4139-944c-2e6949b80b05",
+  "displayName": "Sales Team",
+  "members": [
+    {
+      "value": "2819c223-7f76-453a-919d-413861904646",
+      "display": "Babs Jensen"
+    }
+  ],
+  "urn:ietf:params:scim:schemas:extension:groupMembers:2.0:Group": {
+    "membersMetadata": {
+      "policy": "hybrid",
+      "ref": "https://example.com/scim/v2/GroupMembers?filter= \
+        group.value%20eq%20%22a0b1c2d3-f08f-4139-944c-2e6949b80b05%22",
+      "memberCount": 1,
+      "allowedMemberTypes": ["User", "Group"]
+    }
+  },
+  "meta": {
+    "resourceType": "Group",
+    "location": "https://example.com/scim/v2/Groups/ \
+      a0b1c2d3-f08f-4139-944c-2e6949b80b05"
+  }
+}
+</pre><a href="#section-5.2.2-2" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+</section>
+</div>
+</section>
+</div>
+<div id="managing-groupmember-resources">
+<section id="section-6">
+      <h2 id="name-managing-groupmember-resour">
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-managing-groupmember-resour" class="section-name selfRef">Managing GroupMember Resources</a>
+      </h2>
+<p id="section-6-1">This section describes how <code>GroupMember</code> resources are managed using the SCIM protocol. A <code>GroupMember</code> is a simple resource that represents a linkage between a group and a member. As such, a membership can only be created, retrieved, or deleted. Updating a membership serves little practical value, as changing the group or the member would fundamentally represent a new membership, not a modification of the existing one. Therefore, a Service Provider that supports this specification <span class="bcp14">MUST</span> only support the <code>POST</code>, <code>GET</code>, and <code>DELETE</code> methods for this resource type.<a href="#section-6-1" class="pilcrow">¶</a></p>
+<p id="section-6-2">Service Providers <span class="bcp14">MAY</span> also support management of group members through the existing <code>members</code> attribute of the <code>Group</code> resource as defined in <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span> for the purpose of backwards compatibility with existing clients. However, when adding or removing members from a group that also has <code>GroupMember</code> resources, Service Providers <span class="bcp14">MUST</span> ensure that the state remains consistent across both representations. For example, deleting a <code>GroupMember</code> resource <span class="bcp14">MUST</span> result in the corresponding member being removed from the <code>members</code> array on the <code>Group</code> resource, if that attribute is supported by the Service Provider.<a href="#section-6-2" class="pilcrow">¶</a></p>
+<div id="creating-groupmember-resources-post">
+<section id="section-6.1">
+        <h3 id="name-creating-groupmember-resour">
+<a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-creating-groupmember-resour" class="section-name selfRef">Creating GroupMember Resources (POST)</a>
+        </h3>
+<p id="section-6.1-1">To add a new member to a group, the client sends a <code>POST</code> request to the <code>GroupMembers</code> endpoint. The request body <span class="bcp14">MUST</span> contain a <code>GroupMember</code> resource, specifying the <code>group.value</code> and <code>member.value</code>.<a href="#section-6.1-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-6.1-2.1">
+            <p id="section-6.1-2.1.1">Request: POST /scim/v2/GroupMembers<a href="#section-6.1-2.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-6.1-2.2">
+            <p id="section-6.1-2.2.1">Response: 201 Created with the full <code>GroupMember</code> resource in the body, including its newly generated <code>id</code> and <code>meta</code> attributes.<a href="#section-6.1-2.2.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-6.1-3">A Service Provider <span class="bcp14">MUST</span> ensure that both the group and the member referenced by their <code>id</code>s exist before creating the <code>GroupMember</code> resource. If either the group or the member does not exist, the Service Provider <span class="bcp14">SHOULD</span> return a <code>400 Bad Request</code> error with a <code>scimType</code> of <code>invalidValue</code>.<a href="#section-6.1-3" class="pilcrow">¶</a></p>
+<p id="section-6.1-4">If the membership already exists, the Service Provider <span class="bcp14">MUST</span> return a <code>409 Conflict</code> error.<a href="#section-6.1-4" class="pilcrow">¶</a></p>
+<p id="section-6.1-5">Example Request Body:<a href="#section-6.1-5" class="pilcrow">¶</a></p>
+<p id="section-6.1-6">POST /GroupMembers<a href="#section-6.1-6" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-6.1-7">
+<pre>
+{
+  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMember"],
+  "group": {
+    "value": "e9e30dba-f08f-4139-944c-2e6949b80b05"
+  },
+  "member": {
+    "value": "2819c223-7f76-453a-919d-413861904646"
+  }
+}
+</pre><a href="#section-6.1-7" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+<div id="retrieving-groupmember-resources-get">
+<section id="section-6.2">
+        <h3 id="name-retrieving-groupmember-reso">
+<a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-retrieving-groupmember-reso" class="section-name selfRef">Retrieving GroupMember Resources (GET)</a>
+        </h3>
+<p id="section-6.2-1"><code>GroupMember</code> resources can be retrieved by sending a <code>GET</code> request to the <code>GroupMembers</code> endpoint. Clients can retrieve an individual resource by its <code>id</code> or a list of resources.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-6.2-2.1">
+            <p id="section-6.2-2.1.1">To get a specific membership: <code>GET /scim/v2/GroupMembers/{id}</code><a href="#section-6.2-2.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-6.2-2.2">
+            <p id="section-6.2-2.2.1">To get all memberships: <code>GET /scim/v2/GroupMembers</code><a href="#section-6.2-2.2.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<div id="pagination">
+<section id="section-6.2.1">
+          <h4 id="name-pagination">
+<a href="#section-6.2.1" class="section-number selfRef">6.2.1. </a><a href="#name-pagination" class="section-name selfRef">Pagination</a>
+          </h4>
+<p id="section-6.2.1-1">Service Providers <span class="bcp14">MUST</span> support pagination of <code>GroupMember</code> resources to allow clients to retrieve large sets of memberships in manageable chunks.<a href="#section-6.2.1-1" class="pilcrow">¶</a></p>
+<p id="section-6.2.1-2">Index-based Pagination: The <code>startIndex</code> and <code>count</code> query parameters are the primary method for pagination, as defined in <span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span>.<a href="#section-6.2.1-2" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-6.2.1-3.1">
+              <p id="section-6.2.1-3.1.1">Example: <code>GET /scim/v2/GroupMembers?startIndex=1&amp;count=1000</code><a href="#section-6.2.1-3.1.1" class="pilcrow">¶</a></p>
+</li>
+          </ul>
+<p id="section-6.2.1-4">Cursor as defined in <span>[<a href="#RFC9865" class="cite xref">RFC9865</a>]</span> for improved performance with very large data sets.<a href="#section-6.2.1-4" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-6.2.1-5.1">
+              <p id="section-6.2.1-5.1.1">Example: <code>GET /scim/v2/GroupMembers?count=1000&amp;cursor=aW5kZXg9MTAx</code><a href="#section-6.2.1-5.1.1" class="pilcrow">¶</a></p>
+</li>
+          </ul>
+<p id="section-6.2.1-6">The response for a paginated request is a <code>ListResponse</code> containing the <code>GroupMember</code> resources for the current page.<a href="#section-6.2.1-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="filtering">
+<section id="section-6.2.2">
+          <h4 id="name-filtering">
+<a href="#section-6.2.2" class="section-number selfRef">6.2.2. </a><a href="#name-filtering" class="section-name selfRef">Filtering</a>
+          </h4>
+<p id="section-6.2.2-1">Service Providers <span class="bcp14">MUST</span> support filtering on the <code>group.value</code> and <code>member.value</code> attributes. This enables clients to perform critical queries, such as "find all members of a specific group" or "find all groups a specific user is a member of."<a href="#section-6.2.2-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlNewline" id="section-6.2.2-2">
+            <dt id="section-6.2.2-2.1">To find all members of a group:</dt>
+            <dd style="margin-left: 1.5em" id="section-6.2.2-2.2">
+              <p id="section-6.2.2-2.2.1">GET /scim/v2/GroupMembers?filter=group.value eq e9e30dba-f08f-4139-944c-2e6949b80b05"<a href="#section-6.2.2-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+</dl>
+<span class="break"></span><dl class="dlNewline" id="section-6.2.2-3">
+            <dt id="section-6.2.2-3.1">To find all groups for a member:</dt>
+            <dd style="margin-left: 1.5em" id="section-6.2.2-3.2">
+              <p id="section-6.2.2-3.2.1">GET /scim/v2/GroupMembers?filter=member.value eq "2819c223-7f76-453a-919d-413861904646"<a href="#section-6.2.2-3.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+</dl>
+</section>
+</div>
+</section>
+</div>
+<div id="deleting-groupmember-resources-delete">
+<section id="section-6.3">
+        <h3 id="name-deleting-groupmember-resour">
+<a href="#section-6.3" class="section-number selfRef">6.3. </a><a href="#name-deleting-groupmember-resour" class="section-name selfRef">Deleting GroupMember Resources (DELETE)</a>
+        </h3>
+<p id="section-6.3-1">To remove a member from a group, the client sends a <code>DELETE</code> request to the URI of the specific <code>GroupMember</code> resource.<a href="#section-6.3-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-6.3-2.1">
+            <p id="section-6.3-2.1.1">Request: <code>DELETE /scim/v2/GroupMembers/{id}</code><a href="#section-6.3-2.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-6.3-2.2">
+            <p id="section-6.3-2.2.1">Response: <code>204 No Content</code> on successful deletion.<a href="#section-6.3-2.2.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+</section>
+</div>
+<div id="bulk-operations">
+<section id="section-6.4">
+        <h3 id="name-bulk-operations">
+<a href="#section-6.4" class="section-number selfRef">6.4. </a><a href="#name-bulk-operations" class="section-name selfRef">Bulk Operations</a>
+        </h3>
+<p id="section-6.4-1">Clients can create and delete multiple <code>GroupMember</code> resources in a single request using the <code>/Bulk</code> endpoint as defined in <span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span>. This is highly efficient for synchronizing memberships for a group with many changes.<a href="#section-6.4-1" class="pilcrow">¶</a></p>
+<p id="section-6.4-2">The following is an example of a <code>Bulk</code> request that adds two new members and removes one existing member from a group.<a href="#section-6.4-2" class="pilcrow">¶</a></p>
+<p id="section-6.4-3">Example Bulk Request:<a href="#section-6.4-3" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-6.4-4">
+<pre>
+{
+"schemas": ["urn:ietf:params:scim:api:messages:2.0:BulkRequest"],
+"failOnErrors": 1,
+"Operations": [
+{
+  "method": "POST",
+  "path": "/GroupMembers",
+  "bulkId": "add-user-1",
+  "data": {
+    "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMember"],
+    "group": { "value": "e9e30dba-f08f-4139-944c-2e6949b80b05" },
+    "member": { "value": "aed9876f-e83c-4359-99a3-37e082236081" }
+  }
+},
+{
+  "method": "POST",
+  "path": "/GroupMembers",
+  "bulkId": "add-user-2",
+  "data": {
+    "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMember"],
+    "group": { "value": "e9e30dba-f08f-4139-944c-2e6949b80b05" },
+    "member": { "value": "bce5231a-6d36-4b89-a249-1b913e16338b" }
+  }
+},
+{
+  "method": "DELETE",
+  "path": "/GroupMembers/gm12345",
+  "bulkId": "delete-user-3"
+}
+]
+}
+</pre><a href="#section-6.4-4" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+</section>
+</div>
+<div id="service-provider-considerations">
+<section id="section-7">
+      <h2 id="name-service-provider-considerat">
+<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-service-provider-considerat" class="section-name selfRef">Service Provider Considerations</a>
+      </h2>
+<p id="section-7-1">This section describes the requirements for Service Providers that implement the <code>GroupMember</code> resource.<a href="#section-7-1" class="pilcrow">¶</a></p>
+<div id="discovering-support-for-the-groupmember-resource">
+<section id="section-7.1">
+        <h3 id="name-discovering-support-for-the">
+<a href="#section-7.1" class="section-number selfRef">7.1. </a><a href="#name-discovering-support-for-the" class="section-name selfRef">Discovering Support for the GroupMember Resource</a>
+        </h3>
+<p id="section-7.1-1">Service Providers that support the <code>GroupMember</code> resource <span class="bcp14">MUST</span> declare this support in their <code>ResourceType</code> and <code>Schema</code> metadata.<a href="#section-7.1-1" class="pilcrow">¶</a></p>
+<div id="schema-endpoint">
+<section id="section-7.1.1">
+          <h4 id="name-schema-endpoint">
+<a href="#section-7.1.1" class="section-number selfRef">7.1.1. </a><a href="#name-schema-endpoint" class="section-name selfRef">Schema Endpoint</a>
+          </h4>
+<p id="section-7.1.1-1">The Service Provider's <code>Schema</code> definition, available at the <code>/Schemas</code> endpoint, <span class="bcp14">MUST</span> include the full schema definitions for <code>urn:ietf:params:scim:schemas:core:2.0:GroupMember</code> as defined in Section 2.3 of this document.<a href="#section-7.1.1-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="impact-on-the-group-resource">
+<section id="section-7.1.2">
+          <h4 id="name-impact-on-the-group-resourc">
+<a href="#section-7.1.2" class="section-number selfRef">7.1.2. </a><a href="#name-impact-on-the-group-resourc" class="section-name selfRef">Impact on the Group Resource</a>
+          </h4>
+<p id="section-7.1.2-1">As noted in Section 6, a Service Provider <span class="bcp14">MAY</span> continue to support the <code>members</code> attribute on the <code>Group</code> resource for backwards compatibility. When doing so, the Service Provider <span class="bcp14">MUST</span> maintain transactional integrity and consistency between the state of the <code>members</code> attribute and the state of the corresponding <code>GroupMember</code> resources.<a href="#section-7.1.2-1" class="pilcrow">¶</a></p>
+<p id="section-7.1.2-2">For example, if a <code>DELETE</code> request to a <code>/GroupMembers/{id}</code> URI is successful, the corresponding member <span class="bcp14">MUST</span> also be removed from the <code>members</code> array of the parent <code>Group</code> resource. Conversely, if a member is removed from a <code>Group</code> via a <code>PATCH</code> request to the <code>/Groups/{id}</code> URI, the corresponding <code>GroupMember</code> resource <span class="bcp14">MUST</span> be deleted.<a href="#section-7.1.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+</section>
+</div>
+<div id="schema-representation">
+<section id="section-8">
+      <h2 id="name-schema-representation">
+<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-schema-representation" class="section-name selfRef">Schema Representation</a>
+      </h2>
+<div id="groupmember-core-schema">
+<section id="section-8.1">
+        <h3 id="name-groupmember-core-schema">
+<a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-groupmember-core-schema" class="section-name selfRef">GroupMember Core Schema</a>
+        </h3>
+<p id="section-8.1-1">The following is the formal SCIM schema definition for the <code>GroupMember</code>
+resource. The <code>schemas</code> and <code>meta</code> attributes are common attributes
+inherited from <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span> and are included here for completeness.<a href="#section-8.1-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-8.1-2">
+<pre>
+{
+  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Schema"],
+  "id": "urn:ietf:params:scim:schemas:core:2.0:GroupMember",
+  "name": "Group Member",
+  "description": "SCIM resource representing a single group membership.",
+  "attributes": [
+    {
+      "name": "group",
+      "type": "complex",
+      "multiValued": false,
+      "mutability": "immutable",
+      "returned": "default",
+      "required": true,
+      "description": "The group of which the member is a member.",
+      "subAttributes": [
+        {
+          "name": "value",
+          "type": "string",
+          "multiValued": false,
+          "mutability": "immutable",
+          "returned": "default",
+          "required": true,
+          "caseExact": true,
+          "uniqueness": "none",
+          "description": "The id of the group."
+        },
+        {
+          "name": "$ref",
+          "type": "reference",
+          "referenceTypes": ["Group"],
+          "multiValued": false,
+          "mutability": "readOnly",
+          "returned": "default",
+          "required": false,
+          "uniqueness": "none",
+          "description": "The URI of the group."
+        },
+        {
+          "name": "display",
+          "type": "string",
+          "multiValued": false,
+          "mutability": "readOnly",
+          "returned": "default",
+          "required": false,
+          "caseExact": false,
+          "uniqueness": "none",
+          "description": "The displayName of the group."
+        }
+      ]
+    },
+    {
+      "name": "member",
+      "type": "complex",
+      "multiValued": false,
+      "mutability": "immutable",
+      "returned": "default",
+      "required": true,
+      "description": "The member of the group.",
+      "subAttributes": [
+        {
+          "name": "value",
+          "type": "string",
+          "multiValued": false,
+          "mutability": "immutable",
+          "returned": "default",
+          "required": true,
+          "caseExact": true,
+          "uniqueness": "none",
+          "description": "The id of the member."
+        },
+        {
+          "name": "$ref",
+          "type": "reference",
+          "referenceTypes": ["User", "Group"],
+          "multiValued": false,
+          "mutability": "readOnly",
+          "returned": "default",
+          "required": false,
+          "uniqueness": "none",
+          "description": "The URI of the member."
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "multiValued": false,
+          "mutability": "readOnly",
+          "returned": "default",
+          "required": false,
+          "caseExact": false,
+          "uniqueness": "none",
+          "description": "The resource type of the member."
+        },
+        {
+          "name": "display",
+          "type": "string",
+          "multiValued": false,
+          "mutability": "readOnly",
+          "returned": "default",
+          "required": false,
+          "caseExact": false,
+          "uniqueness": "none",
+          "description": "The displayName of the member."
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "resourceType": "Schema",
+    "location": "https://example.com/scim/v2/Schemas/ \
+      urn:ietf:params:scim:schemas:core:2.0:GroupMember"
+  }
+}
+</pre><a href="#section-8.1-2" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+<div id="membersmetadata-schema-extension">
+<section id="section-8.2">
+        <h3 id="name-membersmetadata-schema-exte">
+<a href="#section-8.2" class="section-number selfRef">8.2. </a><a href="#name-membersmetadata-schema-exte" class="section-name selfRef">membersMetadata Schema Extension</a>
+        </h3>
+<p id="section-8.2-1">This specification defines a schema extension for the SCIM <code>Group</code> resource to support the discoverability of membership management policies.<a href="#section-8.2-1" class="pilcrow">¶</a></p>
+<p id="section-8.2-2"><strong>Schema URN:</strong> <code>urn:ietf:params:scim:schemas:extension:groupMembers:2.0:Group</code><a href="#section-8.2-2" class="pilcrow">¶</a></p>
+<div id="the-membersmetadata-attribute-definition">
+<section id="section-8.2.1">
+          <h4 id="name-the-membersmetadata-attribut">
+<a href="#section-8.2.1" class="section-number selfRef">8.2.1. </a><a href="#name-the-membersmetadata-attribut" class="section-name selfRef">The <code>membersMetadata</code> Attribute Definition</a>
+          </h4>
+<p id="section-8.2.1-1">The extension introduces a single complex attribute to the <code>Group</code>
+resource: <code>membersMetadata</code>. This attribute is defined as follows. The
+<code>schemas</code> and <code>meta</code> attributes are common attributes inherited from
+<span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span> and are included here for completeness.<a href="#section-8.2.1-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-8.2.1-2">
+<pre>
+{
+  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Schema"],
+  "id": \
+    "urn:ietf:params:scim:schemas:extension:groupMembers:2.0:Group",
+  "name": "GroupMembersMetadata",
+  "description": "A schema extension for Group resources to \
+    provide metadata about how members are managed.",
+  "attributes": [
+    {
+      "name": "membersMetadata",
+      "type": "complex",
+      "multiValued": false,
+      "mutability": "readOnly",
+      "returned": "default",
+      "required": false,
+      "description": "Provides metadata about the management \
+        of this group's members.",
+      "subAttributes": [
+        {
+          "name": "policy",
+          "type": "string",
+          "multiValued": false,
+          "mutability": "readOnly",
+          "returned": "default",
+          "required": true,
+          "canonicalValues": [
+            "inline",
+            "external",
+            "hybrid"
+          ],
+          "description": "Specifies the policy for how \
+            membership of this group is represented."
+        },
+        {
+          "name": "ref",
+          "type": "reference",
+          "referenceTypes": ["uri"],
+          "multiValued": false,
+          "mutability": "readOnly",
+          "returned": "default",
+          "required": true,
+          "description": "A URI that a client can use to \
+            query for the group's members."
+        },
+        {
+          "name": "memberCount",
+          "type": "integer",
+          "multiValued": false,
+          "mutability": "readOnly",
+          "returned": "default",
+          "required": false,
+          "uniqueness": "none",
+          "description": "An integer indicating the total \
+            number of members in the group."
+        },
+        {
+          "name": "allowedMemberTypes",
+          "type": "string",
+          "multiValued": true,
+          "mutability": "readOnly",
+          "returned": "default",
+          "required": false,
+          "caseExact": true,
+          "uniqueness": "none",
+          "description": "A list of strings specifying the \
+            resource types of members allowed in this group."
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "resourceType": "Schema",
+    "location": "https://example.com/scim/v2/Schemas/ \
+      urn:ietf:params:scim:schemas:extension:groupMembers:2.0:Group"
+  }
+}
+</pre><a href="#section-8.2.1-2" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+<div id="usage">
+<section id="section-8.2.2">
+          <h4 id="name-usage">
+<a href="#section-8.2.2" class="section-number selfRef">8.2.2. </a><a href="#name-usage" class="section-name selfRef">Usage</a>
+          </h4>
+<p id="section-8.2.2-1">When a Service Provider uses this extension, it <span class="bcp14">MUST</span> add the schema URN
+<code>urn:ietf:params:scim:schemas:extension:groupMembers:2.0:Group</code> to the
+<code>schemas</code> attribute of the <code>Group</code> resource. The <code>membersMetadata</code>
+attribute and its sub-attributes are read-only, as they are metadata
+reported by the Service Provider to the client.<a href="#section-8.2.2-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="security-considerations">
+<section id="section-8.3">
+        <h3 id="name-security-considerations">
+<a href="#section-8.3" class="section-number selfRef">8.3. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+        </h3>
+<p id="section-8.3-1">The security considerations for the <code>GroupMember</code> resource are substantially the same as those for the <code>User</code> and <code>Group</code> resources defined in Section 8 of the SCIM Protocol document <span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span>. All requests <span class="bcp14">MUST</span> be made over a secure channel such as Transport Layer Security (TLS).<a href="#section-8.3-1" class="pilcrow">¶</a></p>
+<p id="section-8.3-2">Authentication and authorization for managing <code>GroupMember</code> resources are the responsibility of the Service Provider. Implementers should consider the following:<a href="#section-8.3-2" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-8.3-3.1">
+            <p id="section-8.3-3.1.1">A client with permission to read a <code>Group</code> resource's <code>members</code> attribute <span class="bcp14">MUST</span> be granted permission to <code>GET</code> the corresponding <code>GroupMember</code> resources for that group. Access to a <code>Group</code> resource alone does not imply access to its member list — a Service Provider <span class="bcp14">MAY</span> expose group metadata broadly while restricting membership details to privileged clients.<a href="#section-8.3-3.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.3-3.2">
+            <p id="section-8.3-3.2.1">A client authorized to add or remove members from a <code>Group</code> via a <code>PATCH</code> to the <code>Group</code> resource <span class="bcp14">MUST</span> have equivalent <code>POST</code> and <code>DELETE</code> permissions on <code>GroupMember</code> resources for that same group.<a href="#section-8.3-3.2.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+</section>
+</div>
+<div id="iana-considerations">
+<section id="section-8.4">
+        <h3 id="name-iana-considerations">
+<a href="#section-8.4" class="section-number selfRef">8.4. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+        </h3>
+<p id="section-8.4-1">This document requests that IANA register the following URNs in the "SCIM Schemas" registry.<a href="#section-8.4-1" class="pilcrow">¶</a></p>
+<p id="section-8.4-2"><strong>URI:</strong> <code>urn:ietf:params:scim:schemas:core:2.0:GroupMember</code>
+          <strong>Specification:</strong> This document
+<strong>Description:</strong> Defines the schema for a resource representing a single group membership.<a href="#section-8.4-2" class="pilcrow">¶</a></p>
+<p id="section-8.4-3"><strong>URI:</strong> <code>urn:ietf:params:scim:schemas:extension:groupMembers:2.0:Group</code>
+          <strong>Specification:</strong> This document
+<strong>Description:</strong> Defines a schema extension for the Group resource that provides metadata about how group memberships are managed.<a href="#section-8.4-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="sec-normative-references">
+<section id="section-9">
+      <h2 id="name-normative-references">
+<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+      </h2>
+<dl class="references">
+<dt id="RFC2119">[RFC2119]</dt>
+      <dd>
+<span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC7643">[RFC7643]</dt>
+      <dd>
+<span class="refAuthor">Hunt, P., Ed.</span>, <span class="refAuthor">Grizzle, K.</span>, <span class="refAuthor">Wahlstroem, E.</span>, and <span class="refAuthor">C. Mortimore</span>, <span class="refTitle">"System for Cross-domain Identity Management: Core Schema"</span>, <span class="seriesInfo">RFC 7643</span>, <span class="seriesInfo">DOI 10.17487/RFC7643</span>, <time datetime="2015-09" class="refDate">September 2015</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc7643">https://www.rfc-editor.org/rfc/rfc7643</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC7644">[RFC7644]</dt>
+      <dd>
+<span class="refAuthor">Hunt, P., Ed.</span>, <span class="refAuthor">Grizzle, K.</span>, <span class="refAuthor">Ansari, M.</span>, <span class="refAuthor">Wahlstroem, E.</span>, and <span class="refAuthor">C. Mortimore</span>, <span class="refTitle">"System for Cross-domain Identity Management: Protocol"</span>, <span class="seriesInfo">RFC 7644</span>, <span class="seriesInfo">DOI 10.17487/RFC7644</span>, <time datetime="2015-09" class="refDate">September 2015</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc7644">https://www.rfc-editor.org/rfc/rfc7644</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8174">[RFC8174]</dt>
+      <dd>
+<span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9865">[RFC9865]</dt>
+    <dd>
+<span class="refAuthor">Peterson, M., Ed.</span>, <span class="refAuthor">Zollner, D.</span>, and <span class="refAuthor">A. Sehgal</span>, <span class="refTitle">"Cursor-Based Pagination of System of Cross-domain Identity Management (SCIM) Resources"</span>, <span class="seriesInfo">RFC 9865</span>, <span class="seriesInfo">DOI 10.17487/RFC9865</span>, <time datetime="2025-10" class="refDate">October 2025</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9865">https://www.rfc-editor.org/rfc/rfc9865</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="authors-addresses">
+<section id="appendix-A">
+      <h2 id="name-authors-address">
+<a href="#name-authors-address" class="section-name selfRef">Author's Address</a>
+      </h2>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Danny Zollner</span></div>
+<div dir="auto" class="left"><span class="org">Okta</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:danny.zollner@okta.com" class="email">danny.zollner@okta.com</a>
+</div>
+</address>
+</section>
+</div>
+<script>const toc = document.getElementById("toc");
+toc.querySelector("h2").addEventListener("click", e => {
+  toc.classList.toggle("active");
+});
+toc.querySelector("nav").addEventListener("click", e => {
+  toc.classList.remove("active");
+});
+</script>
+</body>
+</html>
