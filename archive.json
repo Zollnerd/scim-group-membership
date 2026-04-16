@@ -1,0 +1,83 @@
+{
+  "magic": "E!vIA5L86J2I",
+  "timestamp": "2026-04-16T00:58:18.282830+00:00",
+  "repo": "Zollnerd/scim-group-membership",
+  "labels": [
+    {
+      "name": "bug",
+      "description": "Something isn't working",
+      "color": "d73a4a"
+    },
+    {
+      "name": "documentation",
+      "description": "Improvements or additions to documentation",
+      "color": "0075ca"
+    },
+    {
+      "name": "duplicate",
+      "description": "This issue or pull request already exists",
+      "color": "cfd3d7"
+    },
+    {
+      "name": "enhancement",
+      "description": "New feature or request",
+      "color": "a2eeef"
+    },
+    {
+      "name": "good first issue",
+      "description": "Good for newcomers",
+      "color": "7057ff"
+    },
+    {
+      "name": "help wanted",
+      "description": "Extra attention is needed",
+      "color": "008672"
+    },
+    {
+      "name": "invalid",
+      "description": "This doesn't seem right",
+      "color": "e4e669"
+    },
+    {
+      "name": "question",
+      "description": "Further information is requested",
+      "color": "d876e3"
+    },
+    {
+      "name": "wontfix",
+      "description": "This will not be worked on",
+      "color": "ffffff"
+    }
+  ],
+  "issues": [],
+  "pulls": [
+    {
+      "number": 1,
+      "id": "PR_kwDORcubHc7SIu1V",
+      "title": "Content updates based on WG mailing list feedback + fixed GH Workflows ",
+      "url": "https://github.com/Zollnerd/scim-group-membership/pull/1",
+      "state": "MERGED",
+      "author": "Zollnerd",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2026-04-13T22:32:30Z",
+      "updatedAt": "2026-04-13T22:34:13Z",
+      "baseRepository": "Zollnerd/scim-group-membership",
+      "baseRefName": "main",
+      "baseRefOid": "71f2810b98b52da00246025b6c64db18aab0e922",
+      "headRepository": "Zollnerd/scim-group-membership",
+      "headRefName": "zollnerd-scim-group-membership-updates-april26",
+      "headRefOid": "72a9a7eeaa60b5fd91cb3e482181666b65c86f46",
+      "closedAt": "2026-04-13T22:34:13Z",
+      "mergedAt": "2026-04-13T22:34:13Z",
+      "mergedBy": "Zollnerd",
+      "mergeCommit": {
+        "oid": "a268414813131e5ace1fb662c579aa9a145c8174"
+      },
+      "comments": [],
+      "reviews": []
+    }
+  ]
+}
