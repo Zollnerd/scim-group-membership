@@ -120,29 +120,6 @@ The following is an example of a `GroupMembership` resource in JSON format. This
 }
 ~~~
 
-## Resource Type Representation
-
-The service provider's `ResourceType` schema, available at the `/ResourceTypes` endpoint, MUST include an entry for "GroupMembership".
-
-**Example ResourceType entry:**
-
-~~~
-{
-  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:ResourceType"],
-  "id": "GroupMembership",
-  "name": "GroupMembership",
-  "endpoint": "/GroupMemberships",
-  "description": "Resource representing a single group membership.",
-  "schema": "urn:ietf:params:scim:schemas:core:2.0:GroupMembership",
-  "meta": {
-    "resourceType": "ResourceType",
-    "created": "2026-02-20T13:43:00Z",
-    "lastModified": "2026-02-20T13:43:00Z",
-    "location": "https://example.com/scim/v2/ResourceTypes/GroupMembership"
-  }
-}
-~~~
-
 # Managing GroupMembership Resources
 
 This section describes how `GroupMembership` resources are managed using the SCIM protocol. A `GroupMembership` is a simple resource that represents a linkage between a group and a member. As such, a membership can only be created, retrieved, or deleted. Changing the group or the member would fundamentally represent a new membership, not a modification of the existing one. Therefore, a service provider that supports this specification is NOT REQUIRED to support `PATCH` or `PUT` methods for this resource type. However, service providers may extend the resource type with additional attributes and MAY allow clients to change those attributes.
@@ -279,6 +256,25 @@ Service providers that support the `GroupMembership` resource MUST declare this 
 ### ResourceTypes Endpoint
 
 The service provider's `ResourceType` definition, available at the `/ResourceTypes` endpoint, MUST include the resource type definitions for `GroupMembership` with the base schema `urn:ietf:params:scim:schemas:core:2.0:GroupMembership`. The resource type definition MUST correctly reflect the service provider's support, e.g. schema extensions MUST be declared and available at the `/Schemas` endpoint.
+
+**Example ResourceType entry:**
+
+~~~
+{
+  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:ResourceType"],
+  "id": "GroupMembership",
+  "name": "GroupMembership",
+  "endpoint": "/GroupMemberships",
+  "description": "Resource representing a single group membership.",
+  "schema": "urn:ietf:params:scim:schemas:core:2.0:GroupMembership",
+  "meta": {
+    "resourceType": "ResourceType",
+    "created": "2026-02-20T13:43:00Z",
+    "lastModified": "2026-02-20T13:43:00Z",
+    "location": "https://example.com/scim/v2/ResourceTypes/GroupMembership"
+  }
+}
+~~~
 
 ### Schema Endpoint
 
