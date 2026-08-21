@@ -45,7 +45,7 @@ The System for Cross-domain Identity Management (SCIM) 2.0 protocol [RFC7643][RF
 
 Currently, the "members" attribute of a Group resource is a multi-valued attribute. Because SCIM only supports paginating resources, a client requesting a Group resource must receive the entire list of group memberships in a single HTTP response. For a group with one million members, an HTTP response can reach approximately 200MB in size. These large payloads create several critical failure points including memory pressure and network timeouts.
 
-This document proposes the "GroupMembership" resource type. By treating a membership as a first-class, top-level resource, service providers can leverage existing SCIM query parameters including filter, count, and multiple pagination methods, allowing them to implement a scaleable and reliable interface for managing groups of any size.
+This document proposes the "GroupMembership" resource type. By treating a membership as a first-class, top-level resource, service providers can leverage existing SCIM query parameters including filter, count, and multiple pagination methods, allowing them to implement a scalable and reliable interface for managing groups of any size.
 
 # Notational Conventions
 
@@ -62,41 +62,35 @@ A `GroupMembership` resource represents a direct membership only. Indirect membe
 The base schema for the `GroupMembership` resource type is defined by the URN `urn:ietf:params:scim:schemas:core:2.0:GroupMembership`. The schema defines the following attributes:
 
 group
-: A complex attribute that provides a reference to the parent Group resource. This attribute contains the following sub-attributes:
+: A complex attribute that provides a reference to the parent Group resource. Service providers MUST support this attribute and MUST assert that it is always assigned. It MUST be singular and complex. It MUST have the properties `"mutability": "immutable"` and `"required": true` if the service provider supports the creation of Group Membership resources. If creation of Group Membership resources is not supported, the attribute MUST have a `mutability` of `readOnly`. This attribute contains the following sub-attributes:
 
     value
-    : The `id` of the referenced Group resource. **REQUIRED**.
+    : The `id` of the referenced Group resource. Service providers MUST support this attribute and MUST assert that it is always assigned. The sub-attribute value MUST NEVER change. The attribute MUST be singular and of type `string`. It MUST have the same values as the `group` attribute for the properties `mutability` and `required`.
 
     $ref
-    : The URI of the referenced Group resource. Read-only.
+    : The URI of the referenced Group resource, as defined in [RFC7643], section 2.4. It MUST be singular and of type `reference`. It MUST have the properties `"referenceTypes": ["Group"]` and "mutability": "readOnly"`.
 
     display
-    : A human-readable name for the referenced Group resource, generally corresponding to the group's `displayName` attribute. Read-only.
+    : A human-readable name for the referenced Group resource, generally corresponding to the group's `displayName` attribute. The value MUST be the same as that of the `groups.display` sub-attribute of the core User resource if the 'value' sub-attributes references the same Group resource. It MUST be a string. It MUST have the properties `"mutability": "readOnly"` and `"caseExact": false`.
     {: newline="true"}
 {: newline="true"}
 
 member
-: A complex attribute that provides a reference to the member resource, which can be a User, another Group, or any other resource type that can be a member of a group. Possible resource types are listed in the 'canonicalValues' property of the 'type' sub-attribute and in the 'referenceTypes' property of the '$ref' sub-attribute. This attribute contains the following sub-attributes:
+: A complex attribute that provides a reference to the member resource, which can be a User, another Group, or any other resource type that can be a member of a group. Possible resource types are listed in the 'canonicalValues' property of the 'type' sub-attribute and in the 'referenceTypes' property of the '$ref' sub-attribute. This attribute exactly corresponds to the `members` attribute of the core Group resource. Service providers MUST support this attribute and MUST assert that it is always assigned. It MUST be singular and complex. It MUST have the same values for the properties `mutability`, `returned`, and `required` as the `group` attribute. This attribute contains the following sub-attributes:
 
     value
-    : The `id` of the referenced member resource. **REQUIRED**.
+    : The `id` of the referenced member resource. Service providers MUST support this attribute and MUST assert that it is always assigned. The sub-attribute value MUST NEVER change. The attribute MUST be singular and of type `string`. It MUST have the same values as the `member` attribute for the properties `mutability` and `required`.
 
     $ref
-    : The URI of the referenced member resource. Read-only.
+    : The URI of the referenced Group resource, as defined in [RFC7643], section 2.4. It MUST be singular and of type `reference`. Its `referenceTypes` property MUST reflect the resource types which can be members of the group, e.g.: `["User", Group"]`. It MUST have the property "mutability": "readOnly"`.
 
     type
-    : A string that specifies the resource type of the member, e.g., "User" or "Group". Read-only.
+    : A string that specifies the resource type of the member, e.g., "User" or "Group". Service provider MUST support this sub-attribute if more than one resource type can be member of a group. The attribute MUST be singular and of type `string`. Its `canonicalValues` property MUST reflect the resource types which can be members of the group, e.g.: `["User", Group"]`. It MUST have the property "mutability": "readOnly"`.
 
     display
-    : A human-readable name for the referenced member resource, generally corresponding to the member's `displayName` attribute. Read-only.
+    : A human-readable name for the referenced member resource, generally corresponding to the member's `displayName` attribute. The value MUST be the same as that of the `members.display` sub-attribute of the core Group resource if the 'value' sub-attributes references the same member resource. It MUST be a string. It MUST have the properties `"mutability": "readOnly"` and `"caseExact": false`.
     {: newline="true"}
 {: newline="true"}
-
-meta
-: A complex attribute containing metadata about the resource. This includes the `resourceType` (which MUST be "GroupMembership"), `created`, `lastModified`, and `location` attributes. This is a REQUIRED, read-only attribute. This attribute is a common attribute inherited from [RFC7643].
-{: newline="true"}
-
-If a service provider's implementation does not support creating or deleting `GroupMembership` resources, all attributes in the schema definition returned from `/Schemas` MUST have their `mutability` property set to `readOnly`.
 
 ## JSON Representation
 
@@ -150,6 +144,8 @@ The service provider's `ResourceType` schema, available at the `/ResourceTypes` 
 This section describes how `GroupMembership` resources are managed using the SCIM protocol. A `GroupMembership` is a simple resource that represents a linkage between a group and a member. As such, a membership can only be created, retrieved, or deleted. Changing the group or the member would fundamentally represent a new membership, not a modification of the existing one. Therefore, a service provider that supports this specification is NOT REQUIRED to support `PATCH` or `PUT` methods for this resource type. However, service providers may extend the resource type with additional attributes and MAY allow clients to change those attributes.
 
 Service providers which support `GroupMembership` resources MUST make all memberships available through the `GroupMembership` resource. If they support management of group memberships (create/delete), they MUST support it through the `GroupMembership` resource.
+
+Service providers MUST ensure that the core User resource's `groups` attribute remains consistent with the state of the `GroupMembership` resources.
 
 Service providers MAY additionally support the `members` attribute of the `Group` resource for retrieval or management of group memberships as defined in [RFC7643] for the purpose of backwards compatibility with existing clients. Service providers that support both the `members` attribute and the `GroupMembership` resource MUST ensure that the state of group memberships remains consistent across both representations. For example, deleting a `GroupMembership` resource MUST result in the corresponding member being removed from the `members` array on the `Group` resource, if that attribute is supported by the service provider.
 
