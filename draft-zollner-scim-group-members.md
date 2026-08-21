@@ -280,13 +280,7 @@ The service provider's `ResourceType` definition, available at the `/ResourceTyp
 
 The service provider's `Schema` definition, available at the `/Schemas` endpoint, MUST include the schema definitions for `urn:ietf:params:scim:schemas:core:2.0:GroupMembership` as defined in Section 2.3 of this document. The schema definition MUST correctly reflect the service provider's support, e.g. unsupported sub-attributes MUST be removed from the schema definition.
 
-# Schema Representation
-
-## GroupMembership Core Schema
-
-The following is the formal SCIM schema definition for the `GroupMembership`
-resource. The `schemas` and `meta` attributes are common attributes
-inherited from [RFC7643] and are included here for completeness.
+**Example Schema entry:**
 
 ~~~
 {
