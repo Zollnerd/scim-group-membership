@@ -191,15 +191,19 @@ POST /GroupMemberships
 
 ### Pagination
 
-Service providers MUST support pagination of `GroupMembership` resources to allow clients to retrieve large sets of memberships in manageable chunks.
+Service providers MUST support at least one method of pagination of `GroupMembership` resources to allow clients to retrieve large sets of memberships in manageable chunks.
 
-Index-based Pagination: The `startIndex` and `count` query parameters are the primary method for pagination, as defined in [RFC7644].
+Index-based pagination is defined in [RFC7644] and uses the `startIndex` and `count` query parameters.
 
 *   Example: `GET /scim/v2/GroupMemberships?startIndex=1&count=1000`
 
-Cursor as defined in [RFC9865] for improved performance with very large data sets.
+Cursor-based pagination is defined in [RFC9865] and uses the `cursor` and `count` query parameters.
 
 *   Example: `GET /scim/v2/GroupMemberships?count=1000&cursor=aW5kZXg9MTAx`
+
+Clients may let the service provider choose the pagination method by only using the `count` parameter with their first request.
+
+*   Example: `GET /scim/v2/GroupMemberships?count=1000`
 
 The response for a paginated request is a `ListResponse` containing the `GroupMembership` resources for the current page.
 
@@ -270,11 +274,15 @@ This section describes the requirements for service providers that implement the
 
 ## Discovering Support for the GroupMembership Resource
 
-Service providers that support the `GroupMembership` resource MUST declare this support in their `ResourceType` and `Schema` metadata.
+Service providers that support the `GroupMembership` resource MUST declare this support in their `/ResourceTypes` and `/Schemas` endpoints.
+
+### ResourceTypes Endpoint
+
+The service provider's `ResourceType` definition, available at the `/ResourceTypes` endpoint, MUST include the resource type definitions for `GroupMembership` with the base schema `urn:ietf:params:scim:schemas:core:2.0:GroupMembership`. The resource type definition MUST correctly reflect the service provider's support, e.g. schema extensions MUST be declared and available at the `/Schemas` endpoint.
 
 ### Schema Endpoint
 
-The service provider's `Schema` definition, available at the `/Schemas` endpoint, MUST include the full schema definitions for `urn:ietf:params:scim:schemas:core:2.0:GroupMembership` as defined in Section 2.3 of this document.
+The service provider's `Schema` definition, available at the `/Schemas` endpoint, MUST include the schema definitions for `urn:ietf:params:scim:schemas:core:2.0:GroupMembership` as defined in Section 2.3 of this document. The schema definition MUST correctly reflect the service provider's support, e.g. unsupported sub-attributes MUST be removed from the schema definition.
 
 ### Impact on the Group Resource
 
