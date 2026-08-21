@@ -395,6 +395,8 @@ The service provider's `Schema` definition, available at the `/Schemas` endpoint
   ],
   "meta": {
     "resourceType": "Schema",
+    "created": "2026-02-20T13:43:00Z",
+    "lastModified": "2026-02-20T13:43:00Z",
     "location": "https://example.com/scim/v2/Schemas/ \
       urn:ietf:params:scim:schemas:core:2.0:GroupMembership"
   }
