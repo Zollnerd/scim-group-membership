@@ -20,6 +20,10 @@ author:
     name: Danny Zollner
     organization: Okta
     email: danny.zollner@okta.com
+  -
+    name: Matthias Winter
+    organization: Garancy AG
+    email: matthias.winter@garancy.com
 
 normative:
   RFC7644:
@@ -41,7 +45,7 @@ Source for this draft and an issue tracker can be found at https://github.com/Zo
 
 # Introduction
 
-The System for Cross-domain Identity Management (SCIM) 2.0 protocol [RFC7643][RFC7644] is widely used for automating the provisioning of identities across disparate systems. While SCIM excels at managing individual User and Group resources, its design for representing relationships, specifically group memberships, encounters significant performance bottlenecks in large-scale enterprise environments.
+The System for Cross-domain Identity Management (SCIM) 2.0 protocol ([RFC7642], [RFC7643], [RFC7644], and [RFC9865]) is widely used for automating the provisioning of identities across disparate systems. While SCIM excels at managing individual User and Group resources, its design for representing relationships, specifically group memberships, encounters significant performance bottlenecks in large-scale enterprise environments.
 
 Currently, the "members" attribute of a Group resource is a multi-valued attribute. Because SCIM only supports paginating resources, a client requesting a Group resource must receive the entire list of group memberships in a single HTTP response. For a group with one million members, an HTTP response can reach approximately 200MB in size. These large payloads create several critical failure points including memory pressure and network timeouts.
 
@@ -130,7 +134,7 @@ Service providers MUST ensure that the core User resource's `groups` attribute r
 
 Service providers MAY additionally support the `members` attribute of the `Group` resource for retrieval or management of group memberships as defined in [RFC7643] for the purpose of backwards compatibility with existing clients. Service providers that support both the `members` attribute and the `GroupMembership` resource MUST ensure that the state of group memberships remains consistent across both representations. For example, deleting a `GroupMembership` resource MUST result in the corresponding member being removed from the `members` array on the `Group` resource, if that attribute is supported by the service provider.
 
-Service providers MUST ensure that the schema definition for the `Group.members` attribute reflects their support for it. E.g., if the service provider does not support the `members` attribute, it MUST be removed from the schema definition for the `Group` resource. If the service provider does not support retrieving the `members` attribute, it MUST be marked as `"returned": "never"`. If the service provider does not support managing the `members` attribute, it MUST be marked as `"mutability": "readOnly"`.
+Service providers MUST ensure that the schema definition for the `Group.members` attribute reflects their support for it. E.g., if the service provider does not support the `Group.members` attribute, it MUST be removed from the schema definition for the `Group` resource. If the service provider does not support retrieving memberships through the `Group.members` attribute, it MUST be marked as `"returned": "never"`. If the service provider does not support adding or removing members through the `Group.members` attribute, it MUST be marked as `"mutability": "readOnly"`.
 
 ## Creating GroupMembership Resources (POST)
 
