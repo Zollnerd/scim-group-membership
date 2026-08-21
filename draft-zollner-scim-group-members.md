@@ -284,13 +284,6 @@ The service provider's `ResourceType` definition, available at the `/ResourceTyp
 
 The service provider's `Schema` definition, available at the `/Schemas` endpoint, MUST include the schema definitions for `urn:ietf:params:scim:schemas:core:2.0:GroupMembership` as defined in Section 2.3 of this document. The schema definition MUST correctly reflect the service provider's support, e.g. unsupported sub-attributes MUST be removed from the schema definition.
 
-### Impact on the Group Resource
-
-As noted in Section 6, a service provider MAY continue to support the `members` attribute on the `Group` resource for backwards compatibility. When doing so, the service provider MUST maintain transactional integrity and consistency between the state of the `members` attribute and the state of the corresponding `GroupMembership` resources.
-
-For example, if a `DELETE` request to a `/GroupMemberships/{id}` URI is successful, the corresponding member MUST also be removed from the `members` array of the parent `Group` resource. Conversely, if a member is removed from a `Group` via a `PATCH` request to the `/Groups/{id}` URI, the corresponding `GroupMembership` resource MUST be deleted.
-
-
 # Schema Representation
 
 ## GroupMembership Core Schema
