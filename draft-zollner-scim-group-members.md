@@ -108,20 +108,22 @@ If a service provider's implementation does not support creating or deleting `Gr
 
 ## JSON Representation
 
-The following is an example of a `GroupMembership` resource in JSON format. This example represents the membership of a user in a group. ($ref values truncated for formatting purposes):
+The following is an example of a `GroupMembership` resource in JSON format. This example represents the membership of a user in a group:
 
 ~~~
 {
   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMembership"],
   "id": "gm12345",
   "group": {
-    "value": "e9e30dba-f08f-4139-944c-2e6949b80b05",
-    "$ref": "https://example.com/scim/v2/Groups/e9e3xxx"
+    "value": "e9e30db",
+    "$ref": "https://example.com/scim/v2/Groups/e9e30db",
+    "display": "Engineering Team"
   },
   "member": {
-    "value": "2819c223-7f76-453a-919d-413861904646",
-    "$ref": "https://example.com/scim/v2/Users/2819xxx",
-    "type": "User"
+    "value": "2819c22",
+    "$ref": "https://example.com/scim/v2/Users/2819c22",
+    "type": "User",
+    "display": "John Doe"
   },
   "meta": {
     "resourceType": "GroupMembership",
@@ -148,6 +150,8 @@ The service provider's `ResourceType` schema, available at the `/ResourceTypes` 
   "schema": "urn:ietf:params:scim:schemas:core:2.0:GroupMembership",
   "meta": {
     "resourceType": "ResourceType",
+    "created": "2026-02-20T13:43:00Z",
+    "lastModified": "2026-02-20T13:43:00Z",
     "location": "https://example.com/scim/v2/ResourceTypes/GroupMembership"
   }
 }
@@ -279,10 +283,10 @@ POST /GroupMemberships
 {
   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMembership"],
   "group": {
-    "value": "e9e30dba-f08f-4139-944c-2e6949b80b05"
+    "value": "e9e30db"
   },
   "member": {
-    "value": "2819c223-7f76-453a-919d-413861904646"
+    "value": "2819c22"
   }
 }
 ~~~
@@ -313,11 +317,11 @@ The response for a paginated request is a `ListResponse` containing the `GroupMe
 Service providers MUST support filtering on the `group.value` and `member.value` attributes. This enables clients to perform critical queries, such as "find all members of a specific group" or "find all groups a specific user is a member of."
 
 To find all members of a group:
-: GET /scim/v2/GroupMemberships?filter=group.value eq e9e30dba-f08f-4139-944c-2e6949b80b05"
+: GET /scim/v2/GroupMemberships?filter=group.value eq e9e30db"
 {: newline="true"}
 
 To find all groups for a member:
-: GET /scim/v2/GroupMemberships?filter=member.value eq "2819c223-7f76-453a-919d-413861904646"
+: GET /scim/v2/GroupMemberships?filter=member.value eq "2819c22"
 {: newline="true"}
 
 ## Deleting GroupMembership Resources (DELETE)
@@ -346,8 +350,8 @@ Example Bulk Request:
   "bulkId": "add-user-1",
   "data": {
     "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMembership"],
-    "group": { "value": "e9e30dba-f08f-4139-944c-2e6949b80b05" },
-    "member": { "value": "aed9876f-e83c-4359-99a3-37e082236081" }
+    "group": { "value": "e9e30db" },
+    "member": { "value": "aed987" }
   }
 },
 {
@@ -356,8 +360,8 @@ Example Bulk Request:
   "bulkId": "add-user-2",
   "data": {
     "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMembership"],
-    "group": { "value": "e9e30dba-f08f-4139-944c-2e6949b80b05" },
-    "member": { "value": "bce5231a-6d36-4b89-a249-1b913e16338b" }
+    "group": { "value": "e9e30db" },
+    "member": { "value": "bce5231" }
   }
 },
 {
