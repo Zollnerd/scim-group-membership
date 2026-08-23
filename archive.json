@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-08-20T01:40:32.510588+00:00",
+  "timestamp": "2026-08-23T01:48:46.310940+00:00",
   "repo": "Zollnerd/scim-group-membership",
   "labels": [
     {
@@ -76,6 +76,32 @@
       "mergeCommit": {
         "oid": "a268414813131e5ace1fb662c579aa9a145c8174"
       },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 2,
+      "id": "PR_kwDORcubHc8AAAABAkY58w",
+      "title": "Remove schema extension, rename ResourceType, and text improvements",
+      "url": "https://github.com/Zollnerd/scim-group-membership/pull/2",
+      "state": "OPEN",
+      "author": "drmawi",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Substantial changes:\r\n\r\n- Removed the extension schema (see my last e-mail)\r\n- Renamed the resource to GroupMembership, as suggested by Hans-Joerg\r\n- One paragraph disallowed any changes of GroupMembership resources. This is correct for the core resource as defined in the draft, which can only be created or deleted, but SCIM 2.0 allows service providers to add more attributes (e.g. through schema extensions), and those attributes may be changable. Potential use-cases are, for example, an expiration date for a membership, comments, or attributes that flag the membership as protected or primary.\r\n\r\nClarifications:\r\n\r\n- Remarks on the relation to the User.groups attribute\r\n- Improved definition of the GroupMembership attributes\r\n- Some more minor issues, see commit messages",
+      "createdAt": "2026-08-21T15:29:48Z",
+      "updatedAt": "2026-08-21T15:29:48Z",
+      "baseRepository": "Zollnerd/scim-group-membership",
+      "baseRefName": "main",
+      "baseRefOid": "64cc84084dd055916d591e85b333c6ec0f5e3f56",
+      "headRepository": "drmawi/scim-group-membership",
+      "headRefName": "main",
+      "headRefOid": "6a29ef8d677df5bbe7932b68b3c1f82fc278446e",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
       "comments": [],
       "reviews": []
     }
