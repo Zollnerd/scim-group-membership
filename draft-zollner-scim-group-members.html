@@ -4,28 +4,29 @@
 <meta charset="utf-8">
 <meta content="Common,Latin" name="scripts">
 <meta content="initial-scale=1.0" name="viewport">
-<title>SCIM Group Member Resource Type Extension</title>
+<title>SCIM Group Membership Resource Type Extension</title>
 <meta content="Danny Zollner" name="author">
 <meta content='
-       This document extends the System for Cross-domain Identity Management (SCIM) 2.0 standard by defining a new "GroupMember" top-level resource. Under the existing model defined in  , group memberships are represented as values in a multi-valued attribute within a Group resource. This architecture lacks native support for server-side pagination, filtering, or sorting of individual members. In deployments managing large-scale groups (e.g., 100,000 to 1,000,000 members or more), retrieving a Group resource results in massive HTTP response payloads that can exceed 100MB in size. This can lead to service timeouts, memory exhaustion, and network instability, and has led to many major SCIM implementations choosing to not support returning the value of the "members" attribute for Group resources. This extension introduces a flattened resource model that enables group memberships to benefit from pagination and other SCIM protocol features, ensuring interoperability and performance at scale. 
+       This document extends the System for Cross-domain Identity Management (SCIM) 2.0 standard by defining a new "GroupMembership" top-level resource. Under the existing model defined in  , group memberships are represented as values in a multi-valued attribute within a Group resource. This architecture lacks native support for server-side pagination, filtering, or sorting of individual members. In deployments managing large-scale groups (e.g., 100,000 to 1,000,000 members or more), retrieving a Group resource results in massive HTTP response payloads that can exceed 100MB in size. This can lead to service timeouts, memory exhaustion, and network instability, and has led to many major SCIM implementations choosing to not support returning the value of the "members" attribute for Group resources. This extension introduces a flattened resource model that enables group memberships to benefit from pagination and other SCIM protocol features, ensuring interoperability and performance at scale. 
     ' name="description">
-<meta content="xml2rfc 3.32.0" name="generator">
+<meta content="xml2rfc 3.34.0" name="generator">
 <meta content="Internet-Draft" name="keyword">
 <meta content="SCIM" name="keyword">
 <meta content="draft-zollner-scim-group-members-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.32.0
-    Python 3.12.12
-    ConfigArgParse 1.7
+  xml2rfc 3.34.0
+    Python 3.14.7
+    ConfigArgParse 1.7.5
     google-i18n-address 3.1.1
     intervaltree 3.2.1
     Jinja2 3.1.6
-    lxml 6.0.2
-    platformdirs 4.9.4
+    lxml 6.1.1
+    natsort 8.4.0
+    platformdirs 4.11.7
     pycountry 24.6.1
     PyYAML 6.0.3
-    requests 2.32.5
-    wcwidth 0.6.0
+    requests 2.33.1
+    wcwidth 0.8.3
 -->
 <link href="draft-zollner-scim-group-members.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -61,7 +62,6 @@
   src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin-ext.woff2') format('woff2');
   unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
-
 @font-face {
   font-family: 'Lora';
   font-style: italic;
@@ -110,7 +110,6 @@
   src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
-
 @font-face {
   font-family: 'Lora';
   font-style: normal;
@@ -175,7 +174,6 @@
   font-display: swap;
   src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
 }
 
 @font-face {
@@ -292,16 +290,19 @@ h1, h2, h3, h4, h5, h6 {
   font-size-adjust: 0.5;
   color: var(--title-color);
 }
-h1#title {
-  font-size: 32px;
-  line-height: 40px;
-  clear: both;
-}
-h1#title, h1#rfcnum {
-  margin: 1.5em 0 0.2em;
-}
-h1#rfcnum + h1#title {
-  margin: 0.2em 0;
+h1 {
+  &#title {
+    font-size: 32px;
+    line-height: 40px;
+    clear: both;
+    margin: 1.5em 0 0.2em;
+  }
+  &#rfcnum {
+    margin: 1.5em 0 0.2em;
+    & + h1#title {
+      margin: 0.2em 0;
+    }
+  }
 }
 
 h1, h2, h3 {
@@ -321,10 +322,10 @@ h4, h5, h6 {
 #abstract+p {
   font-size: 18px;
   line-height: 24px;
-}
-#abstract+p code, #abstract+p samp, #abstract+p tt {
-  font-size: 16px;
-  line-height: 0;
+  & code, & samp, & tt {
+    font-size: 16px;
+    line-height: 0;
+  }
 }
 
 p {
@@ -335,59 +336,59 @@ p {
 div {
   margin: 0;
 }
-.alignRight.art-text {
-  background-color: var(--highlight-color);
-  border: 1px solid var(--line-color);
-  border-radius: 3px;
-  padding: 0.5em 1em 0;
-  margin-bottom: 0.5em;
-}
-.alignRight.art-text pre {
-  padding: 0;
-  width: auto;
-}
 .alignRight {
   margin: 1em 0;
-}
-.alignRight > *:first-child {
-  border: none;
-  margin: 0;
-  float: right;
-  clear: both;
-}
-.alignRight > *:nth-child(2) {
-  clear: both;
-  display: block;
-  border: none;
+  &.art-text {
+    background-color: var(--highlight-color);
+    border: 1px solid var(--line-color);
+    border-radius: 3px;
+    padding: 0.5em 1em 0;
+    margin-bottom: 0.5em;
+    & pre {
+      padding: 0;
+      width: auto;
+    }
+  }
+  & > *:first-child {
+    border: none;
+    margin: 0;
+    float: right;
+    clear: both;
+  }
+  & > *:nth-child(2) {
+    clear: both;
+    display: block;
+    border: none;
+  }
 }
 svg {
   display: block;
-}
-/* font-family isn't space-separated, but =~ will have to do */
-svg[font-family~="monospace" i], svg [font-family~="monospace" i] {
-  font-family: var(--font-mono);
-}
-.alignCenter.art-text {
-  background-color: var(--highlight-color);
-  border: 1px solid var(--line-color);
-  border-radius: 3px;
-  padding: 0.5em 1em 0;
-  margin-bottom: 0.5em;
-}
-.alignCenter.art-text pre {
-  padding: 0;
-  width: auto;
+  /* font-family isn't space-separated, but =~ will have to do */
+  &[font-family~="monospace" i], & [font-family~="monospace" i] {
+    font-family: var(--font-mono);
+  }
 }
 .alignCenter {
   margin: 1em 0;
-}
-.alignCenter > *:first-child {
-  border: none;
-  /* this isn't optimal, but it's an existence proof.  PrinceXML doesn't
-     support flexbox yet.
-  */
-  display: table;
-  margin: 0 auto;
+  &.art-text {
+    background-color: var(--highlight-color);
+    border: 1px solid var(--line-color);
+    border-radius: 3px;
+    padding: 0.5em 1em 0;
+    margin-bottom: 0.5em;
+    & pre {
+      padding: 0;
+      width: auto;
+    }
+  }
+  & > *:first-child {
+    border: none;
+    /* this isn't optimal, but it's an existence proof.  PrinceXML doesn't
+       support flexbox yet.
+    */
+    display: table;
+    margin: 0 auto;
+  }
 }
 
 /* lists */
@@ -425,26 +426,25 @@ dl {
     --indent: 5ch;
     & > dt {
       min-width: calc(var(--indent) - 2ch);
+      float: none;
     }
-  }
-  &.olPercent > dt {
-    float: none;
   }
 
   dl > dd > & {
     margin-top: 0.5em;
     margin-bottom: 0;
   }
-}
-dl:not(.dlNewline) > dt {
-  float: left;
-  margin-right: 2ch;
-  min-width: 8ch;
-}
-dl > dd {
-  margin-bottom: .8em;
-  margin-left: var(--indent) !important; /* stupid element overrides */
-  min-height: 2ex;
+
+  &:not(.dlNewline) > dt {
+    float: left;
+    margin-right: 2ch;
+    min-width: 8ch;
+  }
+  & > dd {
+    margin-bottom: .8em;
+    margin-left: var(--indent) !important; /* stupid element overrides */
+    min-height: 2ex;
+  }
 }
 :is(dl.compact, .dlCompact) > dd {
   margin-bottom: 0;
@@ -460,20 +460,22 @@ dl > dd {
 }
 
 /* links */
-a, a[href].selfRef:hover {
+a {
   text-decoration: none;
+  &[href] {
+    color: var(--link-color);
+    &:hover { text-decoration: underline; }
+    &.selfRef {
+      color: var(--text-color);
+      &:hover {
+        text-decoration: none;
+        background-color: var(--highlight-color);
+      }
+    }
+  }
 }
-a[href] {
-  color: var(--link-color);
-}
-a[href].selfRef, .iref + a[href].internal {
+.iref + a[href].internal {
   color: var(--text-color);
-}
-a[href]:hover {
-  text-decoration: underline;
-}
-a[href].selfRef:hover {
-  background-color: var(--highlight-color);
 }
 a.xref:is(.cite, .auto), :is(#status-of-memo, #copyright) a {
   white-space: nowrap;
@@ -509,9 +511,9 @@ img {
 figure {
   margin: 0.5em 0;
   padding: 0;
-}
-figure blockquote {
-  margin: 0.8em 0.4em 0.4em;
+  & blockquote {
+    margin: 0.8em 0.4em 0.4em;
+  }
 }
 figcaption, caption {
   font-style: italic;
@@ -521,17 +523,19 @@ figcaption, caption {
 }
 @media screen {
   /* Auto-collapse boilerplate. */
-  :is(#status-of-memo, #copyright) p {
-    margin: -2px 0;
-    max-height: 0;
-    transition: max-height 2s ease, margin 0.5s ease 0.5s;
-    overflow: hidden;
-  }
-  :is(#status-of-memo, #copyright):hover p,
-  :is(#status-of-memo, #copyright) h2:target ~ p {
-    margin: 0.5em 0;
-    max-height: 500px;
-    overflow: auto;
+  :is(#status-of-memo, #copyright) {
+    & p {
+      margin: -2px 0;
+      max-height: 0;
+      transition: max-height 2s ease, margin 0.5s ease 0.5s;
+      overflow: hidden;
+    }
+    &:hover p,
+    & h2:target ~ p {
+      margin: 0.5em 0;
+      max-height: 500px;
+      overflow: auto;
+    }
   }
   pre, svg {
     display: inline-block;
@@ -581,25 +585,17 @@ table {
   max-width: 100%;
   margin: 0 0 1em;
   border-collapse: collapse;
-}
-table.right {
-  margin-left: auto;
-}
-table.center {
-  margin-left: auto;
-  margin-right: auto;
-}
-table.left {
-  margin-right: auto;
-}
-table .text-left {
-  text-align: left;
-}
-table .text-center {
-  text-align: center;
-}
-table .text-right {
-  text-align: right;
+  &.right { margin-left: auto; }
+  &.center { margin-left: auto; margin-right: auto; }
+  &.left { margin-right: auto; }
+  & .text-left { text-align: left; }
+  & .text-center { text-align: center; }
+  & .text-right { text-align: right; }
+  & caption {
+    margin: 0;
+    padding: 3px 0 3px 1em;
+  }
+  & p { margin: 0; }
 }
 
 thead, tbody {
@@ -619,13 +615,6 @@ th {
 :is(tr:nth-child(2n+1), thead+tbody > tr:nth-child(2n)) > td {
   background-color: var(--highlight-color);
 }
-table caption {
-  margin: 0;
-  padding: 3px 0 3px 1em;
-}
-table p {
-  margin: 0;
-}
 
 /* pilcrow */
 a.pilcrow {
@@ -636,18 +625,16 @@ a.pilcrow {
     color: var(--pilcrow-weak);
     &:hover { text-decoration: none; }
   }
-}
-@media not print {
-  :hover > a.pilcrow, a.pilcrow:focus {
-    opacity: 1;
+  @media not print {
+    :hover > &, &:focus {
+      opacity: 1;
+    }
+    &[href]:hover {
+      color: var(--pilcrow-strong);
+      background-color: transparent;
+    }
   }
-  a.pilcrow[href]:hover {
-    color: var(--pilcrow-strong);
-    background-color: transparent;
-  }
-}
-@media print {
-  a.pilcrow {
+  @media print {
     display: none;
   }
 }
@@ -706,9 +693,9 @@ sub, sup {
   font-size: 0.9em;
   font-style: italic;
   margin-top: 2em;
-}
-.docInfo .prepared {
-  float: right;
+  & .prepared {
+    float: right;
+  }
 }
 
 /* table of contents */
@@ -798,23 +785,27 @@ hr.addr {
   max-width: calc(100% - 16px);
 }
 @media (min-width: 500px) {
-  #authors-addresses > section {
-    column-count: 2;
-    column-gap: 20px;
-  }
-  #authors-addresses > section > h2 {
-    column-span: all;
-  }
-  /* hack for break-inside: avoid-column */
-  #authors-addresses address {
-    display: inline-block;
-    break-inside: avoid-column;
+  #authors-addresses {
+    & > section {
+      column-count: 2;
+      column-gap: 20px;
+    }
+    & > section > h2 {
+      column-span: all;
+    }
+    /* hack for break-inside: avoid-column */
+    & address {
+      display: inline-block;
+      break-inside: avoid-column;
+    }
   }
 }
 
 /* Comments */
-.rfcEditorRemove p:first-of-type {
-  font-style: italic;
+.rfcEditorRemove {
+  & p:first-of-type {
+    font-style: italic;
+  }
 }
 .cref {
   background-color: rgba(249, 232, 105, 0.3);
@@ -825,19 +816,21 @@ hr.addr {
 }
 
 @media screen {
-  #toc nav {
-    font-family: var(--font-title);
-    font-weight: 360;
-    & > ul { margin-bottom: 2em; }
-    & ul {
-      margin: 0 0 0 4px;
-      & :is(p, li) {
-        margin: 2px 0;
+  #toc {
+    & nav {
+      font-family: var(--font-title);
+      font-weight: 360;
+      & > ul { margin-bottom: 2em; }
+      & ul {
+        margin: 0 0 0 4px;
+        & :is(p, li) {
+          margin: 2px 0;
+        }
       }
     }
-  }
-  #toc a.toplink {
-    float: right;
+    & a.toplink {
+      float: right;
+    }
   }
 }
 @media not screen {
@@ -858,54 +851,54 @@ hr.addr {
     margin: 0;
     border-bottom: 1px solid #ccc;
     opacity: 0.6;
-  }
-  #toc h2 {
-    margin: 0;
-    padding: 2px 0 2px 6px;
-    padding-right: 1em;
-    font-size: 18px;
-    line-height: 24px;
-    min-width: 190px;
-    text-align: right;
-    background-color: #444;
-    color: white;
-    cursor: pointer;
-    &::before { /* css hamburger */
-      float: right;
-      position: relative;
-      width: 1em;
-      height: 1px;
-      left: -164px;
-      margin: 8px 0 0 0;
-      background: white none repeat scroll 0 0;
-      box-shadow: 0 4px 0 0 white, 0 8px 0 0 white;
-      content: "";
+    & h2 {
+      margin: 0;
+      padding: 2px 0 2px 6px;
+      padding-right: 1em;
+      font-size: 18px;
+      line-height: 24px;
+      min-width: 190px;
+      text-align: right;
+      background-color: #444;
+      color: white;
+      cursor: pointer;
+      &::before { /* css hamburger */
+        float: right;
+        position: relative;
+        width: 1em;
+        height: 1px;
+        left: -164px;
+        margin: 8px 0 0 0;
+        background: white none repeat scroll 0 0;
+        box-shadow: 0 4px 0 0 white, 0 8px 0 0 white;
+        content: "";
+      }
     }
-  }
-  #toc nav {
-    display: none;
-    background-color: var(--background-color);
-    padding: 0.5em 1em 1em;
-    overflow: auto;
-    overscroll-behavior: contain;
-    height: calc(100vh - 48px);
-    border-left: 1px solid #ddd;
-  }
-  #toc.active {
-    opacity: 1;
-    & nav { display: block; }
-  }
-  /* Make the collapsed ToC header render white on gray also when it's a link */
-  #toc h2 a,
-  #toc h2 a:is(:link, :focus, :hover),
-  #toc a.toplink,
-  #toc a.toplink:hover {
-    color: white;
-    background-color: #444;
-    text-decoration: none;
-  }
-  #toc a.toplink {
-    margin: 2px 0.5em 0;
+    & nav {
+      display: none;
+      background-color: var(--background-color);
+      padding: 0.5em 1em 1em;
+      overflow: auto;
+      overscroll-behavior: contain;
+      height: calc(100vh - 48px);
+      border-left: 1px solid #ddd;
+    }
+    &.active {
+      opacity: 1;
+      & nav { display: block; }
+    }
+    /* Make the collapsed ToC header render white on gray also when it's a link */
+    & h2 a,
+    & h2 a:is(:link, :focus, :hover),
+    & a.toplink,
+    & a.toplink:hover {
+      color: white;
+      background-color: #444;
+      text-decoration: none;
+    }
+    & a.toplink {
+      margin: 2px 0.5em 0;
+    }
   }
 }
 
@@ -924,26 +917,26 @@ hr.addr {
     margin: 0;
     padding: 0;
     z-index: 1;
-  }
-  #toc h2 {
-    margin: 0;
-    padding: 0.25em 1em 1em 0;
-  }
-  #toc nav {
-    display: block;
-    height: calc(90vh - 84px);
-    bottom: 0;
-    padding: 0.5em 0 2em;
-    overflow: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: thin;
+    & h2 {
+      margin: 0;
+      padding: 0.25em 1em 1em 0;
+    }
+    & nav {
+      display: block;
+      height: calc(90vh - 84px);
+      bottom: 0;
+      padding: 0.5em 0 2em;
+      overflow: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+    }
+    & a.toplink {
+      margin: 8px 0.5em 0;
+    }
   }
   img { /* future proofing */
     max-width: 100%;
     height: auto;
-  }
-  #toc a.toplink {
-    margin: 8px 0.5em 0;
   }
 }
 
@@ -959,12 +952,13 @@ hr.addr {
   #n-copyright-notice {
     border-bottom: none;
   }
-  #toc, #n-introduction {
-    page-break-before: always;
-  }
   #toc {
+    page-break-before: always;
     border-top: none;
     padding-top: 0;
+  }
+  #n-introduction {
+    page-break-before: always;
   }
   figure, pre, .vcard {
     page-break-inside: avoid;
@@ -1026,17 +1020,19 @@ hr.addr {
 }
 
 /* SVG Trick: a prefix match works because only black and white are allowed */
-svg :is([stroke="black"], [stroke^="#000"]) {
-  stroke: var(--text-color);
-}
-svg :is([stroke="white"], [stroke^="#fff"]) {
-  stroke: var(--background-color);
-}
-svg :is([fill="black"], [fill^="#000"], :not([fill])) {
-  fill: var(--text-color);
-}
-svg :is([fill="white"], [fill^="#fff"]) {
-  fill: var(--background-color);
+svg {
+  & :is([stroke="black"], [stroke^="#000"]) {
+    stroke: var(--text-color);
+  }
+  & :is([stroke="white"], [stroke^="#fff"]) {
+    stroke: var(--background-color);
+  }
+  & :is([fill="black"], [fill^="#000"], :not([fill])) {
+    fill: var(--text-color);
+  }
+  & :is([fill="white"], [fill^="#fff"]) {
+    fill: var(--background-color);
+  }
 }
 </style>
 
@@ -1045,12 +1041,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <table class="ears">
 <thead><tr>
 <td class="left">Internet-Draft</td>
-<td class="center">SCIM Group Member Resource</td>
-<td class="right">April 2026</td>
+<td class="center">SCIM Group Membership Resource</td>
+<td class="right">September 2026</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Zollner</td>
-<td class="center">Expires 17 October 2026</td>
+<td class="center">Expires 7 March 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1063,12 +1059,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-zollner-scim-group-members-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-04-15" class="published">15 April 2026</time>
+<time datetime="2026-09-03" class="published">3 September 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-10-17">17 October 2026</time></dd>
+<dd class="expires"><time datetime="2027-03-07">7 March 2027</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1078,10 +1074,10 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </dd>
 </dl>
 </div>
-<h1 id="title">SCIM Group Member Resource Type Extension</h1>
+<h1 id="title">SCIM Group Membership Resource Type Extension</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
-<p id="section-abstract-1">This document extends the System for Cross-domain Identity Management (SCIM) 2.0 standard by defining a new "GroupMember" top-level resource. Under the existing model defined in <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span>, group memberships are represented as values in a multi-valued attribute within a Group resource. This architecture lacks native support for server-side pagination, filtering, or sorting of individual members. In deployments managing large-scale groups (e.g., 100,000 to 1,000,000 members or more), retrieving a Group resource results in massive HTTP response payloads that can exceed 100MB in size. This can lead to service timeouts, memory exhaustion, and network instability, and has led to many major SCIM implementations choosing to not support returning the value of the "members" attribute for Group resources. This extension introduces a flattened resource model that enables group memberships to benefit from pagination and other SCIM protocol features, ensuring interoperability and performance at scale.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-1">This document extends the System for Cross-domain Identity Management (SCIM) 2.0 standard by defining a new "GroupMembership" top-level resource. Under the existing model defined in <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span>, group memberships are represented as values in a multi-valued attribute within a Group resource. This architecture lacks native support for server-side pagination, filtering, or sorting of individual members. In deployments managing large-scale groups (e.g., 100,000 to 1,000,000 members or more), retrieving a Group resource results in massive HTTP response payloads that can exceed 100MB in size. This can lead to service timeouts, memory exhaustion, and network instability, and has led to many major SCIM implementations choosing to not support returning the value of the "members" attribute for Group resources. This extension introduces a flattened resource model that enables group memberships to benefit from pagination and other SCIM protocol features, ensuring interoperability and performance at scale.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <div id="status-of-memo">
 <section id="section-boilerplate.1">
@@ -1102,7 +1098,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 17 October 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 7 March 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1141,7 +1137,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
             <p id="section-toc.1-1.3.1" class="keepWithNext"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-notational-conventions" class="internal xref">Notational Conventions</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
-            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-the-groupmember-resource" class="internal xref">The GroupMember Resource</a></p>
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-the-groupmembership-resourc" class="internal xref">The GroupMembership Resource</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1">
                 <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-resource-properties" class="internal xref">Resource Properties</a></p>
@@ -1174,13 +1170,13 @@ svg :is([fill="white"], [fill^="#fff"]) {
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
-            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-managing-groupmember-resour" class="internal xref">Managing GroupMember Resources</a></p>
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-managing-groupmembership-re" class="internal xref">Managing GroupMembership Resources</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.1">
-                <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="auto internal xref">6.1</a>.  <a href="#name-creating-groupmember-resour" class="internal xref">Creating GroupMember Resources (POST)</a></p>
+                <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="auto internal xref">6.1</a>.  <a href="#name-creating-groupmembership-re" class="internal xref">Creating GroupMembership Resources (POST)</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.2">
-                <p id="section-toc.1-1.6.2.2.1"><a href="#section-6.2" class="auto internal xref">6.2</a>.  <a href="#name-retrieving-groupmember-reso" class="internal xref">Retrieving GroupMember Resources (GET)</a></p>
+                <p id="section-toc.1-1.6.2.2.1"><a href="#section-6.2" class="auto internal xref">6.2</a>.  <a href="#name-retrieving-groupmembership-" class="internal xref">Retrieving GroupMembership Resources (GET)</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.2.2.1">
                     <p id="section-toc.1-1.6.2.2.2.1.1"><a href="#section-6.2.1" class="auto internal xref">6.2.1</a>.  <a href="#name-pagination" class="internal xref">Pagination</a></p>
@@ -1191,7 +1187,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
                 </ul>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.3">
-                <p id="section-toc.1-1.6.2.3.1"><a href="#section-6.3" class="auto internal xref">6.3</a>.  <a href="#name-deleting-groupmember-resour" class="internal xref">Deleting GroupMember Resources (DELETE)</a></p>
+                <p id="section-toc.1-1.6.2.3.1"><a href="#section-6.3" class="auto internal xref">6.3</a>.  <a href="#name-deleting-groupmembership-re" class="internal xref">Deleting GroupMembership Resources (DELETE)</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.4">
                 <p id="section-toc.1-1.6.2.4.1"><a href="#section-6.4" class="auto internal xref">6.4</a>.  <a href="#name-bulk-operations" class="internal xref">Bulk Operations</a></p>
@@ -1202,7 +1198,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
             <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-service-provider-considerat" class="internal xref">Service Provider Considerations</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.1">
-                <p id="section-toc.1-1.7.2.1.1"><a href="#section-7.1" class="auto internal xref">7.1</a>.  <a href="#name-discovering-support-for-the" class="internal xref">Discovering Support for the GroupMember Resource</a></p>
+                <p id="section-toc.1-1.7.2.1.1"><a href="#section-7.1" class="auto internal xref">7.1</a>.  <a href="#name-discovering-support-for-the" class="internal xref">Discovering Support for the GroupMembership Resource</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.1.2.1">
                     <p id="section-toc.1-1.7.2.1.2.1.1"><a href="#section-7.1.1" class="auto internal xref">7.1.1</a>.  <a href="#name-schema-endpoint" class="internal xref">Schema Endpoint</a></p>
@@ -1218,7 +1214,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
             <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-schema-representation" class="internal xref">Schema Representation</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.1">
-                <p id="section-toc.1-1.8.2.1.1"><a href="#section-8.1" class="auto internal xref">8.1</a>.  <a href="#name-groupmember-core-schema" class="internal xref">GroupMember Core Schema</a></p>
+                <p id="section-toc.1-1.8.2.1.1"><a href="#section-8.1" class="auto internal xref">8.1</a>.  <a href="#name-groupmembership-core-schema" class="internal xref">GroupMembership Core Schema</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.2">
                 <p id="section-toc.1-1.8.2.2.1"><a href="#section-8.2" class="auto internal xref">8.2</a>.  <a href="#name-membersmetadata-schema-exte" class="internal xref">membersMetadata Schema Extension</a></p>
@@ -1264,8 +1260,8 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <a href="#section-2" class="section-number selfRef">2. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
       </h2>
 <p id="section-2-1">The System for Cross-domain Identity Management (SCIM) 2.0 protocol <span><a href="#RFC7644" class="internal xref">RFC7643</a> [<a href="#RFC7644" class="cite xref">RFC7644</a>]</span> is widely used for automating the provisioning of identities across disparate systems. While SCIM excels at managing individual User and Group resources, its design for representing relationships, specifically group memberships, encounters significant performance bottlenecks in large-scale enterprise environments.<a href="#section-2-1" class="pilcrow">¶</a></p>
-<p id="section-2-2">Currently, the "members" attribute of a Group resource is a multi-valued attribute. Because SCIM only supports paginating resources, a client requesting a Group resource must receive the entire list of group members in a single HTTP response. For a group with one million members, an HTTP response can reach approximately 200MB in size. These large payloads create several critical failure points including memory pressure and network timeouts.<a href="#section-2-2" class="pilcrow">¶</a></p>
-<p id="section-2-3">This document proposes the "GroupMember" resource type. By treating a membership as a first-class, top-level resource, Service Providers can leverage existing SCIM query parameters including filter, count, and multiple pagination methods, allowing them to implement a scaleable and reliable interface for managing groups of any size.<a href="#section-2-3" class="pilcrow">¶</a></p>
+<p id="section-2-2">Currently, the "members" attribute of a Group resource is a multi-valued attribute. Because SCIM only supports paginating resources, a client requesting a Group resource must receive the entire list of group memberships in a single HTTP response. For a group with one million members, an HTTP response can reach approximately 200MB in size. These large payloads create several critical failure points including memory pressure and network timeouts.<a href="#section-2-2" class="pilcrow">¶</a></p>
+<p id="section-2-3">This document proposes the "GroupMembership" resource type. By treating a membership as a first-class, top-level resource, Service Providers can leverage existing SCIM query parameters including filter, count, and multiple pagination methods, allowing them to implement a scaleable and reliable interface for managing groups of any size.<a href="#section-2-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="notational-conventions">
@@ -1279,30 +1275,30 @@ described in BCP 14 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</s
 appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="the-groupmember-resource">
+<div id="the-groupmembership-resource">
 <section id="section-4">
-      <h2 id="name-the-groupmember-resource">
-<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-the-groupmember-resource" class="section-name selfRef">The GroupMember Resource</a>
+      <h2 id="name-the-groupmembership-resourc">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-the-groupmembership-resourc" class="section-name selfRef">The GroupMembership Resource</a>
       </h2>
-<p id="section-4-1">This section defines the <code>GroupMember</code> resource, which represents a single membership relationship between a SCIM Group and a member. By representing each membership as a distinct, top-level resource, Service Providers can manage group memberships individually, allowing for pagination, filtering, and other operations at scale.<a href="#section-4-1" class="pilcrow">¶</a></p>
-<p id="section-4-2">A <code>GroupMember</code> resource represents a direct membership only. Indirect memberships, as defined in <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span> Section 4.1.2, <span class="bcp14">MUST NOT</span> be represented as <code>GroupMember</code> resources.<a href="#section-4-2" class="pilcrow">¶</a></p>
+<p id="section-4-1">This section defines the <code>GroupMembership</code> resource, which represents a single membership relationship between a SCIM Group and a member. By representing each membership as a distinct, top-level resource, Service Providers can manage group memberships individually, allowing for pagination, filtering, and other operations at scale.<a href="#section-4-1" class="pilcrow">¶</a></p>
+<p id="section-4-2">A <code>GroupMembership</code> resource represents a direct membership only. Indirect memberships, as defined in <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span> Section 4.1.2, <span class="bcp14">MUST NOT</span> be represented as <code>GroupMembership</code> resources.<a href="#section-4-2" class="pilcrow">¶</a></p>
 <div id="resource-properties">
 <section id="section-4.1">
         <h3 id="name-resource-properties">
 <a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-resource-properties" class="section-name selfRef">Resource Properties</a>
         </h3>
-<p id="section-4.1-1">The <code>GroupMember</code> resource is defined by the following properties:<a href="#section-4.1-1" class="pilcrow">¶</a></p>
+<p id="section-4.1-1">The <code>GroupMembership</code> resource is defined by the following properties:<a href="#section-4.1-1" class="pilcrow">¶</a></p>
 <span class="break"></span><dl class="dlNewline" id="section-4.1-2">
           <dt id="section-4.1-2.1">schemas</dt>
           <dd style="margin-left: 1.5em" id="section-4.1-2.2">
-            <p id="section-4.1-2.2.1">A multi-valued attribute that contains the SCIM schema URNs for this resource. The URN for the GroupMember resource's core schema is <code>urn:ietf:params:scim:schemas:core:2.0:GroupMember</code>. This is a <strong><span class="bcp14">REQUIRED</span></strong> attribute. This attribute is a common attribute inherited from <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span>.<a href="#section-4.1-2.2.1" class="pilcrow">¶</a></p>
+            <p id="section-4.1-2.2.1">A multi-valued attribute that contains the SCIM schema URNs for this resource. The URN for the GroupMembership resource's core schema is <code>urn:ietf:params:scim:schemas:core:2.0:GroupMembership</code>. This is a <strong><span class="bcp14">REQUIRED</span></strong> attribute. This attribute is a common attribute inherited from <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span>.<a href="#section-4.1-2.2.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 </dl>
 <span class="break"></span><dl class="dlNewline" id="section-4.1-3">
           <dt id="section-4.1-3.1">id</dt>
           <dd style="margin-left: 1.5em" id="section-4.1-3.2">
-            <p id="section-4.1-3.2.1">A unique identifier for the <code>GroupMember</code> resource, generated by the Service Provider. This is a <strong><span class="bcp14">REQUIRED</span></strong>, read-only attribute. Clients <span class="bcp14">MUST</span> treat this value as opaque. The <code>id</code> serves as the stable identifier for a membership link — it uniquely identifies the relationship between a specific group and a specific member, and is the value used to address the resource at the <code>/GroupMembers/{id}</code> URI. This attribute is a common attribute inherited from <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span>.<a href="#section-4.1-3.2.1" class="pilcrow">¶</a></p>
+            <p id="section-4.1-3.2.1">A unique identifier for the <code>GroupMembership</code> resource, generated by the Service Provider. This is a <strong><span class="bcp14">REQUIRED</span></strong>, read-only attribute. Clients <span class="bcp14">MUST</span> treat this value as opaque. The <code>id</code> serves as the stable identifier for a membership link — it uniquely identifies the relationship between a specific group and a specific member, and is the value used to address the resource at the <code>/GroupMemberships/{id}</code> URI. This attribute is a common attribute inherited from <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span>.<a href="#section-4.1-3.2.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 </dl>
@@ -1362,11 +1358,11 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
 <span class="break"></span><dl class="dlNewline" id="section-4.1-6">
           <dt id="section-4.1-6.1">meta</dt>
           <dd style="margin-left: 1.5em" id="section-4.1-6.2">
-            <p id="section-4.1-6.2.1">A complex attribute containing metadata about the resource. This includes the <code>resourceType</code> (which <span class="bcp14">MUST</span> be "GroupMember"), <code>created</code>, <code>lastModified</code>, and <code>location</code> attributes. This is a <span class="bcp14">REQUIRED</span>, read-only attribute. This attribute is a common attribute inherited from <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span>.<a href="#section-4.1-6.2.1" class="pilcrow">¶</a></p>
+            <p id="section-4.1-6.2.1">A complex attribute containing metadata about the resource. This includes the <code>resourceType</code> (which <span class="bcp14">MUST</span> be "GroupMembership"), <code>created</code>, <code>lastModified</code>, and <code>location</code> attributes. This is a <span class="bcp14">REQUIRED</span>, read-only attribute. This attribute is a common attribute inherited from <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span>.<a href="#section-4.1-6.2.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 </dl>
-<p id="section-4.1-7">If a Service Provider's implementation does not support creating or deleting <code>GroupMember</code> resources, all attributes in the schema definition returned from <code>/Schemas</code> <span class="bcp14">MUST</span> have their <code>mutability</code> property set to <code>readOnly</code>.<a href="#section-4.1-7" class="pilcrow">¶</a></p>
+<p id="section-4.1-7">If a Service Provider's implementation does not support creating or deleting <code>GroupMembership</code> resources, all attributes in the schema definition returned from <code>/Schemas</code> <span class="bcp14">MUST</span> have their <code>mutability</code> property set to <code>readOnly</code>.<a href="#section-4.1-7" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="json-representation">
@@ -1374,11 +1370,11 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
         <h3 id="name-json-representation">
 <a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-json-representation" class="section-name selfRef">JSON Representation</a>
         </h3>
-<p id="section-4.2-1">The following is an example of a <code>GroupMember</code> resource in JSON format. This example represents the membership of a User in a Group. ($ref values truncated for formatting purposes):<a href="#section-4.2-1" class="pilcrow">¶</a></p>
+<p id="section-4.2-1">The following is an example of a <code>GroupMembership</code> resource in JSON format. This example represents the membership of a User in a Group. ($ref values truncated for formatting purposes):<a href="#section-4.2-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.2-2">
 <pre>
 {
-  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMember"],
+  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMembership"],
   "id": "gm12345",
   "group": {
     "value": "e9e30dba-f08f-4139-944c-2e6949b80b05",
@@ -1390,10 +1386,10 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
     "type": "User"
   },
   "meta": {
-    "resourceType": "GroupMember",
+    "resourceType": "GroupMembership",
     "created": "2026-02-24T20:26:44Z",
     "lastModified": "2026-02-24T20:26:44Z",
-    "location": "https://example.com/scim/v2/GroupMembers/gm12345"
+    "location": "https://example.com/scim/v2/GroupMemberships/gm12345"
   }
 }
 </pre><a href="#section-4.2-2" class="pilcrow">¶</a>
@@ -1405,20 +1401,20 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
         <h3 id="name-resource-type-representatio">
 <a href="#section-4.3" class="section-number selfRef">4.3. </a><a href="#name-resource-type-representatio" class="section-name selfRef">Resource Type Representation</a>
         </h3>
-<p id="section-4.3-1">The Service Provider's <code>ResourceType</code> schema, available at the <code>/ResourceTypes</code> endpoint, <span class="bcp14">MUST</span> include an entry for "GroupMember".<a href="#section-4.3-1" class="pilcrow">¶</a></p>
+<p id="section-4.3-1">The Service Provider's <code>ResourceType</code> schema, available at the <code>/ResourceTypes</code> endpoint, <span class="bcp14">MUST</span> include an entry for "GroupMembership".<a href="#section-4.3-1" class="pilcrow">¶</a></p>
 <p id="section-4.3-2"><strong>Example ResourceType entry:</strong><a href="#section-4.3-2" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.3-3">
 <pre>
 {
   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:ResourceType"],
-  "id": "GroupMember",
-  "name": "GroupMember",
-  "endpoint": "/GroupMembers",
+  "id": "GroupMembership",
+  "name": "GroupMembership",
+  "endpoint": "/GroupMemberships",
   "description": "Resource representing a single group membership.",
-  "schema": "urn:ietf:params:scim:schemas:core:2.0:GroupMember",
+  "schema": "urn:ietf:params:scim:schemas:core:2.0:GroupMembership",
   "meta": {
     "resourceType": "ResourceType",
-    "location": "https://example.com/scim/v2/ResourceTypes/GroupMember"
+    "location": "https://example.com/scim/v2/ResourceTypes/GroupMembership"
   }
 }
 </pre><a href="#section-4.3-3" class="pilcrow">¶</a>
@@ -1569,35 +1565,35 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
 </div>
 </section>
 </div>
-<div id="managing-groupmember-resources">
+<div id="managing-groupmembership-resources">
 <section id="section-6">
-      <h2 id="name-managing-groupmember-resour">
-<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-managing-groupmember-resour" class="section-name selfRef">Managing GroupMember Resources</a>
+      <h2 id="name-managing-groupmembership-re">
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-managing-groupmembership-re" class="section-name selfRef">Managing GroupMembership Resources</a>
       </h2>
-<p id="section-6-1">This section describes how <code>GroupMember</code> resources are managed using the SCIM protocol. A <code>GroupMember</code> is a simple resource that represents a linkage between a group and a member. As such, a membership can only be created, retrieved, or deleted. Updating a membership serves little practical value, as changing the group or the member would fundamentally represent a new membership, not a modification of the existing one. Therefore, a Service Provider that supports this specification <span class="bcp14">MUST</span> only support the <code>POST</code>, <code>GET</code>, and <code>DELETE</code> methods for this resource type.<a href="#section-6-1" class="pilcrow">¶</a></p>
-<p id="section-6-2">Service Providers <span class="bcp14">MAY</span> also support management of group members through the existing <code>members</code> attribute of the <code>Group</code> resource as defined in <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span> for the purpose of backwards compatibility with existing clients. However, when adding or removing members from a group that also has <code>GroupMember</code> resources, Service Providers <span class="bcp14">MUST</span> ensure that the state remains consistent across both representations. For example, deleting a <code>GroupMember</code> resource <span class="bcp14">MUST</span> result in the corresponding member being removed from the <code>members</code> array on the <code>Group</code> resource, if that attribute is supported by the Service Provider.<a href="#section-6-2" class="pilcrow">¶</a></p>
-<div id="creating-groupmember-resources-post">
+<p id="section-6-1">This section describes how <code>GroupMembership</code> resources are managed using the SCIM protocol. A <code>GroupMembership</code> is a simple resource that represents a linkage between a group and a member. As such, a membership can only be created, retrieved, or deleted. Updating a membership serves little practical value, as changing the group or the member would fundamentally represent a new membership, not a modification of the existing one. Therefore, a Service Provider that supports this specification <span class="bcp14">MUST</span> only support the <code>POST</code>, <code>GET</code>, and <code>DELETE</code> methods for this resource type.<a href="#section-6-1" class="pilcrow">¶</a></p>
+<p id="section-6-2">Service Providers <span class="bcp14">MAY</span> also support management of group memberships through the existing <code>members</code> attribute of the <code>Group</code> resource as defined in <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span> for the purpose of backwards compatibility with existing clients. However, when adding or removing members from a group that also has <code>GroupMembership</code> resources, Service Providers <span class="bcp14">MUST</span> ensure that the state remains consistent across both representations. For example, deleting a <code>GroupMembership</code> resource <span class="bcp14">MUST</span> result in the corresponding member being removed from the <code>members</code> array on the <code>Group</code> resource, if that attribute is supported by the Service Provider.<a href="#section-6-2" class="pilcrow">¶</a></p>
+<div id="creating-groupmembership-resources-post">
 <section id="section-6.1">
-        <h3 id="name-creating-groupmember-resour">
-<a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-creating-groupmember-resour" class="section-name selfRef">Creating GroupMember Resources (POST)</a>
+        <h3 id="name-creating-groupmembership-re">
+<a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-creating-groupmembership-re" class="section-name selfRef">Creating GroupMembership Resources (POST)</a>
         </h3>
-<p id="section-6.1-1">To add a new member to a group, the client sends a <code>POST</code> request to the <code>GroupMembers</code> endpoint. The request body <span class="bcp14">MUST</span> contain a <code>GroupMember</code> resource, specifying the <code>group.value</code> and <code>member.value</code>.<a href="#section-6.1-1" class="pilcrow">¶</a></p>
+<p id="section-6.1-1">To add a new member to a group, the client sends a <code>POST</code> request to the <code>GroupMemberships</code> endpoint. The request body <span class="bcp14">MUST</span> contain a <code>GroupMembership</code> resource, specifying the <code>group.value</code> and <code>member.value</code>.<a href="#section-6.1-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-6.1-2.1">
-            <p id="section-6.1-2.1.1">Request: POST /scim/v2/GroupMembers<a href="#section-6.1-2.1.1" class="pilcrow">¶</a></p>
+            <p id="section-6.1-2.1.1">Request: POST /scim/v2/GroupMemberships<a href="#section-6.1-2.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-6.1-2.2">
-            <p id="section-6.1-2.2.1">Response: 201 Created with the full <code>GroupMember</code> resource in the body, including its newly generated <code>id</code> and <code>meta</code> attributes.<a href="#section-6.1-2.2.1" class="pilcrow">¶</a></p>
+            <p id="section-6.1-2.2.1">Response: 201 Created with the full <code>GroupMembership</code> resource in the body, including its newly generated <code>id</code> and <code>meta</code> attributes.<a href="#section-6.1-2.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-6.1-3">A Service Provider <span class="bcp14">MUST</span> ensure that both the group and the member referenced by their <code>id</code>s exist before creating the <code>GroupMember</code> resource. If either the group or the member does not exist, the Service Provider <span class="bcp14">SHOULD</span> return a <code>400 Bad Request</code> error with a <code>scimType</code> of <code>invalidValue</code>.<a href="#section-6.1-3" class="pilcrow">¶</a></p>
+<p id="section-6.1-3">A Service Provider <span class="bcp14">MUST</span> ensure that both the group and the member referenced by their <code>id</code>s exist before creating the <code>GroupMembership</code> resource. If either the group or the member does not exist, the Service Provider <span class="bcp14">SHOULD</span> return a <code>400 Bad Request</code> error with a <code>scimType</code> of <code>invalidValue</code>.<a href="#section-6.1-3" class="pilcrow">¶</a></p>
 <p id="section-6.1-4">If the membership already exists, the Service Provider <span class="bcp14">MUST</span> return a <code>409 Conflict</code> error.<a href="#section-6.1-4" class="pilcrow">¶</a></p>
 <p id="section-6.1-5">Example Request Body:<a href="#section-6.1-5" class="pilcrow">¶</a></p>
-<p id="section-6.1-6">POST /GroupMembers<a href="#section-6.1-6" class="pilcrow">¶</a></p>
+<p id="section-6.1-6">POST /GroupMemberships<a href="#section-6.1-6" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-6.1-7">
 <pre>
 {
-  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMember"],
+  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMembership"],
   "group": {
     "value": "e9e30dba-f08f-4139-944c-2e6949b80b05"
   },
@@ -1609,18 +1605,18 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
 </div>
 </section>
 </div>
-<div id="retrieving-groupmember-resources-get">
+<div id="retrieving-groupmembership-resources-get">
 <section id="section-6.2">
-        <h3 id="name-retrieving-groupmember-reso">
-<a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-retrieving-groupmember-reso" class="section-name selfRef">Retrieving GroupMember Resources (GET)</a>
+        <h3 id="name-retrieving-groupmembership-">
+<a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-retrieving-groupmembership-" class="section-name selfRef">Retrieving GroupMembership Resources (GET)</a>
         </h3>
-<p id="section-6.2-1"><code>GroupMember</code> resources can be retrieved by sending a <code>GET</code> request to the <code>GroupMembers</code> endpoint. Clients can retrieve an individual resource by its <code>id</code> or a list of resources.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
+<p id="section-6.2-1"><code>GroupMembership</code> resources can be retrieved by sending a <code>GET</code> request to the <code>GroupMemberships</code> endpoint. Clients can retrieve an individual resource by its <code>id</code> or a list of resources.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-6.2-2.1">
-            <p id="section-6.2-2.1.1">To get a specific membership: <code>GET /scim/v2/GroupMembers/{id}</code><a href="#section-6.2-2.1.1" class="pilcrow">¶</a></p>
+            <p id="section-6.2-2.1.1">To get a specific membership: <code>GET /scim/v2/GroupMemberships/{id}</code><a href="#section-6.2-2.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-6.2-2.2">
-            <p id="section-6.2-2.2.1">To get all memberships: <code>GET /scim/v2/GroupMembers</code><a href="#section-6.2-2.2.1" class="pilcrow">¶</a></p>
+            <p id="section-6.2-2.2.1">To get all memberships: <code>GET /scim/v2/GroupMemberships</code><a href="#section-6.2-2.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <div id="pagination">
@@ -1628,20 +1624,20 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
           <h4 id="name-pagination">
 <a href="#section-6.2.1" class="section-number selfRef">6.2.1. </a><a href="#name-pagination" class="section-name selfRef">Pagination</a>
           </h4>
-<p id="section-6.2.1-1">Service Providers <span class="bcp14">MUST</span> support pagination of <code>GroupMember</code> resources to allow clients to retrieve large sets of memberships in manageable chunks.<a href="#section-6.2.1-1" class="pilcrow">¶</a></p>
+<p id="section-6.2.1-1">Service Providers <span class="bcp14">MUST</span> support pagination of <code>GroupMembership</code> resources to allow clients to retrieve large sets of memberships in manageable chunks.<a href="#section-6.2.1-1" class="pilcrow">¶</a></p>
 <p id="section-6.2.1-2">Index-based Pagination: The <code>startIndex</code> and <code>count</code> query parameters are the primary method for pagination, as defined in <span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span>.<a href="#section-6.2.1-2" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-6.2.1-3.1">
-              <p id="section-6.2.1-3.1.1">Example: <code>GET /scim/v2/GroupMembers?startIndex=1&amp;count=1000</code><a href="#section-6.2.1-3.1.1" class="pilcrow">¶</a></p>
+              <p id="section-6.2.1-3.1.1">Example: <code>GET /scim/v2/GroupMemberships?startIndex=1&amp;count=1000</code><a href="#section-6.2.1-3.1.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
 <p id="section-6.2.1-4">Cursor as defined in <span>[<a href="#RFC9865" class="cite xref">RFC9865</a>]</span> for improved performance with very large data sets.<a href="#section-6.2.1-4" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-6.2.1-5.1">
-              <p id="section-6.2.1-5.1.1">Example: <code>GET /scim/v2/GroupMembers?count=1000&amp;cursor=aW5kZXg9MTAx</code><a href="#section-6.2.1-5.1.1" class="pilcrow">¶</a></p>
+              <p id="section-6.2.1-5.1.1">Example: <code>GET /scim/v2/GroupMemberships?count=1000&amp;cursor=aW5kZXg9MTAx</code><a href="#section-6.2.1-5.1.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-6.2.1-6">The response for a paginated request is a <code>ListResponse</code> containing the <code>GroupMember</code> resources for the current page.<a href="#section-6.2.1-6" class="pilcrow">¶</a></p>
+<p id="section-6.2.1-6">The response for a paginated request is a <code>ListResponse</code> containing the <code>GroupMembership</code> resources for the current page.<a href="#section-6.2.1-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="filtering">
@@ -1653,14 +1649,14 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
 <span class="break"></span><dl class="dlNewline" id="section-6.2.2-2">
             <dt id="section-6.2.2-2.1">To find all members of a group:</dt>
             <dd style="margin-left: 1.5em" id="section-6.2.2-2.2">
-              <p id="section-6.2.2-2.2.1">GET /scim/v2/GroupMembers?filter=group.value eq e9e30dba-f08f-4139-944c-2e6949b80b05"<a href="#section-6.2.2-2.2.1" class="pilcrow">¶</a></p>
+              <p id="section-6.2.2-2.2.1">GET /scim/v2/GroupMemberships?filter=group.value eq e9e30dba-f08f-4139-944c-2e6949b80b05"<a href="#section-6.2.2-2.2.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
 </dl>
 <span class="break"></span><dl class="dlNewline" id="section-6.2.2-3">
             <dt id="section-6.2.2-3.1">To find all groups for a member:</dt>
             <dd style="margin-left: 1.5em" id="section-6.2.2-3.2">
-              <p id="section-6.2.2-3.2.1">GET /scim/v2/GroupMembers?filter=member.value eq "2819c223-7f76-453a-919d-413861904646"<a href="#section-6.2.2-3.2.1" class="pilcrow">¶</a></p>
+              <p id="section-6.2.2-3.2.1">GET /scim/v2/GroupMemberships?filter=member.value eq "2819c223-7f76-453a-919d-413861904646"<a href="#section-6.2.2-3.2.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
 </dl>
@@ -1668,15 +1664,15 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
 </div>
 </section>
 </div>
-<div id="deleting-groupmember-resources-delete">
+<div id="deleting-groupmembership-resources-delete">
 <section id="section-6.3">
-        <h3 id="name-deleting-groupmember-resour">
-<a href="#section-6.3" class="section-number selfRef">6.3. </a><a href="#name-deleting-groupmember-resour" class="section-name selfRef">Deleting GroupMember Resources (DELETE)</a>
+        <h3 id="name-deleting-groupmembership-re">
+<a href="#section-6.3" class="section-number selfRef">6.3. </a><a href="#name-deleting-groupmembership-re" class="section-name selfRef">Deleting GroupMembership Resources (DELETE)</a>
         </h3>
-<p id="section-6.3-1">To remove a member from a group, the client sends a <code>DELETE</code> request to the URI of the specific <code>GroupMember</code> resource.<a href="#section-6.3-1" class="pilcrow">¶</a></p>
+<p id="section-6.3-1">To remove a member from a group, the client sends a <code>DELETE</code> request to the URI of the specific <code>GroupMembership</code> resource.<a href="#section-6.3-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-6.3-2.1">
-            <p id="section-6.3-2.1.1">Request: <code>DELETE /scim/v2/GroupMembers/{id}</code><a href="#section-6.3-2.1.1" class="pilcrow">¶</a></p>
+            <p id="section-6.3-2.1.1">Request: <code>DELETE /scim/v2/GroupMemberships/{id}</code><a href="#section-6.3-2.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-6.3-2.2">
             <p id="section-6.3-2.2.1">Response: <code>204 No Content</code> on successful deletion.<a href="#section-6.3-2.2.1" class="pilcrow">¶</a></p>
@@ -1689,7 +1685,7 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
         <h3 id="name-bulk-operations">
 <a href="#section-6.4" class="section-number selfRef">6.4. </a><a href="#name-bulk-operations" class="section-name selfRef">Bulk Operations</a>
         </h3>
-<p id="section-6.4-1">Clients can create and delete multiple <code>GroupMember</code> resources in a single request using the <code>/Bulk</code> endpoint as defined in <span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span>. This is highly efficient for synchronizing memberships for a group with many changes.<a href="#section-6.4-1" class="pilcrow">¶</a></p>
+<p id="section-6.4-1">Clients can create and delete multiple <code>GroupMembership</code> resources in a single request using the <code>/Bulk</code> endpoint as defined in <span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span>. This is highly efficient for synchronizing memberships for a group with many changes.<a href="#section-6.4-1" class="pilcrow">¶</a></p>
 <p id="section-6.4-2">The following is an example of a <code>Bulk</code> request that adds two new members and removes one existing member from a group.<a href="#section-6.4-2" class="pilcrow">¶</a></p>
 <p id="section-6.4-3">Example Bulk Request:<a href="#section-6.4-3" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-6.4-4">
@@ -1700,27 +1696,27 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
 "Operations": [
 {
   "method": "POST",
-  "path": "/GroupMembers",
+  "path": "/GroupMemberships",
   "bulkId": "add-user-1",
   "data": {
-    "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMember"],
+    "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMembership"],
     "group": { "value": "e9e30dba-f08f-4139-944c-2e6949b80b05" },
     "member": { "value": "aed9876f-e83c-4359-99a3-37e082236081" }
   }
 },
 {
   "method": "POST",
-  "path": "/GroupMembers",
+  "path": "/GroupMemberships",
   "bulkId": "add-user-2",
   "data": {
-    "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMember"],
+    "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMembership"],
     "group": { "value": "e9e30dba-f08f-4139-944c-2e6949b80b05" },
     "member": { "value": "bce5231a-6d36-4b89-a249-1b913e16338b" }
   }
 },
 {
   "method": "DELETE",
-  "path": "/GroupMembers/gm12345",
+  "path": "/GroupMemberships/gm12345",
   "bulkId": "delete-user-3"
 }
 ]
@@ -1736,19 +1732,19 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
       <h2 id="name-service-provider-considerat">
 <a href="#section-7" class="section-number selfRef">7. </a><a href="#name-service-provider-considerat" class="section-name selfRef">Service Provider Considerations</a>
       </h2>
-<p id="section-7-1">This section describes the requirements for Service Providers that implement the <code>GroupMember</code> resource.<a href="#section-7-1" class="pilcrow">¶</a></p>
-<div id="discovering-support-for-the-groupmember-resource">
+<p id="section-7-1">This section describes the requirements for Service Providers that implement the <code>GroupMembership</code> resource.<a href="#section-7-1" class="pilcrow">¶</a></p>
+<div id="discovering-support-for-the-groupmembership-resource">
 <section id="section-7.1">
         <h3 id="name-discovering-support-for-the">
-<a href="#section-7.1" class="section-number selfRef">7.1. </a><a href="#name-discovering-support-for-the" class="section-name selfRef">Discovering Support for the GroupMember Resource</a>
+<a href="#section-7.1" class="section-number selfRef">7.1. </a><a href="#name-discovering-support-for-the" class="section-name selfRef">Discovering Support for the GroupMembership Resource</a>
         </h3>
-<p id="section-7.1-1">Service Providers that support the <code>GroupMember</code> resource <span class="bcp14">MUST</span> declare this support in their <code>ResourceType</code> and <code>Schema</code> metadata.<a href="#section-7.1-1" class="pilcrow">¶</a></p>
+<p id="section-7.1-1">Service Providers that support the <code>GroupMembership</code> resource <span class="bcp14">MUST</span> declare this support in their <code>ResourceType</code> and <code>Schema</code> metadata.<a href="#section-7.1-1" class="pilcrow">¶</a></p>
 <div id="schema-endpoint">
 <section id="section-7.1.1">
           <h4 id="name-schema-endpoint">
 <a href="#section-7.1.1" class="section-number selfRef">7.1.1. </a><a href="#name-schema-endpoint" class="section-name selfRef">Schema Endpoint</a>
           </h4>
-<p id="section-7.1.1-1">The Service Provider's <code>Schema</code> definition, available at the <code>/Schemas</code> endpoint, <span class="bcp14">MUST</span> include the full schema definitions for <code>urn:ietf:params:scim:schemas:core:2.0:GroupMember</code> as defined in Section 2.3 of this document.<a href="#section-7.1.1-1" class="pilcrow">¶</a></p>
+<p id="section-7.1.1-1">The Service Provider's <code>Schema</code> definition, available at the <code>/Schemas</code> endpoint, <span class="bcp14">MUST</span> include the full schema definitions for <code>urn:ietf:params:scim:schemas:core:2.0:GroupMembership</code> as defined in Section 2.3 of this document.<a href="#section-7.1.1-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="impact-on-the-group-resource">
@@ -1756,8 +1752,8 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
           <h4 id="name-impact-on-the-group-resourc">
 <a href="#section-7.1.2" class="section-number selfRef">7.1.2. </a><a href="#name-impact-on-the-group-resourc" class="section-name selfRef">Impact on the Group Resource</a>
           </h4>
-<p id="section-7.1.2-1">As noted in Section 6, a Service Provider <span class="bcp14">MAY</span> continue to support the <code>members</code> attribute on the <code>Group</code> resource for backwards compatibility. When doing so, the Service Provider <span class="bcp14">MUST</span> maintain transactional integrity and consistency between the state of the <code>members</code> attribute and the state of the corresponding <code>GroupMember</code> resources.<a href="#section-7.1.2-1" class="pilcrow">¶</a></p>
-<p id="section-7.1.2-2">For example, if a <code>DELETE</code> request to a <code>/GroupMembers/{id}</code> URI is successful, the corresponding member <span class="bcp14">MUST</span> also be removed from the <code>members</code> array of the parent <code>Group</code> resource. Conversely, if a member is removed from a <code>Group</code> via a <code>PATCH</code> request to the <code>/Groups/{id}</code> URI, the corresponding <code>GroupMember</code> resource <span class="bcp14">MUST</span> be deleted.<a href="#section-7.1.2-2" class="pilcrow">¶</a></p>
+<p id="section-7.1.2-1">As noted in Section 6, a Service Provider <span class="bcp14">MAY</span> continue to support the <code>members</code> attribute on the <code>Group</code> resource for backwards compatibility. When doing so, the Service Provider <span class="bcp14">MUST</span> maintain transactional integrity and consistency between the state of the <code>members</code> attribute and the state of the corresponding <code>GroupMembership</code> resources.<a href="#section-7.1.2-1" class="pilcrow">¶</a></p>
+<p id="section-7.1.2-2">For example, if a <code>DELETE</code> request to a <code>/GroupMemberships/{id}</code> URI is successful, the corresponding member <span class="bcp14">MUST</span> also be removed from the <code>members</code> array of the parent <code>Group</code> resource. Conversely, if a member is removed from a <code>Group</code> via a <code>PATCH</code> request to the <code>/Groups/{id}</code> URI, the corresponding <code>GroupMembership</code> resource <span class="bcp14">MUST</span> be deleted.<a href="#section-7.1.2-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1769,20 +1765,20 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
       <h2 id="name-schema-representation">
 <a href="#section-8" class="section-number selfRef">8. </a><a href="#name-schema-representation" class="section-name selfRef">Schema Representation</a>
       </h2>
-<div id="groupmember-core-schema">
+<div id="groupmembership-core-schema">
 <section id="section-8.1">
-        <h3 id="name-groupmember-core-schema">
-<a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-groupmember-core-schema" class="section-name selfRef">GroupMember Core Schema</a>
+        <h3 id="name-groupmembership-core-schema">
+<a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-groupmembership-core-schema" class="section-name selfRef">GroupMembership Core Schema</a>
         </h3>
-<p id="section-8.1-1">The following is the formal SCIM schema definition for the <code>GroupMember</code>
+<p id="section-8.1-1">The following is the formal SCIM schema definition for the <code>GroupMembership</code>
 resource. The <code>schemas</code> and <code>meta</code> attributes are common attributes
 inherited from <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span> and are included here for completeness.<a href="#section-8.1-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-8.1-2">
 <pre>
 {
   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Schema"],
-  "id": "urn:ietf:params:scim:schemas:core:2.0:GroupMember",
-  "name": "Group Member",
+  "id": "urn:ietf:params:scim:schemas:core:2.0:GroupMembership",
+  "name": "Group Membership",
   "description": "SCIM resource representing a single group membership.",
   "attributes": [
     {
@@ -1888,7 +1884,7 @@ inherited from <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span> a
   "meta": {
     "resourceType": "Schema",
     "location": "https://example.com/scim/v2/Schemas/ \
-      urn:ietf:params:scim:schemas:core:2.0:GroupMember"
+      urn:ietf:params:scim:schemas:core:2.0:GroupMembership"
   }
 }
 </pre><a href="#section-8.1-2" class="pilcrow">¶</a>
@@ -2012,14 +2008,14 @@ reported by the Service Provider to the client.<a href="#section-8.2.2-1" class=
         <h3 id="name-security-considerations">
 <a href="#section-8.3" class="section-number selfRef">8.3. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
         </h3>
-<p id="section-8.3-1">The security considerations for the <code>GroupMember</code> resource are substantially the same as those for the <code>User</code> and <code>Group</code> resources defined in Section 8 of the SCIM Protocol document <span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span>. All requests <span class="bcp14">MUST</span> be made over a secure channel such as Transport Layer Security (TLS).<a href="#section-8.3-1" class="pilcrow">¶</a></p>
-<p id="section-8.3-2">Authentication and authorization for managing <code>GroupMember</code> resources are the responsibility of the Service Provider. Implementers should consider the following:<a href="#section-8.3-2" class="pilcrow">¶</a></p>
+<p id="section-8.3-1">The security considerations for the <code>GroupMembership</code> resource are substantially the same as those for the <code>User</code> and <code>Group</code> resources defined in Section 8 of the SCIM Protocol document <span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span>. All requests <span class="bcp14">MUST</span> be made over a secure channel such as Transport Layer Security (TLS).<a href="#section-8.3-1" class="pilcrow">¶</a></p>
+<p id="section-8.3-2">Authentication and authorization for managing <code>GroupMembership</code> resources are the responsibility of the Service Provider. Implementers should consider the following:<a href="#section-8.3-2" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-8.3-3.1">
-            <p id="section-8.3-3.1.1">A client with permission to read a <code>Group</code> resource's <code>members</code> attribute <span class="bcp14">MUST</span> be granted permission to <code>GET</code> the corresponding <code>GroupMember</code> resources for that group. Access to a <code>Group</code> resource alone does not imply access to its member list — a Service Provider <span class="bcp14">MAY</span> expose group metadata broadly while restricting membership details to privileged clients.<a href="#section-8.3-3.1.1" class="pilcrow">¶</a></p>
+            <p id="section-8.3-3.1.1">A client with permission to read a <code>Group</code> resource's <code>members</code> attribute <span class="bcp14">MUST</span> be granted permission to <code>GET</code> the corresponding <code>GroupMembership</code> resources for that group. Access to a <code>Group</code> resource alone does not imply access to its member list — a Service Provider <span class="bcp14">MAY</span> expose group metadata broadly while restricting membership details to privileged clients.<a href="#section-8.3-3.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-8.3-3.2">
-            <p id="section-8.3-3.2.1">A client authorized to add or remove members from a <code>Group</code> via a <code>PATCH</code> to the <code>Group</code> resource <span class="bcp14">MUST</span> have equivalent <code>POST</code> and <code>DELETE</code> permissions on <code>GroupMember</code> resources for that same group.<a href="#section-8.3-3.2.1" class="pilcrow">¶</a></p>
+            <p id="section-8.3-3.2.1">A client authorized to add or remove members from a <code>Group</code> via a <code>PATCH</code> to the <code>Group</code> resource <span class="bcp14">MUST</span> have equivalent <code>POST</code> and <code>DELETE</code> permissions on <code>GroupMembership</code> resources for that same group.<a href="#section-8.3-3.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
@@ -2030,7 +2026,7 @@ reported by the Service Provider to the client.<a href="#section-8.2.2-1" class=
 <a href="#section-8.4" class="section-number selfRef">8.4. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
         </h3>
 <p id="section-8.4-1">This document requests that IANA register the following URNs in the "SCIM Schemas" registry.<a href="#section-8.4-1" class="pilcrow">¶</a></p>
-<p id="section-8.4-2"><strong>URI:</strong> <code>urn:ietf:params:scim:schemas:core:2.0:GroupMember</code>
+<p id="section-8.4-2"><strong>URI:</strong> <code>urn:ietf:params:scim:schemas:core:2.0:GroupMembership</code>
           <strong>Specification:</strong> This document
 <strong>Description:</strong> Defines the schema for a resource representing a single group membership.<a href="#section-8.4-2" class="pilcrow">¶</a></p>
 <p id="section-8.4-3"><strong>URI:</strong> <code>urn:ietf:params:scim:schemas:extension:groupMembers:2.0:Group</code>
