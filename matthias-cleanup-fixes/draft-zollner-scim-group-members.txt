@@ -4,17 +4,17 @@
 
 SCIM                                                          D. Zollner
 Internet-Draft                                                      Okta
-Intended status: Standards Track                           15 April 2026
-Expires: 17 October 2026
+Intended status: Standards Track                        3 September 2026
+Expires: 7 March 2027
 
 
-               SCIM Group Member Resource Type Extension
+             SCIM Group Membership Resource Type Extension
                 draft-zollner-scim-group-members-latest
 
 Abstract
 
    This document extends the System for Cross-domain Identity Management
-   (SCIM) 2.0 standard by defining a new "GroupMember" top-level
+   (SCIM) 2.0 standard by defining a new "GroupMembership" top-level
    resource.  Under the existing model defined in [RFC7643], group
    memberships are represented as values in a multi-valued attribute
    within a Group resource.  This architecture lacks native support for
@@ -45,7 +45,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 17 October 2026.
+   This Internet-Draft will expire on 7 March 2027.
 
 Copyright Notice
 
@@ -66,7 +66,7 @@ Table of Contents
    1.  Discussion Venues
    2.  Introduction
    3.  Notational Conventions
-   4.  The GroupMember Resource
+   4.  The GroupMembership Resource
      4.1.  Resource Properties
      4.2.  JSON Representation
      4.3.  Resource Type Representation
@@ -75,19 +75,19 @@ Table of Contents
      5.2.  Example Group Resources
        5.2.1.  Example of an "External" Policy
        5.2.2.  Example of a "Hybrid" Policy
-   6.  Managing GroupMember Resources
-     6.1.  Creating GroupMember Resources (POST)
-     6.2.  Retrieving GroupMember Resources (GET)
+   6.  Managing GroupMembership Resources
+     6.1.  Creating GroupMembership Resources (POST)
+     6.2.  Retrieving GroupMembership Resources (GET)
        6.2.1.  Pagination
        6.2.2.  Filtering
-     6.3.  Deleting GroupMember Resources (DELETE)
+     6.3.  Deleting GroupMembership Resources (DELETE)
      6.4.  Bulk Operations
    7.  Service Provider Considerations
-     7.1.  Discovering Support for the GroupMember Resource
+     7.1.  Discovering Support for the GroupMembership Resource
        7.1.1.  Schema Endpoint
        7.1.2.  Impact on the Group Resource
    8.  Schema Representation
-     8.1.  GroupMember Core Schema
+     8.1.  GroupMembership Core Schema
      8.2.  membersMetadata Schema Extension
        8.2.1.  The membersMetadata Attribute Definition
        8.2.2.  Usage
@@ -115,16 +115,17 @@ Table of Contents
    Currently, the "members" attribute of a Group resource is a multi-
    valued attribute.  Because SCIM only supports paginating resources, a
    client requesting a Group resource must receive the entire list of
-   group members in a single HTTP response.  For a group with one
+   group memberships in a single HTTP response.  For a group with one
    million members, an HTTP response can reach approximately 200MB in
    size.  These large payloads create several critical failure points
    including memory pressure and network timeouts.
 
-   This document proposes the "GroupMember" resource type.  By treating
-   a membership as a first-class, top-level resource, Service Providers
-   can leverage existing SCIM query parameters including filter, count,
-   and multiple pagination methods, allowing them to implement a
-   scaleable and reliable interface for managing groups of any size.
+   This document proposes the "GroupMembership" resource type.  By
+   treating a membership as a first-class, top-level resource, service
+   providers can leverage existing SCIM query parameters including
+   filter, count, and multiple pagination methods, allowing them to
+   implement a scaleable and reliable interface for managing groups of
+   any size.
 
 3.  Notational Conventions
 
@@ -134,37 +135,37 @@ Table of Contents
    BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all
    capitals, as shown here.
 
-4.  The GroupMember Resource
+4.  The GroupMembership Resource
 
-   This section defines the GroupMember resource, which represents a
-   single membership relationship between a SCIM Group and a member.  By
+   This section defines the GroupMembership resource, which represents a
+   single membership relationship between a SCIM group and a member.  By
    representing each membership as a distinct, top-level resource,
-   Service Providers can manage group memberships individually, allowing
+   service providers can manage group memberships individually, allowing
    for pagination, filtering, and other operations at scale.
 
-   A GroupMember resource represents a direct membership only.  Indirect
-   memberships, as defined in [RFC7643] Section 4.1.2, MUST NOT be
-   represented as GroupMember resources.
+   A GroupMembership resource represents a direct membership only.
+   Indirect memberships, as defined in [RFC7643] Section 4.1.2, MUST NOT
+   be represented as GroupMembership resources.
 
 4.1.  Resource Properties
 
-   The GroupMember resource is defined by the following properties:
+   The GroupMembership resource is defined by the following properties:
 
    schemas
       A multi-valued attribute that contains the SCIM schema URNs for
-      this resource.  The URN for the GroupMember resource's core schema
-      is urn:ietf:params:scim:schemas:core:2.0:GroupMember.  This is a
-      *REQUIRED* attribute.  This attribute is a common attribute
-      inherited from [RFC7643].
+      this resource.  The URN for the GroupMembership resource's core
+      schema is urn:ietf:params:scim:schemas:core:2.0:GroupMembership.
+      This is a *REQUIRED* attribute.  This attribute is a common
+      attribute inherited from [RFC7643].
 
    id
-      A unique identifier for the GroupMember resource, generated by the
-      Service Provider.  This is a *REQUIRED*, read-only attribute.
+      A unique identifier for the GroupMembership resource, generated by
+      the service provider.  This is a *REQUIRED*, read-only attribute.
       Clients MUST treat this value as opaque.  The id serves as the
       stable identifier for a membership link — it uniquely identifies
       the relationship between a specific group and a specific member,
       and is the value used to address the resource at the
-      /GroupMembers/{id} URI.  This attribute is a common attribute
+      /GroupMemberships/{id} URI.  This attribute is a common attribute
       inherited from [RFC7643].
 
    group
@@ -179,7 +180,7 @@ Table of Contents
 
       display
          A human-readable name for the referenced Group resource,
-         generally corresponding to the Group's displayName attribute.
+         generally corresponding to the group's displayName attribute.
          Read-only.
 
    member
@@ -205,61 +206,64 @@ Table of Contents
 
    meta
       A complex attribute containing metadata about the resource.  This
-      includes the resourceType (which MUST be "GroupMember"), created,
-      lastModified, and location attributes.  This is a REQUIRED, read-
-      only attribute.  This attribute is a common attribute inherited
-      from [RFC7643].
+      includes the resourceType (which MUST be "GroupMembership"),
+      created, lastModified, and location attributes.  This is a
+      REQUIRED, read-only attribute.  This attribute is a common
+      attribute inherited from [RFC7643].
 
-   If a Service Provider's implementation does not support creating or
-   deleting GroupMember resources, all attributes in the schema
+   If a service provider's implementation does not support creating or
+   deleting GroupMembership resources, all attributes in the schema
    definition returned from /Schemas MUST have their mutability property
    set to readOnly.
 
 4.2.  JSON Representation
 
-   The following is an example of a GroupMember resource in JSON format.
-   This example represents the membership of a User in a Group. ($ref
-   values truncated for formatting purposes):
+   The following is an example of a GroupMembership resource in JSON
+   format.  This example represents the membership of a user in a group:
 
-   {
-     "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMember"],
-     "id": "gm12345",
-     "group": {
-       "value": "e9e30dba-f08f-4139-944c-2e6949b80b05",
-       "$ref": "https://example.com/scim/v2/Groups/e9e3xxx"
-     },
-     "member": {
-       "value": "2819c223-7f76-453a-919d-413861904646",
-       "$ref": "https://example.com/scim/v2/Users/2819xxx",
-       "type": "User"
-     },
-     "meta": {
-       "resourceType": "GroupMember",
-       "created": "2026-02-24T20:26:44Z",
-       "lastModified": "2026-02-24T20:26:44Z",
-       "location": "https://example.com/scim/v2/GroupMembers/gm12345"
-     }
+ {
+   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMembership"],
+   "id": "gm12345",
+   "group": {
+     "value": "e9e30db",
+     "$ref": "https://example.com/scim/v2/Groups/e9e30db",
+     "display": "Engineering Team"
+   },
+   "member": {
+     "value": "2819c22",
+     "$ref": "https://example.com/scim/v2/Users/2819c22",
+     "type": "User",
+     "display": "John Doe"
+   },
+   "meta": {
+     "resourceType": "GroupMembership",
+     "created": "2026-02-24T20:26:44Z",
+     "lastModified": "2026-02-24T20:26:44Z",
+     "location": "https://example.com/scim/v2/GroupMemberships/gm12345"
    }
+ }
 
 4.3.  Resource Type Representation
 
-   The Service Provider's ResourceType schema, available at the
-   /ResourceTypes endpoint, MUST include an entry for "GroupMember".
+   The service provider's ResourceType schema, available at the
+   /ResourceTypes endpoint, MUST include an entry for "GroupMembership".
 
    *Example ResourceType entry:*
 
- {
-   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:ResourceType"],
-   "id": "GroupMember",
-   "name": "GroupMember",
-   "endpoint": "/GroupMembers",
-   "description": "Resource representing a single group membership.",
-   "schema": "urn:ietf:params:scim:schemas:core:2.0:GroupMember",
-   "meta": {
-     "resourceType": "ResourceType",
-     "location": "https://example.com/scim/v2/ResourceTypes/GroupMember"
-   }
- }
+{
+  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:ResourceType"],
+  "id": "GroupMembership",
+  "name": "GroupMembership",
+  "endpoint": "/GroupMemberships",
+  "description": "Resource representing a single group membership.",
+  "schema": "urn:ietf:params:scim:schemas:core:2.0:GroupMembership",
+  "meta": {
+    "resourceType": "ResourceType",
+    "created": "2026-02-20T13:43:00Z",
+    "lastModified": "2026-02-20T13:43:00Z",
+    "location": "https://example.com/scim/v2/ResourceTypes/GroupMembership"
+  }
+}
 
 5.  membersMetadata Group Schema Extension
 
@@ -381,10 +385,10 @@ Table of Contents
    }
  }
 
-6.  Managing GroupMember Resources
+6.  Managing GroupMembership Resources
 
-   This section describes how GroupMember resources are managed using
-   the SCIM protocol.  A GroupMember is a simple resource that
+   This section describes how GroupMembership resources are managed
+   using the SCIM protocol.  A GroupMembership is a simple resource that
    represents a linkage between a group and a member.  As such, a
    membership can only be created, retrieved, or deleted.  Updating a
    membership serves little practical value, as changing the group or
@@ -393,107 +397,107 @@ Table of Contents
    supports this specification MUST only support the POST, GET, and
    DELETE methods for this resource type.
 
-   Service Providers MAY also support management of group members
+   Service providers MAY also support management of group memberships
    through the existing members attribute of the Group resource as
    defined in [RFC7643] for the purpose of backwards compatibility with
    existing clients.  However, when adding or removing members from a
-   group that also has GroupMember resources, Service Providers MUST
+   group that also has GroupMembership resources, service providers MUST
    ensure that the state remains consistent across both representations.
-   For example, deleting a GroupMember resource MUST result in the
+   For example, deleting a GroupMembership resource MUST result in the
    corresponding member being removed from the members array on the
-   Group resource, if that attribute is supported by the Service
-   Provider.
+   Group resource, if that attribute is supported by the service
+   provider.
 
-6.1.  Creating GroupMember Resources (POST)
+6.1.  Creating GroupMembership Resources (POST)
 
    To add a new member to a group, the client sends a POST request to
-   the GroupMembers endpoint.  The request body MUST contain a
-   GroupMember resource, specifying the group.value and member.value.
+   the GroupMemberships endpoint.  The request body MUST contain a
+   GroupMembership resource, specifying the group.value and
+   member.value.
 
-   *  Request: POST /scim/v2/GroupMembers
+   *  Request: POST /scim/v2/GroupMemberships
 
-   *  Response: 201 Created with the full GroupMember resource in the
-      body, including its newly generated id and meta attributes.
+   *  Response: 201 Created with the full GroupMembership resource in
+      the body, including its newly generated id and meta attributes.
 
-   A Service Provider MUST ensure that both the group and the member
-   referenced by their ids exist before creating the GroupMember
+   A service provider MUST ensure that both the group and the member
+   referenced by their ids exist before creating the GroupMembership
    resource.  If either the group or the member does not exist, the
-   Service Provider SHOULD return a 400 Bad Request error with a
+   service provider SHOULD return a 400 Bad Request error with a
    scimType of invalidValue.
 
-   If the membership already exists, the Service Provider MUST return a
+   If the membership already exists, the service provider MUST return a
    409 Conflict error.
 
    Example Request Body:
 
-   POST /GroupMembers
+   POST /GroupMemberships
 
-   {
-     "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMember"],
-     "group": {
-       "value": "e9e30dba-f08f-4139-944c-2e6949b80b05"
-     },
-     "member": {
-       "value": "2819c223-7f76-453a-919d-413861904646"
-     }
+ {
+   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMembership"],
+   "group": {
+     "value": "e9e30db"
+   },
+   "member": {
+     "value": "2819c22"
    }
+ }
 
-6.2.  Retrieving GroupMember Resources (GET)
+6.2.  Retrieving GroupMembership Resources (GET)
 
-   GroupMember resources can be retrieved by sending a GET request to
-   the GroupMembers endpoint.  Clients can retrieve an individual
+   GroupMembership resources can be retrieved by sending a GET request
+   to the GroupMemberships endpoint.  Clients can retrieve an individual
    resource by its id or a list of resources.
 
-   *  To get a specific membership: GET /scim/v2/GroupMembers/{id}
+   *  To get a specific membership: GET /scim/v2/GroupMemberships/{id}
 
-   *  To get all memberships: GET /scim/v2/GroupMembers
+   *  To get all memberships: GET /scim/v2/GroupMemberships
 
 6.2.1.  Pagination
 
-   Service Providers MUST support pagination of GroupMember resources to
-   allow clients to retrieve large sets of memberships in manageable
-   chunks.
+   Service providers MUST support pagination of GroupMembership
+   resources to allow clients to retrieve large sets of memberships in
+   manageable chunks.
 
    Index-based Pagination: The startIndex and count query parameters are
    the primary method for pagination, as defined in [RFC7644].
 
-   *  Example: GET /scim/v2/GroupMembers?startIndex=1&count=1000
+   *  Example: GET /scim/v2/GroupMemberships?startIndex=1&count=1000
 
    Cursor as defined in [RFC9865] for improved performance with very
    large data sets.
 
-   *  Example: GET /scim/v2/GroupMembers?count=1000&cursor=aW5kZXg9MTAx
+   *  Example: GET /scim/v2/
+      GroupMemberships?count=1000&cursor=aW5kZXg9MTAx
 
    The response for a paginated request is a ListResponse containing the
-   GroupMember resources for the current page.
+   GroupMembership resources for the current page.
 
 6.2.2.  Filtering
 
-   Service Providers MUST support filtering on the group.value and
+   Service providers MUST support filtering on the group.value and
    member.value attributes.  This enables clients to perform critical
    queries, such as "find all members of a specific group" or "find all
    groups a specific user is a member of."
 
    To find all members of a group:
-      GET /scim/v2/GroupMembers?filter=group.value eq e9e30dba-f08f-
-      4139-944c-2e6949b80b05"
+      GET /scim/v2/GroupMemberships?filter=group.value eq e9e30db"
 
    To find all groups for a member:
-      GET /scim/v2/GroupMembers?filter=member.value eq "2819c223-7f76-
-      453a-919d-413861904646"
+      GET /scim/v2/GroupMemberships?filter=member.value eq "2819c22"
 
-6.3.  Deleting GroupMember Resources (DELETE)
+6.3.  Deleting GroupMembership Resources (DELETE)
 
    To remove a member from a group, the client sends a DELETE request to
-   the URI of the specific GroupMember resource.
+   the URI of the specific GroupMembership resource.
 
-   *  Request: DELETE /scim/v2/GroupMembers/{id}
+   *  Request: DELETE /scim/v2/GroupMemberships/{id}
 
    *  Response: 204 No Content on successful deletion.
 
 6.4.  Bulk Operations
 
-   Clients can create and delete multiple GroupMember resources in a
+   Clients can create and delete multiple GroupMembership resources in a
    single request using the /Bulk endpoint as defined in [RFC7644].
    This is highly efficient for synchronizing memberships for a group
    with many changes.
@@ -503,82 +507,82 @@ Table of Contents
 
    Example Bulk Request:
 
-   {
-   "schemas": ["urn:ietf:params:scim:api:messages:2.0:BulkRequest"],
-   "failOnErrors": 1,
-   "Operations": [
-   {
-     "method": "POST",
-     "path": "/GroupMembers",
-     "bulkId": "add-user-1",
-     "data": {
-       "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMember"],
-       "group": { "value": "e9e30dba-f08f-4139-944c-2e6949b80b05" },
-       "member": { "value": "aed9876f-e83c-4359-99a3-37e082236081" }
-     }
-   },
-   {
-     "method": "POST",
-     "path": "/GroupMembers",
-     "bulkId": "add-user-2",
-     "data": {
-       "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMember"],
-       "group": { "value": "e9e30dba-f08f-4139-944c-2e6949b80b05" },
-       "member": { "value": "bce5231a-6d36-4b89-a249-1b913e16338b" }
-     }
-   },
-   {
-     "method": "DELETE",
-     "path": "/GroupMembers/gm12345",
-     "bulkId": "delete-user-3"
-   }
-   ]
-   }
+{
+"schemas": ["urn:ietf:params:scim:api:messages:2.0:BulkRequest"],
+"failOnErrors": 1,
+"Operations": [
+{
+  "method": "POST",
+  "path": "/GroupMemberships",
+  "bulkId": "add-user-1",
+  "data": {
+    "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMembership"],
+    "group": { "value": "e9e30db" },
+    "member": { "value": "aed987" }
+  }
+},
+{
+  "method": "POST",
+  "path": "/GroupMemberships",
+  "bulkId": "add-user-2",
+  "data": {
+    "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMembership"],
+    "group": { "value": "e9e30db" },
+    "member": { "value": "bce5231" }
+  }
+},
+{
+  "method": "DELETE",
+  "path": "/GroupMemberships/gm12345",
+  "bulkId": "delete-user-3"
+}
+]
+}
 
 7.  Service Provider Considerations
 
-   This section describes the requirements for Service Providers that
-   implement the GroupMember resource.
+   This section describes the requirements for service providers that
+   implement the GroupMembership resource.
 
-7.1.  Discovering Support for the GroupMember Resource
+7.1.  Discovering Support for the GroupMembership Resource
 
-   Service Providers that support the GroupMember resource MUST declare
-   this support in their ResourceType and Schema metadata.
+   Service providers that support the GroupMembership resource MUST
+   declare this support in their ResourceType and Schema metadata.
 
 7.1.1.  Schema Endpoint
 
-   The Service Provider's Schema definition, available at the /Schemas
+   The service provider's Schema definition, available at the /Schemas
    endpoint, MUST include the full schema definitions for
-   urn:ietf:params:scim:schemas:core:2.0:GroupMember as defined in
+   urn:ietf:params:scim:schemas:core:2.0:GroupMembership as defined in
    Section 2.3 of this document.
 
 7.1.2.  Impact on the Group Resource
 
-   As noted in Section 6, a Service Provider MAY continue to support the
+   As noted in Section 6, a service provider MAY continue to support the
    members attribute on the Group resource for backwards compatibility.
-   When doing so, the Service Provider MUST maintain transactional
+   When doing so, the service provider MUST maintain transactional
    integrity and consistency between the state of the members attribute
-   and the state of the corresponding GroupMember resources.
+   and the state of the corresponding GroupMembership resources.
 
-   For example, if a DELETE request to a /GroupMembers/{id} URI is
+   For example, if a DELETE request to a /GroupMemberships/{id} URI is
    successful, the corresponding member MUST also be removed from the
    members array of the parent Group resource.  Conversely, if a member
    is removed from a Group via a PATCH request to the /Groups/{id} URI,
-   the corresponding GroupMember resource MUST be deleted.
+   the corresponding GroupMembership resource MUST be deleted.
 
 8.  Schema Representation
 
-8.1.  GroupMember Core Schema
+8.1.  GroupMembership Core Schema
 
    The following is the formal SCIM schema definition for the
-   GroupMember resource.  The schemas and meta attributes are common
+   GroupMembership resource.  The schemas and meta attributes are common
    attributes inherited from [RFC7643] and are included here for
    completeness.
 
 {
   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Schema"],
-  "id": "urn:ietf:params:scim:schemas:core:2.0:GroupMember",
-  "name": "Group Member",
+  "id": "urn:ietf:params:scim:schemas:core:2.0:GroupMembership",
+  "name": "Group Membership",
   "description": "SCIM resource representing a single group membership.",
   "attributes": [
     {
@@ -683,8 +687,10 @@ Table of Contents
   ],
   "meta": {
     "resourceType": "Schema",
+    "created": "2026-02-20T13:43:00Z",
+    "lastModified": "2026-02-20T13:43:00Z",
     "location": "https://example.com/scim/v2/Schemas/ \
-      urn:ietf:params:scim:schemas:core:2.0:GroupMember"
+      urn:ietf:params:scim:schemas:core:2.0:GroupMembership"
   }
 }
 
@@ -791,33 +797,33 @@ Table of Contents
 
 8.3.  Security Considerations
 
-   The security considerations for the GroupMember resource are
+   The security considerations for the GroupMembership resource are
    substantially the same as those for the User and Group resources
    defined in Section 8 of the SCIM Protocol document [RFC7644].  All
    requests MUST be made over a secure channel such as Transport Layer
    Security (TLS).
 
-   Authentication and authorization for managing GroupMember resources
-   are the responsibility of the Service Provider.  Implementers should
-   consider the following:
+   Authentication and authorization for managing GroupMembership
+   resources are the responsibility of the service provider.
+   Implementers should consider the following:
 
    *  A client with permission to read a Group resource's members
       attribute MUST be granted permission to GET the corresponding
-      GroupMember resources for that group.  Access to a Group resource
-      alone does not imply access to its member list — a Service
-      Provider MAY expose group metadata broadly while restricting
-      membership details to privileged clients.
+      GroupMembership resources for that group.  Access to a Group
+      resource alone does not imply access to its member list — a
+      service provider MAY expose group metadata broadly while
+      restricting membership details to privileged clients.
 
    *  A client authorized to add or remove members from a Group via a
       PATCH to the Group resource MUST have equivalent POST and DELETE
-      permissions on GroupMember resources for that same group.
+      permissions on GroupMembership resources for that same group.
 
 8.4.  IANA Considerations
 
    This document requests that IANA register the following URNs in the
    "SCIM Schemas" registry.
 
-   *URI:* urn:ietf:params:scim:schemas:core:2.0:GroupMember
+   *URI:* urn:ietf:params:scim:schemas:core:2.0:GroupMembership
    *Specification:* This document *Description:* Defines the schema for
    a resource representing a single group membership.
 
