@@ -106,6 +106,8 @@ meta
 
 If a service provider's implementation does not support creating or deleting `GroupMembership` resources, all attributes in the schema definition returned from `/Schemas` MUST have their `mutability` property set to `readOnly`.
 
+This resource's `ResourceType` and `Schema` definitions are discoverable via the `/ResourceTypes` and `/Schemas` endpoints, respectively, per [RFC7644]. The definitions for both are provided below.
+
 ## JSON Representation
 
 The following is an example of a `GroupMembership` resource in JSON format. This example represents the membership of a user in a group:
@@ -231,7 +233,7 @@ This section describes how `GroupMembership` resources are managed using the SCI
 
 If a service provider supports the `GroupMembership` resource, it MUST make available via `/GroupMemberships` every membership the requesting client is authorized to view. This requirement is independent of whether `Group.members` is also supported or returned; a service provider MAY choose not to return `Group.members` for groups whose membership is exposed via `GroupMembership`, and this requirement does not mandate supporting `Group.members` at all.
 
-Service providers MAY also support management of group memberships through the existing `members` attribute of the `Group` resource as defined in [RFC7643] for the purpose of backwards compatibility with existing clients. However, when adding or removing members from a group that also has `GroupMembership` resources, service providers MUST ensure that the state remains consistent across both representations. For example, deleting a `GroupMembership` resource MUST result in the corresponding member being removed from the `members` array on the `Group` resource, if that attribute is supported by the service provider.
+Service providers MAY also support management of group memberships through the existing `members` attribute of the `Group` resource as defined in [RFC7643] for the purpose of backwards compatibility with existing clients. When doing so, the service provider MUST maintain consistency between the state of the `members` attribute and the state of the corresponding `GroupMembership` resources. For example, if a `DELETE` request to a `/GroupMemberships/{id}` URI is successful, the corresponding member MUST also be removed from the `members` array of the parent `Group` resource. Conversely, if a member is removed from a `Group` via a `PATCH` request to the `/Groups/{id}` URI, the corresponding `GroupMembership` resource MUST be deleted.
 
 ## Creating GroupMembership Resources (POST)
 
@@ -341,25 +343,6 @@ Example Bulk Request:
 ]
 }
 ~~~
-
-# Service Provider Considerations
-
-This section describes the requirements for service providers that implement the `GroupMembership` resource.
-
-## Discovering Support for the GroupMembership Resource
-
-Service providers that support the `GroupMembership` resource MUST declare this support in their `ResourceType` and `Schema` metadata.
-
-### Schema Endpoint
-
-The service provider's `Schema` definition, available at the `/Schemas` endpoint, MUST include the full schema definitions for `urn:ietf:params:scim:schemas:core:2.0:GroupMembership` as defined in Section 2.3 of this document.
-
-### Impact on the Group Resource
-
-As noted in Section 6, a service provider MAY continue to support the `members` attribute on the `Group` resource for backwards compatibility. When doing so, the service provider MUST maintain transactional integrity and consistency between the state of the `members` attribute and the state of the corresponding `GroupMembership` resources.
-
-For example, if a `DELETE` request to a `/GroupMemberships/{id}` URI is successful, the corresponding member MUST also be removed from the `members` array of the parent `Group` resource. Conversely, if a member is removed from a `Group` via a `PATCH` request to the `/Groups/{id}` URI, the corresponding `GroupMembership` resource MUST be deleted.
-
 
 # Schema Representation
 
