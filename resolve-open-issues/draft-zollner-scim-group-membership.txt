@@ -1,0 +1,797 @@
+
+
+
+
+SCIM                                                          D. Zollner
+Internet-Draft                                                      Okta
+Intended status: Standards Track                        4 September 2026
+Expires: 8 March 2027
+
+
+             SCIM Group Membership Resource Type Extension
+               draft-zollner-scim-group-membership-latest
+
+Abstract
+
+   This document extends the System for Cross-domain Identity Management
+   (SCIM) 2.0 standard by defining a new "GroupMembership" top-level
+   resource.  Under the existing model defined in [RFC7643], group
+   memberships are represented as values in a multi-valued attribute
+   within a Group resource.  This architecture lacks native support for
+   server-side pagination, filtering, or sorting of individual members.
+   In deployments managing large-scale groups (e.g., 100,000 to
+   1,000,000 members or more), retrieving a Group resource results in
+   massive HTTP response payloads that can exceed 100MB in size.  This
+   can lead to service timeouts, memory exhaustion, and network
+   instability, and has led to many major SCIM implementations choosing
+   to not support returning the value of the "members" attribute for
+   Group resources.  This extension introduces a flattened resource
+   model that enables group memberships to benefit from pagination and
+   other SCIM protocol features, ensuring interoperability and
+   performance at scale.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 8 March 2027.
+
+Copyright Notice
+
+   Copyright (c) 2026 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents (https://trustee.ietf.org/
+   license-info) in effect on the date of publication of this document.
+   Please review these documents carefully, as they describe your rights
+   and restrictions with respect to this document.  Code Components
+   extracted from this document must include Revised BSD License text as
+   described in Section 4.e of the Trust Legal Provisions and are
+   provided without warranty as described in the Revised BSD License.
+
+Table of Contents
+
+   1.  Discussion Venues
+   2.  Introduction
+   3.  Notational Conventions
+   4.  The GroupMembership Resource
+     4.1.  Resource Properties
+     4.2.  JSON Representation
+     4.3.  Resource Type Representation
+   5.  groupMemberships Group Schema Extension
+     5.1.  The externallyManaged Attribute
+     5.2.  Example Group Resources
+       5.2.1.  Example of an Externally-Managed Group
+       5.2.2.  Example of a Group with Inline Members
+   6.  Managing GroupMembership Resources
+     6.1.  Creating GroupMembership Resources (POST)
+     6.2.  Retrieving GroupMembership Resources (GET)
+       6.2.1.  Pagination
+       6.2.2.  Filtering
+     6.3.  Deleting GroupMembership Resources (DELETE)
+     6.4.  Bulk Operations
+   7.  Schema Representation
+     7.1.  GroupMembership Core Schema
+     7.2.  groupMemberships Schema Extension
+       7.2.1.  The externallyManaged Attribute Definition
+       7.2.2.  Usage
+     7.3.  Security Considerations
+     7.4.  IANA Considerations
+   8.  Normative References
+   Author's Address
+
+1.  Discussion Venues
+
+   This note is to be removed before publishing as an RFC.
+
+   Source for this draft and an issue tracker can be found at
+   https://github.com/Zollnerd/scim-group-membership.
+
+2.  Introduction
+
+   The System for Cross-domain Identity Management (SCIM) 2.0 protocol
+   RFC7643 [RFC7644] is widely used for automating the provisioning of
+   identities across disparate systems.  While SCIM excels at managing
+   individual User and Group resources, its design for representing
+   relationships, specifically group memberships, encounters significant
+   performance bottlenecks in large-scale enterprise environments.
+
+   Currently, the "members" attribute of a Group resource is a multi-
+   valued attribute.  Because SCIM only supports paginating resources, a
+   client requesting a Group resource must receive the entire list of
+   group memberships in a single HTTP response.  For a group with one
+   million members, an HTTP response can reach approximately 200MB in
+   size.  These large payloads create several critical failure points
+   including memory pressure and network timeouts.
+
+   These failure points have already led to workarounds that avoid the
+   problem rather than solve it.  Some service providers do not return
+   the "members" attribute at all, instead exposing membership only
+   through indirect filter queries against the Group resource.  Some
+   clients request that the "members" attribute be excluded from Group
+   responses altogether, using the excludedAttributes query parameter
+   defined in [RFC7644], for the same reason; this leaves those clients
+   able to push membership additions and removals but unable to read
+   back and reconcile the service provider's actual membership state.
+
+   This document proposes the "GroupMembership" resource type.  By
+   treating a membership as a first-class, top-level resource, service
+   providers can leverage existing SCIM query parameters including
+   filter, count, and multiple pagination methods, allowing them to
+   implement a scaleable and reliable interface for managing groups of
+   any size.
+
+3.  Notational Conventions
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in
+   BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+4.  The GroupMembership Resource
+
+   This section defines the GroupMembership resource, which represents a
+   single membership relationship between a SCIM group and a member.  By
+   representing each membership as a distinct, top-level resource,
+   service providers can manage group memberships individually, allowing
+   for pagination, filtering, and other operations at scale.
+
+   A GroupMembership resource represents a direct membership only.
+   Indirect memberships, as defined in [RFC7643] Section 4.1.2, MUST NOT
+   be represented as GroupMembership resources.
+
+4.1.  Resource Properties
+
+   The GroupMembership resource is defined by the following properties:
+
+   schemas
+      A multi-valued attribute that contains the SCIM schema URNs for
+      this resource.  The URN for the GroupMembership resource's core
+      schema is urn:ietf:params:scim:schemas:core:2.0:GroupMembership.
+      This is a *REQUIRED* attribute.  This attribute is a common
+      attribute inherited from [RFC7643].
+
+   id
+      A unique identifier for the GroupMembership resource, generated by
+      the service provider.  This is a *REQUIRED*, read-only attribute.
+      Clients MUST treat this value as opaque.  The id serves as the
+      stable identifier for a membership link — it uniquely identifies
+      the relationship between a specific group and a specific member,
+      and is the value used to address the resource at the
+      /GroupMemberships/{id} URI.  This attribute is a common attribute
+      inherited from [RFC7643].
+
+   group
+      A complex attribute that provides a reference to the parent Group
+      resource.  This attribute contains the following sub-attributes:
+
+      value
+         The id of the referenced Group resource. *REQUIRED*.
+
+      $ref
+         The URI of the referenced Group resource.  Read-only.
+
+      display
+         A human-readable name for the referenced Group resource,
+         generally corresponding to the group's displayName attribute.
+         Read-only.  When populated, this value MUST match the current
+         displayName of the referenced Group resource.
+
+   member
+      A complex attribute that provides a reference to the member
+      resource, which can be a User, another Group, or any other
+      resource type that can be a member of a group.  This attribute
+      contains the following sub-attributes:
+
+      value
+         The id of the referenced member resource. *REQUIRED*.
+
+      $ref
+         The URI of the referenced member resource.  Read-only.
+
+      type
+         A string that specifies the resource type of the member, e.g.,
+         "User" or "Group".  Read-only.
+
+      display
+         A human-readable name for the referenced member resource,
+         generally corresponding to the member's displayName attribute.
+         Read-only.  When populated, this value MUST match the current
+         displayName of the referenced resource.
+
+   Service providers MAY optimize payload size by omitting the
+   group.display and member.display sub-attributes entirely, or by
+   configuring them as returned: "request" (available only when
+   explicitly requested via the attributes query parameter).  Because
+   these sub-attributes are optional and read-only, a service provider
+   that never implements them is fully conformant.
+
+   meta
+      A complex attribute containing metadata about the resource.  This
+      includes the resourceType (which MUST be "GroupMembership"),
+      created, lastModified, and location attributes.  This is a
+      REQUIRED, read-only attribute.  This attribute is a common
+      attribute inherited from [RFC7643].
+
+   If a service provider's implementation does not support creating or
+   deleting GroupMembership resources, all attributes in the schema
+   definition returned from /Schemas MUST have their mutability property
+   set to readOnly.
+
+   This resource's ResourceType and Schema definitions are discoverable
+   via the /ResourceTypes and /Schemas endpoints, respectively, per
+   [RFC7644].  The definitions for both are provided below.
+
+4.2.  JSON Representation
+
+   The following is an example of a GroupMembership resource in JSON
+   format.  This example represents the membership of a user in a group:
+
+ {
+   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMembership"],
+   "id": "gm12345",
+   "group": {
+     "value": "e9e30db",
+     "$ref": "https://example.com/scim/v2/Groups/e9e30db",
+     "display": "Engineering Team"
+   },
+   "member": {
+     "value": "2819c22",
+     "$ref": "https://example.com/scim/v2/Users/2819c22",
+     "type": "User",
+     "display": "John Doe"
+   },
+   "meta": {
+     "resourceType": "GroupMembership",
+     "created": "2026-02-24T20:26:44Z",
+     "lastModified": "2026-02-24T20:26:44Z",
+     "location": "https://example.com/scim/v2/GroupMemberships/gm12345"
+   }
+ }
+
+4.3.  Resource Type Representation
+
+   The service provider's ResourceType schema, available at the
+   /ResourceTypes endpoint, MUST include an entry for "GroupMembership".
+
+   *Example ResourceType entry:*
+
+{
+  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:ResourceType"],
+  "id": "GroupMembership",
+  "name": "GroupMembership",
+  "endpoint": "/GroupMemberships",
+  "description": "Resource representing a single group membership.",
+  "schema": "urn:ietf:params:scim:schemas:core:2.0:GroupMembership",
+  "meta": {
+    "resourceType": "ResourceType",
+    "created": "2026-02-20T13:43:00Z",
+    "lastModified": "2026-02-20T13:43:00Z",
+    "location": "https://example.com/scim/v2/ResourceTypes/GroupMembership"
+  }
+}
+
+5.  groupMemberships Group Schema Extension
+
+   To prevent ambiguity and provide a clear path for clients, this
+   specification also defines an extension schema for the Group
+   resource.  This extension introduces a new attribute,
+   externallyManaged, which signals that a group's membership is managed
+   via /GroupMemberships rather than the members attribute.
+
+   When a Service Provider supports the /GroupMemberships endpoint, it
+   SHOULD include the externallyManaged attribute on Group resources to
+   indicate this for each group.  The schema URN for the extension is
+   urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group.
+
+5.1.  The externallyManaged Attribute
+
+   externallyManaged
+      A boolean indicating whether this group's membership is managed
+      externally via /GroupMemberships rather than the members
+      attribute.  A value of true signals that the /GroupMemberships
+      endpoint, filtered on this group's id, is the canonical and
+      preferred source of this group's membership, regardless of whether
+      the members attribute is also populated.  A value of false, or the
+      absence of this attribute, indicates that the members attribute is
+      the group's canonical membership representation.
+
+   A client can always construct the URI to query a group's memberships
+   without relying on a service-provider-supplied value, using the
+   pattern /GroupMemberships?filter=group.value eq "[Group_ID]".
+
+5.2.  Example Group Resources
+
+5.2.1.  Example of an Externally-Managed Group
+
+   The following is a Group with a large number of members.
+   externallyManaged is true and the members attribute is omitted; the
+   client queries /GroupMemberships for this group's membership.
+
+{
+  "schemas": [
+    "urn:ietf:params:scim:schemas:core:2.0:Group",
+    "urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group"
+  ],
+  "id": "e9e30dba-f08f-4139-944c-2e6949b80b05",
+  "displayName": "All Employees",
+  "urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group": {
+    "externallyManaged": true
+  },
+  "meta": {
+    "resourceType": "Group",
+    "location": "https://example.com/scim/v2/Groups/ \
+      e9e30dba-f08f-4139-944c-2e6949b80b05"
+  }
+}
+
+5.2.2.  Example of a Group with Inline Members
+
+   The following is a Group with a small number of members.
+   externallyManaged is false, indicating that the members attribute is
+   this group's canonical membership representation.
+
+{
+  "schemas": [
+    "urn:ietf:params:scim:schemas:core:2.0:Group",
+    "urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group"
+  ],
+  "id": "a0b1c2d3-f08f-4139-944c-2e6949b80b05",
+  "displayName": "Sales Team",
+  "members": [
+    {
+      "value": "2819c223-7f76-453a-919d-413861904646",
+      "display": "Babs Jensen"
+    }
+  ],
+  "urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group": {
+    "externallyManaged": false
+  },
+  "meta": {
+    "resourceType": "Group",
+    "location": "https://example.com/scim/v2/Groups/ \
+      a0b1c2d3-f08f-4139-944c-2e6949b80b05"
+  }
+}
+
+6.  Managing GroupMembership Resources
+
+   This section describes how GroupMembership resources are managed
+   using the SCIM protocol.  A GroupMembership is fundamentally a link
+   between a group and a member, not a resource with independently
+   editable state.  The group and member attributes of the core schema
+   are declared immutable, so a different group or member value
+   represents a different membership, not an edit to the existing one;
+   as a result, PATCH and PUT have nothing in the core schema to act on.
+   This does not prohibit a service provider from supporting PATCH or
+   PUT as methods; a service provider that adds its own mutable
+   extension attributes to this resource MAY support PATCH for those
+   attributes without contradicting this document.
+
+   If a service provider supports the GroupMembership resource, it MUST
+   make available via /GroupMemberships every membership the requesting
+   client is authorized to view.  This requirement is independent of
+   whether Group.members is also supported or returned; a service
+   provider MAY choose not to return Group.members for groups whose
+   membership is exposed via GroupMembership, and this requirement does
+   not mandate supporting Group.members at all.
+
+   Service providers MAY also support management of group memberships
+   through the existing members attribute of the Group resource as
+   defined in [RFC7643] for the purpose of backwards compatibility with
+   existing clients.  When doing so, the service provider MUST maintain
+   consistency between the state of the members attribute and the state
+   of the corresponding GroupMembership resources.  For example, if a
+   DELETE request to a /GroupMemberships/{id} URI is successful, the
+   corresponding member MUST also be removed from the members array of
+   the parent Group resource.  Conversely, if a member is removed from a
+   Group via a PATCH request to the /Groups/{id} URI, the corresponding
+   GroupMembership resource MUST be deleted.
+
+6.1.  Creating GroupMembership Resources (POST)
+
+   To add a new member to a group, the client sends a POST request to
+   the GroupMemberships endpoint.  The request body MUST contain a
+   GroupMembership resource, specifying the group.value and
+   member.value.
+
+   *  Request: POST /scim/v2/GroupMemberships
+
+   *  Response: 201 Created with the full GroupMembership resource in
+      the body, including its newly generated id and meta attributes.
+
+   A service provider MUST ensure that both the group and the member
+   referenced by their ids exist before creating the GroupMembership
+   resource.  If either the group or the member does not exist, the
+   service provider SHOULD return a 400 Bad Request error with a
+   scimType of invalidValue.
+
+   If the membership already exists, the service provider MUST return a
+   409 Conflict error.
+
+   Example Request Body:
+
+   POST /GroupMemberships
+
+ {
+   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMembership"],
+   "group": {
+     "value": "e9e30db"
+   },
+   "member": {
+     "value": "2819c22"
+   }
+ }
+
+6.2.  Retrieving GroupMembership Resources (GET)
+
+   GroupMembership resources can be retrieved by sending a GET request
+   to the GroupMemberships endpoint.  Clients can retrieve an individual
+   resource by its id or a list of resources.
+
+   *  To get a specific membership: GET /scim/v2/GroupMemberships/{id}
+
+   *  To get all memberships: GET /scim/v2/GroupMemberships
+
+6.2.1.  Pagination
+
+   Service providers MUST support pagination of GroupMembership
+   resources to allow clients to retrieve large sets of memberships in
+   manageable chunks.
+
+   Index-based Pagination: The startIndex and count query parameters are
+   the primary method for pagination, as defined in [RFC7644].
+
+   *  Example: GET /scim/v2/GroupMemberships?startIndex=1&count=1000
+
+   Cursor as defined in [RFC9865] for improved performance with very
+   large data sets.
+
+   *  Example: GET /scim/v2/
+      GroupMemberships?count=1000&cursor=aW5kZXg9MTAx
+
+   The response for a paginated request is a ListResponse containing the
+   GroupMembership resources for the current page.
+
+   A GET request to /GroupMemberships without a filter returns all
+   memberships across all groups.  Service providers SHOULD impose a
+   reasonable per-page limit on such unconstrained listings (e.g., a
+   maximum of 1000 results per page) to avoid unbounded computation over
+   the full membership dataset.  An implementation MAY sort results
+   internally by group.id so that pagination can stream across group
+   boundaries without materializing the entire membership dataset in
+   memory.
+
+6.2.2.  Filtering
+
+   Service providers MUST support filtering on the group.value and
+   member.value attributes.  This enables clients to perform critical
+   queries, such as "find all members of a specific group" or "find all
+   groups a specific user is a member of."
+
+   To find all members of a group:
+      GET /scim/v2/GroupMemberships?filter=group.value eq e9e30db"
+
+   To find all groups for a member:
+      GET /scim/v2/GroupMemberships?filter=member.value eq "2819c22"
+
+   If a service provider supports more than one resource type as a group
+   member, it MUST also support filtering on member.type, so that
+   clients can narrow queries to a specific member resource type without
+   enumerating and filtering results client-side.
+
+   To find all User members of a group:
+      GET /scim/v2/GroupMemberships?filter=group.value eq "e9e30db" and
+      member.type eq "User"
+
+6.3.  Deleting GroupMembership Resources (DELETE)
+
+   To remove a member from a group, the client sends a DELETE request to
+   the URI of the specific GroupMembership resource.
+
+   *  Request: DELETE /scim/v2/GroupMemberships/{id}
+
+   *  Response: 204 No Content on successful deletion.
+
+6.4.  Bulk Operations
+
+   Clients can create and delete multiple GroupMembership resources in a
+   single request using the /Bulk endpoint as defined in [RFC7644].
+   This is highly efficient for synchronizing memberships for a group
+   with many changes.
+
+   The following is an example of a Bulk request that adds two new
+   members and removes one existing member from a group.
+
+   Example Bulk Request:
+
+{
+"schemas": ["urn:ietf:params:scim:api:messages:2.0:BulkRequest"],
+"failOnErrors": 1,
+"Operations": [
+{
+  "method": "POST",
+  "path": "/GroupMemberships",
+  "bulkId": "add-user-1",
+  "data": {
+    "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMembership"],
+    "group": { "value": "e9e30db" },
+    "member": { "value": "aed987" }
+  }
+},
+{
+  "method": "POST",
+  "path": "/GroupMemberships",
+  "bulkId": "add-user-2",
+  "data": {
+    "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMembership"],
+    "group": { "value": "e9e30db" },
+    "member": { "value": "bce5231" }
+  }
+},
+{
+  "method": "DELETE",
+  "path": "/GroupMemberships/gm12345",
+  "bulkId": "delete-user-3"
+}
+]
+}
+
+7.  Schema Representation
+
+7.1.  GroupMembership Core Schema
+
+   The following is the formal SCIM schema definition for the
+   GroupMembership resource.  The schemas and meta attributes are common
+   attributes inherited from [RFC7643] and are included here for
+   completeness.
+
+{
+  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Schema"],
+  "id": "urn:ietf:params:scim:schemas:core:2.0:GroupMembership",
+  "name": "Group Membership",
+  "description": "SCIM resource representing a single group membership.",
+  "attributes": [
+    {
+      "name": "group",
+      "type": "complex",
+      "multiValued": false,
+      "mutability": "immutable",
+      "returned": "default",
+      "required": true,
+      "description": "The group of which the member is a member.",
+      "subAttributes": [
+        {
+          "name": "value",
+          "type": "string",
+          "multiValued": false,
+          "mutability": "immutable",
+          "returned": "default",
+          "required": true,
+          "caseExact": true,
+          "uniqueness": "none",
+          "description": "The id of the group."
+        },
+        {
+          "name": "$ref",
+          "type": "reference",
+          "referenceTypes": ["Group"],
+          "multiValued": false,
+          "mutability": "readOnly",
+          "returned": "default",
+          "required": false,
+          "uniqueness": "none",
+          "description": "The URI of the group."
+        },
+        {
+          "name": "display",
+          "type": "string",
+          "multiValued": false,
+          "mutability": "readOnly",
+          "returned": "default",
+          "required": false,
+          "caseExact": false,
+          "uniqueness": "none",
+          "description": "The displayName of the group."
+        }
+      ]
+    },
+    {
+      "name": "member",
+      "type": "complex",
+      "multiValued": false,
+      "mutability": "immutable",
+      "returned": "default",
+      "required": true,
+      "description": "The member of the group.",
+      "subAttributes": [
+        {
+          "name": "value",
+          "type": "string",
+          "multiValued": false,
+          "mutability": "immutable",
+          "returned": "default",
+          "required": true,
+          "caseExact": true,
+          "uniqueness": "none",
+          "description": "The id of the member."
+        },
+        {
+          "name": "$ref",
+          "type": "reference",
+          "referenceTypes": ["User", "Group"],
+          "multiValued": false,
+          "mutability": "readOnly",
+          "returned": "default",
+          "required": false,
+          "uniqueness": "none",
+          "description": "The URI of the member."
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "multiValued": false,
+          "mutability": "readOnly",
+          "returned": "default",
+          "required": false,
+          "caseExact": false,
+          "uniqueness": "none",
+          "description": "The resource type of the member."
+        },
+        {
+          "name": "display",
+          "type": "string",
+          "multiValued": false,
+          "mutability": "readOnly",
+          "returned": "default",
+          "required": false,
+          "caseExact": false,
+          "uniqueness": "none",
+          "description": "The displayName of the member."
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "resourceType": "Schema",
+    "created": "2026-02-20T13:43:00Z",
+    "lastModified": "2026-02-20T13:43:00Z",
+    "location": "https://example.com/scim/v2/Schemas/ \
+      urn:ietf:params:scim:schemas:core:2.0:GroupMembership"
+  }
+}
+
+7.2.  groupMemberships Schema Extension
+
+   This specification defines a schema extension for the SCIM Group
+   resource to support the discoverability of externally-managed
+   memberships.
+
+   *Schema URN:*
+   urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group
+
+7.2.1.  The externallyManaged Attribute Definition
+
+   The extension introduces a single boolean attribute to the Group
+   resource: externallyManaged.  This attribute is defined as follows.
+   The schemas and meta attributes are common attributes inherited from
+   [RFC7643] and are included here for completeness.
+
+{
+  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Schema"],
+  "id": \
+    "urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group",
+  "name": "GroupMembershipsExtension",
+  "description": "A schema extension for Group resources to \
+    indicate whether membership is managed externally.",
+  "attributes": [
+    {
+      "name": "externallyManaged",
+      "type": "boolean",
+      "multiValued": false,
+      "mutability": "readOnly",
+      "returned": "default",
+      "required": false,
+      "description": "Indicates whether this group's \
+        membership is managed via /GroupMemberships rather \
+        than the members attribute."
+    }
+  ],
+  "meta": {
+    "resourceType": "Schema",
+    "location": "https://example.com/scim/v2/Schemas/ \
+      urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group"
+  }
+}
+
+7.2.2.  Usage
+
+   When a Service Provider uses this extension, it MUST add the schema
+   URN urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group
+   to the schemas attribute of the Group resource.  The
+   externallyManaged attribute is read-only, as it is metadata reported
+   by the Service Provider to the client.
+
+7.3.  Security Considerations
+
+   The security considerations for the GroupMembership resource are
+   substantially the same as those for the User and Group resources
+   defined in Section 8 of the SCIM Protocol document [RFC7644].  All
+   requests MUST be made over a secure channel such as Transport Layer
+   Security (TLS).
+
+   Authentication and authorization for managing GroupMembership
+   resources are the responsibility of the service provider.
+   Implementers should consider the following:
+
+   *  A client with permission to read a Group resource's members
+      attribute MUST be granted permission to GET the corresponding
+      GroupMembership resources for that group.  Access to a Group
+      resource alone does not imply access to its member list — a
+      service provider MAY expose group metadata broadly while
+      restricting membership details to privileged clients.
+
+   *  A client authorized to add or remove members from a Group via a
+      PATCH to the Group resource MUST have equivalent POST and DELETE
+      permissions on GroupMembership resources for that same group.
+
+7.4.  IANA Considerations
+
+   This document requests that IANA register the following URNs in the
+   "SCIM Schemas" registry.
+
+   *URI:* urn:ietf:params:scim:schemas:core:2.0:GroupMembership
+   *Specification:* This document *Description:* Defines the schema for
+   a resource representing a single group membership.
+
+   *URI:*
+   urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group
+   *Specification:* This document *Description:* Defines a schema
+   extension for the Group resource that indicates whether membership is
+   managed externally.
+
+8.  Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/rfc/rfc2119>.
+
+   [RFC7643]  Hunt, P., Ed., Grizzle, K., Wahlstroem, E., and C.
+              Mortimore, "System for Cross-domain Identity Management:
+              Core Schema", RFC 7643, DOI 10.17487/RFC7643, September
+              2015, <https://www.rfc-editor.org/rfc/rfc7643>.
+
+   [RFC7644]  Hunt, P., Ed., Grizzle, K., Ansari, M., Wahlstroem, E.,
+              and C. Mortimore, "System for Cross-domain Identity
+              Management: Protocol", RFC 7644, DOI 10.17487/RFC7644,
+              September 2015, <https://www.rfc-editor.org/rfc/rfc7644>.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
+              May 2017, <https://www.rfc-editor.org/rfc/rfc8174>.
+
+   [RFC9865]  Peterson, M., Ed., Zollner, D., and A. Sehgal, "Cursor-
+              Based Pagination of System of Cross-domain Identity
+              Management (SCIM) Resources", RFC 9865,
+              DOI 10.17487/RFC9865, October 2025,
+              <https://www.rfc-editor.org/rfc/rfc9865>.
+
+Author's Address
+
+   Danny Zollner
+   Okta
+   Email: danny.zollner@okta.com
