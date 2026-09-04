@@ -157,63 +157,36 @@ The service provider's `ResourceType` schema, available at the `/ResourceTypes` 
 }
 ~~~
 
-# membersMetadata Group Schema Extension
+# groupMemberships Group Schema Extension
 
-To prevent ambiguity and provide a clear path for clients, this specification also defines an extension schema for the `Group` resource. This extension introduces a new complex attribute, `membersMetadata`, which signals how group memberships are managed and provides metadata about those memberships.
+To prevent ambiguity and provide a clear path for clients, this specification also defines an extension schema for the `Group` resource. This extension introduces a new attribute, `externallyManaged`, which signals that a group's membership is managed via `/GroupMemberships` rather than the `members` attribute.
 
-When a Service Provider supports the `/GroupMembers` endpoint, it SHOULD include the `membersMetadata` attribute on `Group` resources to declare its membership management policy for that group. The schema URN for the membersMetadata schema extension is `urn:ietf:params:scim:schemas:extension:groupMembers:2.0:Group`
+When a Service Provider supports the `/GroupMemberships` endpoint, it SHOULD include the `externallyManaged` attribute on `Group` resources to indicate this for each group. The schema URN for the extension is `urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group`.
 
-## The `membersMetadata` Attribute
+## The `externallyManaged` Attribute
 
-The `membersMetadata` attribute is a complex attribute with the following sub-attributes:
-
-policy
-: A REQUIRED string that specifies how membership for this group is represented. It MUST have one of the following values:
-
-    inline
-    : Indicates that this group's members are fully represented in the `members` attribute. Clients SHOULD NOT use the `/GroupMembers` endpoint for this group.
-
-    external
-    : Indicates that this group's members are managed exclusively via the `/GroupMembers` endpoint. The `members` attribute MUST be omitted from this `Group` resource representation.
-
-    hybrid
-    : Indicates that the Service Provider MAY return members in the `members` attribute, but the canonical method for managing memberships is via `/GroupMembers`. Clients SHOULD prefer using the `/GroupMembers` endpoint for reliability and scale.
-    {: newline="true"}
+externallyManaged
+: A boolean indicating whether this group's membership is managed externally via `/GroupMemberships` rather than the `members` attribute. A value of `true` signals that the `/GroupMemberships` endpoint, filtered on this group's `id`, is the canonical and preferred source of this group's membership, regardless of whether the `members` attribute is also populated. A value of `false`, or the absence of this attribute, indicates that the `members` attribute is the group's canonical membership representation.
 {: newline="true"}
 
-ref
-: A REQUIRED URI that a client can use to query for the group's members. It MUST be the URI of the `/GroupMembers` endpoint with a pre-populated filter for the current group's ID. Its format is `[GroupMembers_Endpoint]?filter=group.value eq "[Group_ID]"`.
-{: newline="true"}
-
-memberCount
-: An OPTIONAL non-negative integer indicating the total number of members in the group.
-{: newline="true"}
-
-allowedMemberTypes
-: An OPTIONAL multi-valued attribute containing a list of strings that specify the resource types (`resourceType`) of members allowed in this group.
-{: newline="true"}
+A client can always construct the URI to query a group's memberships without relying on a service-provider-supplied value, using the pattern `/GroupMemberships?filter=group.value eq "[Group_ID]"`.
 
 ## Example Group Resources
 
-### Example of an "External" Policy
+### Example of an Externally-Managed Group
 
-The following is a `Group` with a large number of members. The `policy` is `"external"`, the `members` attribute is absent, and the client is directed to use the `ref` URI.
+The following is a `Group` with a large number of members. `externallyManaged` is `true` and the `members` attribute is omitted; the client queries `/GroupMemberships` for this group's membership.
 
 ~~~
 {
   "schemas": [
     "urn:ietf:params:scim:schemas:core:2.0:Group",
-    "urn:ietf:params:scim:schemas:extension:groupMembers:2.0:Group"
+    "urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group"
   ],
   "id": "e9e30dba-f08f-4139-944c-2e6949b80b05",
   "displayName": "All Employees",
-  "urn:ietf:params:scim:schemas:extension:groupMembers:2.0:Group": {
-    "membersMetadata": {
-      "policy": "external",
-      "ref": "https://example.com/scim/v2/GroupMembers?filter= \
-        group.value%20eq%20%22e9e30dba-f08f-4139-944c-2e6949b80b05%22",
-      "memberCount": 150321
-    }
+  "urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group": {
+    "externallyManaged": true
   },
   "meta": {
     "resourceType": "Group",
@@ -223,15 +196,15 @@ The following is a `Group` with a large number of members. The `policy` is `"ext
 }
 ~~~
 
-### Example of a "Hybrid" Policy
+### Example of a Group with Inline Members
 
-The following is a `Group` with a small number of members. The `policy` is `"hybrid"`, indicating that while the members are included inline for convenience, clients should still prefer using the `/GroupMembers` endpoint for management operations.
+The following is a `Group` with a small number of members. `externallyManaged` is `false`, indicating that the `members` attribute is this group's canonical membership representation.
 
 ~~~
 {
   "schemas": [
     "urn:ietf:params:scim:schemas:core:2.0:Group",
-    "urn:ietf:params:scim:schemas:extension:groupMembers:2.0:Group"
+    "urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group"
   ],
   "id": "a0b1c2d3-f08f-4139-944c-2e6949b80b05",
   "displayName": "Sales Team",
@@ -241,14 +214,8 @@ The following is a `Group` with a small number of members. The `policy` is `"hyb
       "display": "Babs Jensen"
     }
   ],
-  "urn:ietf:params:scim:schemas:extension:groupMembers:2.0:Group": {
-    "membersMetadata": {
-      "policy": "hybrid",
-      "ref": "https://example.com/scim/v2/GroupMembers?filter= \
-        group.value%20eq%20%22a0b1c2d3-f08f-4139-944c-2e6949b80b05%22",
-      "memberCount": 1,
-      "allowedMemberTypes": ["User", "Group"]
-    }
+  "urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group": {
+    "externallyManaged": false
   },
   "meta": {
     "resourceType": "Group",
@@ -517,16 +484,16 @@ inherited from [RFC7643] and are included here for completeness.
 }
 ~~~
 
-## membersMetadata Schema Extension
+## groupMemberships Schema Extension
 
-This specification defines a schema extension for the SCIM `Group` resource to support the discoverability of membership management policies.
+This specification defines a schema extension for the SCIM `Group` resource to support the discoverability of externally-managed memberships.
 
-**Schema URN:** `urn:ietf:params:scim:schemas:extension:groupMembers:2.0:Group`
+**Schema URN:** `urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group`
 
-### The `membersMetadata` Attribute Definition
+### The `externallyManaged` Attribute Definition
 
-The extension introduces a single complex attribute to the `Group`
-resource: `membersMetadata`. This attribute is defined as follows. The
+The extension introduces a single boolean attribute to the `Group`
+resource: `externallyManaged`. This attribute is defined as follows. The
 `schemas` and `meta` attributes are common attributes inherited from
 [RFC7643] and are included here for completeness.
 
@@ -534,77 +501,27 @@ resource: `membersMetadata`. This attribute is defined as follows. The
 {
   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Schema"],
   "id": \
-    "urn:ietf:params:scim:schemas:extension:groupMembers:2.0:Group",
-  "name": "GroupMembersMetadata",
+    "urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group",
+  "name": "GroupMembershipsExtension",
   "description": "A schema extension for Group resources to \
-    provide metadata about how members are managed.",
+    indicate whether membership is managed externally.",
   "attributes": [
     {
-      "name": "membersMetadata",
-      "type": "complex",
+      "name": "externallyManaged",
+      "type": "boolean",
       "multiValued": false,
       "mutability": "readOnly",
       "returned": "default",
       "required": false,
-      "description": "Provides metadata about the management \
-        of this group's members.",
-      "subAttributes": [
-        {
-          "name": "policy",
-          "type": "string",
-          "multiValued": false,
-          "mutability": "readOnly",
-          "returned": "default",
-          "required": true,
-          "canonicalValues": [
-            "inline",
-            "external",
-            "hybrid"
-          ],
-          "description": "Specifies the policy for how \
-            membership of this group is represented."
-        },
-        {
-          "name": "ref",
-          "type": "reference",
-          "referenceTypes": ["uri"],
-          "multiValued": false,
-          "mutability": "readOnly",
-          "returned": "default",
-          "required": true,
-          "description": "A URI that a client can use to \
-            query for the group's members."
-        },
-        {
-          "name": "memberCount",
-          "type": "integer",
-          "multiValued": false,
-          "mutability": "readOnly",
-          "returned": "default",
-          "required": false,
-          "uniqueness": "none",
-          "description": "An integer indicating the total \
-            number of members in the group."
-        },
-        {
-          "name": "allowedMemberTypes",
-          "type": "string",
-          "multiValued": true,
-          "mutability": "readOnly",
-          "returned": "default",
-          "required": false,
-          "caseExact": true,
-          "uniqueness": "none",
-          "description": "A list of strings specifying the \
-            resource types of members allowed in this group."
-        }
-      ]
+      "description": "Indicates whether this group's \
+        membership is managed via /GroupMemberships rather \
+        than the members attribute."
     }
   ],
   "meta": {
     "resourceType": "Schema",
     "location": "https://example.com/scim/v2/Schemas/ \
-      urn:ietf:params:scim:schemas:extension:groupMembers:2.0:Group"
+      urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group"
   }
 }
 ~~~
@@ -612,10 +529,10 @@ resource: `membersMetadata`. This attribute is defined as follows. The
 ### Usage
 
 When a Service Provider uses this extension, it MUST add the schema URN
-`urn:ietf:params:scim:schemas:extension:groupMembers:2.0:Group` to the
-`schemas` attribute of the `Group` resource. The `membersMetadata`
-attribute and its sub-attributes are read-only, as they are metadata
-reported by the Service Provider to the client.
+`urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group` to
+the `schemas` attribute of the `Group` resource. The `externallyManaged`
+attribute is read-only, as it is metadata reported by the Service
+Provider to the client.
 
 
 ## Security Considerations
@@ -636,6 +553,6 @@ This document requests that IANA register the following URNs in the "SCIM Schema
 **Specification:** This document
 **Description:** Defines the schema for a resource representing a single group membership.
 
-**URI:** `urn:ietf:params:scim:schemas:extension:groupMembers:2.0:Group`
+**URI:** `urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group`
 **Specification:** This document
-**Description:** Defines a schema extension for the Group resource that provides metadata about how group memberships are managed.
+**Description:** Defines a schema extension for the Group resource that indicates whether membership is managed externally.
