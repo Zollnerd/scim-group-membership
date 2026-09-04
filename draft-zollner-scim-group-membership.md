@@ -295,6 +295,12 @@ To find all groups for a member:
 : GET /scim/v2/GroupMemberships?filter=member.value eq "2819c22"
 {: newline="true"}
 
+If a service provider supports more than one resource type as a group member, it MUST also support filtering on `member.type`, so that clients can narrow queries to a specific member resource type without enumerating and filtering results client-side.
+
+To find all User members of a group:
+: GET /scim/v2/GroupMemberships?filter=group.value eq "e9e30db" and member.type eq "User"
+{: newline="true"}
+
 ## Deleting GroupMembership Resources (DELETE)
 
 To remove a member from a group, the client sends a `DELETE` request to the URI of the specific `GroupMembership` resource.
