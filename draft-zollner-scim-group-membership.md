@@ -45,6 +45,8 @@ The System for Cross-domain Identity Management (SCIM) 2.0 protocol [RFC7643][RF
 
 Currently, the "members" attribute of a Group resource is a multi-valued attribute. Because SCIM only supports paginating resources, a client requesting a Group resource must receive the entire list of group memberships in a single HTTP response. For a group with one million members, an HTTP response can reach approximately 200MB in size. These large payloads create several critical failure points including memory pressure and network timeouts.
 
+These failure points have already led to workarounds that avoid the problem rather than solve it. Some service providers do not return the "members" attribute at all, instead exposing membership only through indirect filter queries against the Group resource. Some clients request that the "members" attribute be excluded from Group responses altogether, using the `excludedAttributes` query parameter defined in [RFC7644], for the same reason; this leaves those clients able to push membership additions and removals but unable to read back and reconcile the service provider's actual membership state.
+
 This document proposes the "GroupMembership" resource type. By treating a membership as a first-class, top-level resource, service providers can leverage existing SCIM query parameters including filter, count, and multiple pagination methods, allowing them to implement a scaleable and reliable interface for managing groups of any size.
 
 # Notational Conventions
