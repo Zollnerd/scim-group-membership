@@ -283,6 +283,8 @@ Cursor as defined in [RFC9865] for improved performance with very large data set
 
 The response for a paginated request is a `ListResponse` containing the `GroupMembership` resources for the current page.
 
+A `GET` request to `/GroupMemberships` without a filter returns all memberships across all groups. Service providers SHOULD impose a reasonable per-page limit on such unconstrained listings (e.g., a maximum of 1000 results per page) to avoid unbounded computation over the full membership dataset. An implementation MAY sort results internally by `group.id` so that pagination can stream across group boundaries without materializing the entire membership dataset in memory.
+
 ### Filtering
 
 Service providers MUST support filtering on the `group.value` and `member.value` attributes. This enables clients to perform critical queries, such as "find all members of a specific group" or "find all groups a specific user is a member of."
