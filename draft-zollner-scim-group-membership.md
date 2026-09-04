@@ -1,7 +1,7 @@
 ---
 title: SCIM Group Membership Resource Type Extension
 abbrev: SCIM Group Membership Resource
-docname: draft-zollner-scim-group-members-latest
+docname: draft-zollner-scim-group-membership-latest
 category: std
 
 ipr: trust200902
