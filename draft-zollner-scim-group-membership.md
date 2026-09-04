@@ -79,7 +79,7 @@ group
     : The URI of the referenced Group resource. Read-only.
 
     display
-    : A human-readable name for the referenced Group resource, generally corresponding to the group's `displayName` attribute. Read-only.
+    : A human-readable name for the referenced Group resource, generally corresponding to the group's `displayName` attribute. Read-only. When populated, this value MUST match the current `displayName` of the referenced `Group` resource.
     {: newline="true"}
 {: newline="true"}
 
@@ -96,7 +96,7 @@ member
     : A string that specifies the resource type of the member, e.g., "User" or "Group". Read-only.
 
     display
-    : A human-readable name for the referenced member resource, generally corresponding to the member's `displayName` attribute. Read-only.
+    : A human-readable name for the referenced member resource, generally corresponding to the member's `displayName` attribute. Read-only. When populated, this value MUST match the current `displayName` of the referenced resource.
     {: newline="true"}
 {: newline="true"}
 
