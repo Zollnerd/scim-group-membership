@@ -100,6 +100,8 @@ member
     {: newline="true"}
 {: newline="true"}
 
+Service providers MAY optimize payload size by omitting the `group.display` and `member.display` sub-attributes entirely, or by configuring them as `returned: "request"` (available only when explicitly requested via the `attributes` query parameter). Because these sub-attributes are optional and read-only, a service provider that never implements them is fully conformant.
+
 meta
 : A complex attribute containing metadata about the resource. This includes the `resourceType` (which MUST be "GroupMembership"), `created`, `lastModified`, and `location` attributes. This is a REQUIRED, read-only attribute. This attribute is a common attribute inherited from [RFC7643].
 {: newline="true"}
