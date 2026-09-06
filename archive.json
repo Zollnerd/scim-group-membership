@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-09-03T04:04:12.057847+00:00",
+  "timestamp": "2026-09-06T04:12:38.195308+00:00",
   "repo": "Zollnerd/scim-group-membership",
   "labels": [
     {
@@ -55,80 +55,120 @@
       "id": "I_kwDORcubHc8AAAABPabHig",
       "title": "Rename GroupMember resource to GroupMembership",
       "url": "https://github.com/Zollnerd/scim-group-membership/issues/3",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "Zollnerd",
       "authorAssociation": "OWNER",
       "assignees": [],
       "labels": [],
       "body": "The resource type name `GroupMember` reads ambiguously against its own URI pattern: `GET /GroupMembers/{id}` looks like \"get the members of group {id}\" rather than \"get a single membership record.\" It can also be misread as a subclass of User.\n\nChange, to be made consistently across the draft:\n- Resource type name: `GroupMember` \u2192 `GroupMembership`\n- Endpoint: `/GroupMembers` \u2192 `/GroupMemberships`\n- Schema URN: `urn:ietf:params:scim:schemas:core:2.0:GroupMember` \u2192 `urn:ietf:params:scim:schemas:core:2.0:GroupMembership`\n- All prose references, JSON examples, and the IANA considerations entry\n\nThis is a mechanical, whole-document rename with no other content changes bundled in.\n",
       "createdAt": "2026-09-02T21:15:13Z",
-      "updatedAt": "2026-09-02T21:15:13Z",
-      "closedAt": null,
-      "comments": []
+      "updatedAt": "2026-09-03T20:18:52Z",
+      "closedAt": "2026-09-03T20:18:52Z",
+      "comments": [
+        {
+          "author": "Zollnerd",
+          "authorAssociation": "OWNER",
+          "body": "Resolved via #13 (rename) and #14 (follow-on mechanical fixes, stacked on #13). Both merged.",
+          "createdAt": "2026-09-03T20:18:51Z",
+          "updatedAt": "2026-09-03T20:18:51Z"
+        }
+      ]
     },
     {
       "number": 4,
       "id": "I_kwDORcubHc8AAAABPab4sA",
       "title": "Add problem-evidence examples to the Introduction",
       "url": "https://github.com/Zollnerd/scim-group-membership/issues/4",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "Zollnerd",
       "authorAssociation": "OWNER",
       "assignees": [],
       "labels": [],
       "body": "The Introduction currently argues the scalability problem in the abstract (payload size math) without grounding it in real deployment behavior. Add vendor-neutral example evidence:\n\n- A documented case of a SCIM service provider limiting or refusing to support enumeration of group members at scale.\n- A documented case of a SCIM client excluding the `members` attribute during sync because it cannot reliably deserialize very large membership payloads, and as a result has no way to reconcile membership drift against the service provider's actual state \u2014 it can only push add/remove operations, not verify state.\n\nGoal: show the problem already causes client-side workarounds in production, without naming specific vendors or products.\n",
       "createdAt": "2026-09-02T21:16:34Z",
-      "updatedAt": "2026-09-02T21:16:34Z",
-      "closedAt": null,
-      "comments": []
+      "updatedAt": "2026-09-04T21:37:54Z",
+      "closedAt": "2026-09-04T21:37:54Z",
+      "comments": [
+        {
+          "author": "Zollnerd",
+          "authorAssociation": "OWNER",
+          "body": "Addressed in #15, commit https://github.com/Zollnerd/scim-group-membership/commit/03e91a1.",
+          "createdAt": "2026-09-04T20:18:20Z",
+          "updatedAt": "2026-09-04T20:18:20Z"
+        }
+      ]
     },
     {
       "number": 5,
       "id": "I_kwDORcubHc8AAAABPajsxQ",
       "title": "Add per-page limit and streaming-pagination guidance for unconstrained GET /GroupMemberships",
       "url": "https://github.com/Zollnerd/scim-group-membership/issues/5",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "Zollnerd",
       "authorAssociation": "OWNER",
       "assignees": [],
       "labels": [],
       "body": "`GET /GroupMemberships` without a filter returns all memberships across all groups, which a naive implementation could compute expensively. Keep unconstrained queries allowed (for consistency with SCIM's querying model and to leave room for future change-tracking extensions), but add guidance:\n\n- Service providers SHOULD impose a reasonable per-page limit on `GroupMembership` listing (e.g., a maximum of 1000 results per page).\n- Note that an implementation MAY sort results internally by `group.id` to stream pagination across group boundaries without materializing the entire membership dataset.\n",
       "createdAt": "2026-09-02T21:31:50Z",
-      "updatedAt": "2026-09-02T21:31:50Z",
-      "closedAt": null,
-      "comments": []
+      "updatedAt": "2026-09-04T21:37:53Z",
+      "closedAt": "2026-09-04T21:37:53Z",
+      "comments": [
+        {
+          "author": "Zollnerd",
+          "authorAssociation": "OWNER",
+          "body": "Addressed in #15, commit https://github.com/Zollnerd/scim-group-membership/commit/195cd0c.",
+          "createdAt": "2026-09-04T20:18:21Z",
+          "updatedAt": "2026-09-04T20:18:21Z"
+        }
+      ]
     },
     {
       "number": 6,
       "id": "I_kwDORcubHc8AAAABPakOSA",
       "title": "Add explicit normative language on display optionality",
       "url": "https://github.com/Zollnerd/scim-group-membership/issues/6",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "Zollnerd",
       "authorAssociation": "OWNER",
       "assignees": [],
       "labels": [],
       "body": "Returning `display` for both `group` and `member` sub-attributes may be unnecessary payload weight for large result sets. The schema already permits omitting it (`required: false`, `mutability: readOnly`), but the draft doesn't say so explicitly. Add normative language along these lines:\n\n\"Service providers MAY optimize payload size by omitting display names entirely, or by configuring them as `returned: \\\"request\\\"` (available only when explicitly requested via the `attributes` query parameter). Because `display` is optional and read-only, a service provider that never implements it is fully conformant.\"\n",
       "createdAt": "2026-09-02T21:32:56Z",
-      "updatedAt": "2026-09-02T21:32:56Z",
-      "closedAt": null,
-      "comments": []
+      "updatedAt": "2026-09-04T21:37:53Z",
+      "closedAt": "2026-09-04T21:37:53Z",
+      "comments": [
+        {
+          "author": "Zollnerd",
+          "authorAssociation": "OWNER",
+          "body": "Addressed in #15, commit https://github.com/Zollnerd/scim-group-membership/commit/c5b345b.",
+          "createdAt": "2026-09-04T20:18:22Z",
+          "updatedAt": "2026-09-04T20:18:22Z"
+        }
+      ]
     },
     {
       "number": 7,
       "id": "I_kwDORcubHc8AAAABPalOmQ",
       "title": "Replace membersMetadata's policy/ref/memberCount with a single externally-managed boolean; remove allowedMemberTypes",
       "url": "https://github.com/Zollnerd/scim-group-membership/issues/7",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "Zollnerd",
       "authorAssociation": "OWNER",
       "assignees": [],
       "labels": [],
       "body": "Restructure the `membersMetadata` Group schema extension:\n\n- Drop `ref`: redundant, since any client can construct the filter URI from the pattern the draft already defines.\n- Drop `memberCount`: expensive to compute for exactly the large groups this draft targets.\n- Replace the `policy` enum (`inline`/`external`/`hybrid`) with a single boolean attribute named `externallyManaged`, signaling \"this group's membership is managed externally via `/GroupMemberships` and not shown here.\" A group can carry the flag regardless of whether `members` happens to be populated, removing the need for a distinct \"hybrid\" value.\n- Drop `allowedMemberTypes` entirely: it's a general-purpose Group-resource improvement unrelated to this draft's pagination problem, not a `GroupMembership`-specific concern. The right home for it is a future, separate Group schema extension, not yet written.\n- Update the extension's schema URN segment from `groupMembers` to `groupMemberships`, to stay consistent with the resource rename in #3: `urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group`.\n\nResulting extension: a single top-level boolean attribute (`externallyManaged`), a direct attribute of the extension namespace \u2014 no wrapper attribute, no enum, no `ref`, no `memberCount`, no `allowedMemberTypes`.\n",
       "createdAt": "2026-09-02T21:35:08Z",
-      "updatedAt": "2026-09-02T22:45:41Z",
-      "closedAt": null,
-      "comments": []
+      "updatedAt": "2026-09-04T21:37:52Z",
+      "closedAt": "2026-09-04T21:37:51Z",
+      "comments": [
+        {
+          "author": "Zollnerd",
+          "authorAssociation": "OWNER",
+          "body": "Addressed in #15, commit https://github.com/Zollnerd/scim-group-membership/commit/cbdeebe.",
+          "createdAt": "2026-09-04T20:18:23Z",
+          "updatedAt": "2026-09-04T20:18:23Z"
+        }
+      ]
     },
     {
       "number": 8,
@@ -142,57 +182,113 @@
       "labels": [],
       "body": "The draft's Service Provider Considerations section implies a service provider can set `returned: \"never\"` on the `Group.members` attribute on a per-Group-resource-instance basis. This is incorrect: `returned` is a schema-level property applied uniformly to a resource type via the `/Schemas` definition, not something that varies per resource instance.\n\nAction: locate this language, confirm it's still present, and remove or rewrite it to correctly describe schema-level (not instance-level) declarations. Final wording may depend on the outcome of the membersMetadata restructuring issue, since that also touches how service providers declare per-group membership-management behavior.\n",
       "createdAt": "2026-09-02T21:36:10Z",
-      "updatedAt": "2026-09-02T21:36:10Z",
+      "updatedAt": "2026-09-04T20:19:33Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "Zollnerd",
+          "authorAssociation": "OWNER",
+          "body": "Closing as superseded: the `external`/`hybrid` policy language this issue refers to was removed by the membersMetadata restructuring in #15, commit https://github.com/Zollnerd/scim-group-membership/commit/cbdeebe (#7).",
+          "createdAt": "2026-09-04T20:18:28Z",
+          "updatedAt": "2026-09-04T20:19:33Z"
+        }
+      ]
     },
     {
       "number": 9,
       "id": "I_kwDORcubHc8AAAABPbI5jg",
       "title": "Require member.type filtering when a service provider supports more than one member resource type",
       "url": "https://github.com/Zollnerd/scim-group-membership/issues/9",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "Zollnerd",
       "authorAssociation": "OWNER",
       "assignees": [],
       "labels": [],
       "body": "The draft currently gives a SHOULD for service providers to support filtering on `member.type`. A SHOULD leaves clients unable to distinguish \"filtering isn't supported at all\" from \"filtering is supported, but `member.type` specifically isn't a valid filter attribute here\" \u2014 both surface identically (e.g. a `400 invalidFilter`), which is especially costly for large, heterogeneous groups where the client's only fallback is enumerating and filtering client-side.\n\nChange: if a service provider supports more than one resource type as a group member, it MUST support filtering on `member.type`. A service provider with only one possible member type is unaffected, since the condition doesn't apply.\n",
       "createdAt": "2026-09-02T22:47:07Z",
-      "updatedAt": "2026-09-02T22:47:07Z",
-      "closedAt": null,
-      "comments": []
+      "updatedAt": "2026-09-04T21:37:53Z",
+      "closedAt": "2026-09-04T21:37:52Z",
+      "comments": [
+        {
+          "author": "Zollnerd",
+          "authorAssociation": "OWNER",
+          "body": "Addressed in #15, commit https://github.com/Zollnerd/scim-group-membership/commit/45f718c.",
+          "createdAt": "2026-09-04T20:18:24Z",
+          "updatedAt": "2026-09-04T20:18:24Z"
+        }
+      ]
     },
     {
       "number": 10,
       "id": "I_kwDORcubHc8AAAABPbJ3SQ",
       "title": "Clarify core-schema immutability rationale and scope the membership availability requirement to authorization",
       "url": "https://github.com/Zollnerd/scim-group-membership/issues/10",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "Zollnerd",
       "authorAssociation": "OWNER",
       "assignees": [],
       "labels": [],
       "body": "Two related clarifications to the resource's mutability model:\n\n**1. Core schema immutability, explained rather than method-banned.** The core `group` and `member` attributes are already declared immutable in the schema. Add prose explaining why, rather than separately stating the resource \"MUST only support POST, GET, and DELETE\": a `GroupMembership` is fundamentally a link between two resources, so the link itself isn't meant to change \u2014 a different group or member value represents a different membership, not an edit to this one. This does not ban PATCH/PUT as methods; it simply means the core schema gives them nothing to act on. A service provider that adds its own mutable extension attributes may support PATCH for those without contradicting this document.\n\n**2. Availability requirement, scoped to authorization.** If a service provider supports the `GroupMembership` resource, it MUST make available via `/GroupMemberships` every membership that the authenticated and authorized SCIM client is authorized to view. This is independent of whether `Group.members` is also supported or returned \u2014 a service provider MAY choose not to return `Group.members` for groups whose membership is exposed via `GroupMembership`, and this requirement does not mandate supporting `Group.members` at all.\n",
       "createdAt": "2026-09-02T22:49:18Z",
-      "updatedAt": "2026-09-02T22:49:18Z",
-      "closedAt": null,
-      "comments": []
+      "updatedAt": "2026-09-04T21:37:52Z",
+      "closedAt": "2026-09-04T21:37:52Z",
+      "comments": [
+        {
+          "author": "Zollnerd",
+          "authorAssociation": "OWNER",
+          "body": "Addressed in #15, commit https://github.com/Zollnerd/scim-group-membership/commit/0fb8540.",
+          "createdAt": "2026-09-04T20:18:25Z",
+          "updatedAt": "2026-09-04T20:18:25Z"
+        }
+      ]
     },
     {
       "number": 11,
       "id": "I_kwDORcubHc8AAAABPbKs2Q",
       "title": "Add display-consistency rule for group and member sub-attributes",
       "url": "https://github.com/Zollnerd/scim-group-membership/issues/11",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "Zollnerd",
       "authorAssociation": "OWNER",
       "assignees": [],
       "labels": [],
       "body": "When populated, the `display` sub-attribute on `group` or `member` MUST match the current `displayName` of the referenced `Group` or `User` resource. This closes an existing ambiguity: today nothing prevents a service provider from returning a stale or divergent label from the referenced resource's own canonical `displayName`.\n",
       "createdAt": "2026-09-02T22:51:26Z",
-      "updatedAt": "2026-09-02T22:51:26Z",
-      "closedAt": null,
-      "comments": []
+      "updatedAt": "2026-09-04T21:37:54Z",
+      "closedAt": "2026-09-04T21:37:54Z",
+      "comments": [
+        {
+          "author": "Zollnerd",
+          "authorAssociation": "OWNER",
+          "body": "Addressed in #15, commit https://github.com/Zollnerd/scim-group-membership/commit/7860116.",
+          "createdAt": "2026-09-04T20:18:26Z",
+          "updatedAt": "2026-09-04T20:18:26Z"
+        }
+      ]
+    },
+    {
+      "number": 12,
+      "id": "I_kwDORcubHc8AAAABPkyIwQ",
+      "title": "Remove \"Discovering Support\" / \"Service Provider Considerations\" headers; relocate consistency content and drop non-normative discovery MUSTs",
+      "url": "https://github.com/Zollnerd/scim-group-membership/issues/12",
+      "state": "CLOSED",
+      "author": "Zollnerd",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Remove the \"Discovering Support for the GroupMembership Resource\" section and its parent \"Service Provider Considerations\" section entirely. Specifically:\n\n- Drop \"service providers that support the `GroupMembership` resource MUST declare this support in their `ResourceType` and `Schema` metadata\" \u2014 a generic protocol-level discovery statement with no corresponding normative basis in RFC7644 (which only describes, rather than mandates, that service providers extending resource types publish them in `/ResourceTypes` and their schemas in `/Schemas`). Patching that gap belongs at the protocol level, not in this draft.\n- Drop the `Schema Endpoint` subsection's \"the `/Schemas` response MUST include the full schema definitions\" sentence, for the same reason.\n- Relocate the `Group.members`/`GroupMembership` consistency requirement and example (currently under \"Impact on the Group Resource\") into the \"Managing GroupMembership Resources\" section \u2014 it's about runtime behavioral consistency, not discovery, and doesn't belong under either removed header.\n- Add a short, non-normative pointer sentence near the top of Section 2 (\"The GroupMembership Resource\"), before the JSON Representation and Resource Type Representation examples: \"This resource's `ResourceType` and `Schema` definitions are discoverable via the `/ResourceTypes` and `/Schemas` endpoints, respectively, per [RFC7644]. The definitions for both are provided below.\"\n",
+      "createdAt": "2026-09-03T18:38:35Z",
+      "updatedAt": "2026-09-04T21:37:52Z",
+      "closedAt": "2026-09-04T21:37:52Z",
+      "comments": [
+        {
+          "author": "Zollnerd",
+          "authorAssociation": "OWNER",
+          "body": "Addressed in #15, commit https://github.com/Zollnerd/scim-group-membership/commit/8d96eb2.",
+          "createdAt": "2026-09-04T20:18:27Z",
+          "updatedAt": "2026-09-04T20:18:27Z"
+        }
+      ]
     }
   ],
   "pulls": [
@@ -229,24 +325,116 @@
       "id": "PR_kwDORcubHc8AAAABAkY58w",
       "title": "Remove schema extension, rename ResourceType, and text improvements",
       "url": "https://github.com/Zollnerd/scim-group-membership/pull/2",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "drmawi",
       "authorAssociation": "NONE",
       "assignees": [],
       "labels": [],
       "body": "Substantial changes:\r\n\r\n- Removed the extension schema (see my last e-mail)\r\n- Renamed the resource to GroupMembership, as suggested by Hans-Joerg\r\n- One paragraph disallowed any changes of GroupMembership resources. This is correct for the core resource as defined in the draft, which can only be created or deleted, but SCIM 2.0 allows service providers to add more attributes (e.g. through schema extensions), and those attributes may be changable. Potential use-cases are, for example, an expiration date for a membership, comments, or attributes that flag the membership as protected or primary.\r\n\r\nClarifications:\r\n\r\n- Remarks on the relation to the User.groups attribute\r\n- Improved definition of the GroupMembership attributes\r\n- Some more minor issues, see commit messages",
       "createdAt": "2026-08-21T15:29:48Z",
-      "updatedAt": "2026-08-21T15:29:48Z",
+      "updatedAt": "2026-09-03T20:29:13Z",
       "baseRepository": "Zollnerd/scim-group-membership",
       "baseRefName": "main",
       "baseRefOid": "64cc84084dd055916d591e85b333c6ec0f5e3f56",
       "headRepository": "drmawi/scim-group-membership",
       "headRefName": "main",
       "headRefOid": "6a29ef8d677df5bbe7932b68b3c1f82fc278446e",
-      "closedAt": null,
+      "closedAt": "2026-09-03T20:29:12Z",
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
+      "comments": [
+        {
+          "author": "Zollnerd",
+          "authorAssociation": "OWNER",
+          "body": "Hi Matthias,\r\n\r\nThanks for putting this together, and thank you for the thorough pass on the draft\u2019s wording and structure. \r\n\r\nI\u2019ve reviewed this commit by commit. While several of the individual improvements are solid, I won\u2019t be merging this PR as a whole. A couple of overarching reasons:\r\n\r\n* **Scope & Granularity:** This bundles a wide variety of independent changes into a single PR (a resource rename, schema extension removal, new normative requirements, textual fixes, and structural overhaul). Reviewing and merging these together makes it difficult to evaluate each on its own merits. In standards work, these need to stand or fall independently.\r\n* **Authorship:** One commit adds you as a co-author of the draft. In IETF/standards processes, adding an author or editor is a significant decision that is made based on a long-term co-editing commitment, rather than something introduced via an unsolicited PR. That said, given the multiple rounds of feedback and valuable discussions we\u2019ve already had on the draft, I\u2019d be very happy to include you in the **Acknowledgements** or **Contributors** section to recognize your input.\r\n\r\nThat said, many of your ideas are valuable. To handle this cleanly while preserving commit history where appropriate, I\u2019ll be cherry-picking clean commits directly and manually implementing reworked versions of the others. \r\n\r\nHere is how each point is being handled:\r\n\r\n### 1. Accepted as Written (Cherry-picking directly)\r\n* **Rename `GroupMember` to `GroupMembership`** (`0bbd1fd`): Agreed. Tracked in #3.\r\n* **Capitalization, `$ref` JSON completeness, and meta sub-attributes fixes** (`653fefb`, `5048090`, `6a29ef8`): Clean fixes, cherry-picking directly.\r\n\r\nThese have been merged in to main via PRs #13 and #14.\r\n\r\n### 2. Partially Accepted / Reworked (Implementing separately)\r\n* **`membersMetadata` Extension** (`963e15d`): Rather than removing it outright, I'm simplifying it to a single boolean attribute and dropping `ref`, `memberCount`, `policy`, and `allowedMemberTypes`. Tracked in #7.\r\n* **PATCH/PUT restrictions & membership availability** (`579483`): Reworked rather than adopted as written. Tracked in #10.\r\n* **Expanded Attribute Descriptions** (`4e2f786`): The display-consistency point is good and will be incorporated. However, I\u2019m not adopting the `User.groups` consistency requirement: `User.groups` can include indirect/transitive memberships, whereas `Group.members` and `GroupMembership` are strictly direct-only, so a blanket consistency requirement does not hold. The restated mutability/required constraints are also already covered by the schema definitions. Tracked in #11.\r\n* **Service Provider Considerations / Discovering Support** (`49ef366`, `885636d`, `fe030b0`): Removing these headers and the two \"MUST declare support\" statements entirely, as neither has a normative basis in RFC 7644 and this draft is not the right vehicle to patch that gap. Tracked in #12.\r\n* **\"Attributes vs. Properties\" Precision** (`ea51f2e`): Will be folded into a dedicated terminology pass once the structural changes land.\r\n\r\n### 3. Not Adopted\r\n* **Deleting \"Impact on the Group Resource\"** (`5ae36c4`): Not adopting; this content is not duplicated elsewhere. It will be relocated rather than deleted as part of #12.\r\n\r\n---\r\n\r\nI appreciate the time and effort you put into this review. Moving forward, please submit contributions like these as smaller, focused PRs or GitHub issues so each topic can be discussed and evaluated separately. \r\n\r\nThank you,\r\n\r\nDanny\r\n",
+          "createdAt": "2026-09-03T20:29:13Z",
+          "updatedAt": "2026-09-03T20:29:13Z"
+        }
+      ],
+      "reviews": []
+    },
+    {
+      "number": 13,
+      "id": "PR_kwDORcubHc8AAAABCG9amw",
+      "title": "Rename GroupMember resource to GroupMembership",
+      "url": "https://github.com/Zollnerd/scim-group-membership/pull/13",
+      "state": "MERGED",
+      "author": "Zollnerd",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Renames the `GroupMember` resource type to `GroupMembership` throughout the draft, including the endpoint (`/GroupMembers` \u2192 `/GroupMemberships`) and schema URN.\n\nIncludes one additional fix beyond the original rename: the `id` attribute description in Section 2 still referred to the \"`GroupMember` resource\" after the rename \u2014 that instance was missed upstream and is fixed here.\n\nCherry-picked from PR #2 (https://github.com/Zollnerd/scim-group-membership/pull/2), commit `0bbd1fd`, plus one new commit fixing the leftover reference.\n\nResolves issue #3 (https://github.com/Zollnerd/scim-group-membership/issues/3).\n",
+      "createdAt": "2026-09-03T19:58:49Z",
+      "updatedAt": "2026-09-03T20:04:29Z",
+      "baseRepository": "Zollnerd/scim-group-membership",
+      "baseRefName": "main",
+      "baseRefOid": "64cc84084dd055916d591e85b333c6ec0f5e3f56",
+      "headRepository": "Zollnerd/scim-group-membership",
+      "headRefName": "rename-group-membership",
+      "headRefOid": "f8fcc2f460ceea61a2dc187940c19d8fb5a22e8b",
+      "closedAt": "2026-09-03T20:04:29Z",
+      "mergedAt": "2026-09-03T20:04:29Z",
+      "mergedBy": "Zollnerd",
+      "mergeCommit": {
+        "oid": "57ed467b38a860f0d2c3ac442aedfbcc322a7efe"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 14,
+      "id": "PR_kwDORcubHc8AAAABCG9tkg",
+      "title": "Apply mechanical wording and example fixes from PR #2",
+      "url": "https://github.com/Zollnerd/scim-group-membership/pull/14",
+      "state": "MERGED",
+      "author": "Zollnerd",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Cherry-picks three purely mechanical fixes from PR https://github.com/Zollnerd/scim-group-membership/pull/2 that don't depend on any of that PR's unaccepted changes:\r\n\r\n- Capitalization consistency (`Service Provider(s)` \u2192 `service provider(s)`)\r\n- Un-truncates `$ref` values and completes the JSON representation example\r\n- Adds missing `meta` sub-attributes to the schema example\r\n\r\nStacked on the GroupMembership rename branch, since these commits were originally authored after that rename and assume the renamed text throughout. Should be merged after that PR lands (or rebased onto `main` once it does).\r\n",
+      "createdAt": "2026-09-03T19:59:27Z",
+      "updatedAt": "2026-09-03T20:05:51Z",
+      "baseRepository": "Zollnerd/scim-group-membership",
+      "baseRefName": "main",
+      "baseRefOid": "64cc84084dd055916d591e85b333c6ec0f5e3f56",
+      "headRepository": "Zollnerd/scim-group-membership",
+      "headRefName": "matthias-cleanup-fixes",
+      "headRefOid": "0fa39532973c7b35db6c6ac70f77fcb032726292",
+      "closedAt": "2026-09-03T20:05:51Z",
+      "mergedAt": "2026-09-03T20:05:51Z",
+      "mergedBy": "Zollnerd",
+      "mergeCommit": {
+        "oid": "4eb06801abf38ab43db84499a0da03a042e89349"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 15,
+      "id": "PR_kwDORcubHc8AAAABCQOjfQ",
+      "title": "Resolve open review-pass issues (#4-#12)",
+      "url": "https://github.com/Zollnerd/scim-group-membership/pull/15",
+      "state": "MERGED",
+      "author": "Zollnerd",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Addresses the 9 open issues filed during a review pass of the draft. One commit per issue, plus a standalone housekeeping commit finishing the file/docname rename that #3 only applied at the content level.\n\n- f20490e - Rename source file and docname to match the GroupMembership resource name (completes #3, not itself a tracked issue)\n- cbdeebe - #7: Replace membersMetadata policy/ref/memberCount with a single externallyManaged boolean; rename extension URN groupMembers -> groupMemberships\n- 0fb8540 - #10: Reframe the method restriction as immutability rationale; scope the availability requirement to authorization\n- 8d96eb2 - #12: Remove \"Service Provider Considerations\"; relocate the consistency example into \"Managing GroupMembership Resources\"\n- 45f718c - #9: Require member.type filtering when more than one member type is supported\n- 195cd0c - #5: Add per-page limit and group.id streaming guidance for unfiltered listing\n- c5b345b - #6: Add explicit normative language on display optionality\n- 7860116 - #11: Add display-consistency rule for group and member sub-attributes\n- 03e91a1 - #4: Add problem-evidence examples to the Introduction\n\n#8 has no dedicated commit: the only text that could have implied a per-instance `returned` override was the external/hybrid policy language removed in cbdeebe (#7), so it's closed as superseded rather than independently fixed.\n\n## Test plan\n- [x] `make` builds clean (kramdown-rfc, xml2rfc-txt, xml2rfc-html all OK)\n- [x] Manual read-through of the rendered .txt for section flow after the Service Provider Considerations removal",
+      "createdAt": "2026-09-04T20:06:39Z",
+      "updatedAt": "2026-09-04T21:37:52Z",
+      "baseRepository": "Zollnerd/scim-group-membership",
+      "baseRefName": "main",
+      "baseRefOid": "4eb06801abf38ab43db84499a0da03a042e89349",
+      "headRepository": "Zollnerd/scim-group-membership",
+      "headRefName": "resolve-open-issues",
+      "headRefOid": "03e91a1acf84ee09e3c0cb24128ce2c163a65a74",
+      "closedAt": "2026-09-04T21:37:50Z",
+      "mergedAt": "2026-09-04T21:37:50Z",
+      "mergedBy": "Zollnerd",
+      "mergeCommit": {
+        "oid": "8bfdd9e4cea8b17727cb6343ec854c967bf66679"
+      },
       "comments": [],
       "reviews": []
     }
