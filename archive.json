@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-09-06T04:12:38.195308+00:00",
+  "timestamp": "2026-09-08T04:12:51.614361+00:00",
   "repo": "Zollnerd/scim-group-membership",
   "labels": [
     {
@@ -175,15 +175,15 @@
       "id": "I_kwDORcubHc8AAAABPalvFQ",
       "title": "Fix incorrect per-instance returned:\"never\" guidance in Service Provider Considerations",
       "url": "https://github.com/Zollnerd/scim-group-membership/issues/8",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "Zollnerd",
       "authorAssociation": "OWNER",
       "assignees": [],
       "labels": [],
       "body": "The draft's Service Provider Considerations section implies a service provider can set `returned: \"never\"` on the `Group.members` attribute on a per-Group-resource-instance basis. This is incorrect: `returned` is a schema-level property applied uniformly to a resource type via the `/Schemas` definition, not something that varies per resource instance.\n\nAction: locate this language, confirm it's still present, and remove or rewrite it to correctly describe schema-level (not instance-level) declarations. Final wording may depend on the outcome of the membersMetadata restructuring issue, since that also touches how service providers declare per-group membership-management behavior.\n",
       "createdAt": "2026-09-02T21:36:10Z",
-      "updatedAt": "2026-09-04T20:19:33Z",
-      "closedAt": null,
+      "updatedAt": "2026-09-06T18:35:07Z",
+      "closedAt": "2026-09-06T18:35:07Z",
       "comments": [
         {
           "author": "Zollnerd",
@@ -191,6 +191,13 @@
           "body": "Closing as superseded: the `external`/`hybrid` policy language this issue refers to was removed by the membersMetadata restructuring in #15, commit https://github.com/Zollnerd/scim-group-membership/commit/cbdeebe (#7).",
           "createdAt": "2026-09-04T20:18:28Z",
           "updatedAt": "2026-09-04T20:19:33Z"
+        },
+        {
+          "author": "Zollnerd",
+          "authorAssociation": "OWNER",
+          "body": "Superseded by #7's removal of the external/hybrid policy language; see prior comment.",
+          "createdAt": "2026-09-06T18:35:06Z",
+          "updatedAt": "2026-09-06T18:35:06Z"
         }
       ]
     },
@@ -304,7 +311,7 @@
       "labels": [],
       "body": "",
       "createdAt": "2026-04-13T22:32:30Z",
-      "updatedAt": "2026-04-13T22:34:13Z",
+      "updatedAt": "2026-09-06T18:44:58Z",
       "baseRepository": "Zollnerd/scim-group-membership",
       "baseRefName": "main",
       "baseRefOid": "71f2810b98b52da00246025b6c64db18aab0e922",
@@ -366,7 +373,7 @@
       "labels": [],
       "body": "Renames the `GroupMember` resource type to `GroupMembership` throughout the draft, including the endpoint (`/GroupMembers` \u2192 `/GroupMemberships`) and schema URN.\n\nIncludes one additional fix beyond the original rename: the `id` attribute description in Section 2 still referred to the \"`GroupMember` resource\" after the rename \u2014 that instance was missed upstream and is fixed here.\n\nCherry-picked from PR #2 (https://github.com/Zollnerd/scim-group-membership/pull/2), commit `0bbd1fd`, plus one new commit fixing the leftover reference.\n\nResolves issue #3 (https://github.com/Zollnerd/scim-group-membership/issues/3).\n",
       "createdAt": "2026-09-03T19:58:49Z",
-      "updatedAt": "2026-09-03T20:04:29Z",
+      "updatedAt": "2026-09-06T18:44:58Z",
       "baseRepository": "Zollnerd/scim-group-membership",
       "baseRefName": "main",
       "baseRefOid": "64cc84084dd055916d591e85b333c6ec0f5e3f56",
@@ -394,7 +401,7 @@
       "labels": [],
       "body": "Cherry-picks three purely mechanical fixes from PR https://github.com/Zollnerd/scim-group-membership/pull/2 that don't depend on any of that PR's unaccepted changes:\r\n\r\n- Capitalization consistency (`Service Provider(s)` \u2192 `service provider(s)`)\r\n- Un-truncates `$ref` values and completes the JSON representation example\r\n- Adds missing `meta` sub-attributes to the schema example\r\n\r\nStacked on the GroupMembership rename branch, since these commits were originally authored after that rename and assume the renamed text throughout. Should be merged after that PR lands (or rebased onto `main` once it does).\r\n",
       "createdAt": "2026-09-03T19:59:27Z",
-      "updatedAt": "2026-09-03T20:05:51Z",
+      "updatedAt": "2026-09-06T18:44:58Z",
       "baseRepository": "Zollnerd/scim-group-membership",
       "baseRefName": "main",
       "baseRefOid": "64cc84084dd055916d591e85b333c6ec0f5e3f56",
