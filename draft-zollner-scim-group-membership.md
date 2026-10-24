@@ -540,6 +540,8 @@ Authentication and authorization for managing `GroupMembership` resources are th
 
 *   A client with permission to read a `Group` resource's `members` attribute MUST be granted permission to `GET` the corresponding `GroupMembership` resources for that group. Access to a `Group` resource alone does not imply access to its member list — a service provider MAY expose group metadata broadly while restricting membership details to privileged clients.
 
+*   Access to a member resource (such as a `User`) alone does not imply access to that resource's group memberships. A service provider MUST apply the same authorization to `GET /GroupMemberships` requests, including those filtered on `member.value`, that it applies to reading the `members` attribute of the corresponding `Group` resources. The membership relationship can be more sensitive than either the member or the group individually, regardless of the member's resource type.
+
 *   A client authorized to add or remove members from a `Group` via a `PATCH` to the `Group` resource MUST have equivalent `POST` and `DELETE` permissions on `GroupMembership` resources for that same group.
 
 ## IANA Considerations
