@@ -142,7 +142,7 @@ The following is an example of a `GroupMembership` resource in JSON format. This
 
 ## Resource Type Representation
 
-The service provider's `ResourceType` schema, available at the `/ResourceTypes` endpoint, MUST include an entry for "GroupMembership".
+The service provider's `/ResourceTypes` endpoint MUST include a `ResourceType` resource for "GroupMembership".
 
 **Example ResourceType entry:**
 
