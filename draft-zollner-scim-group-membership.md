@@ -281,7 +281,7 @@ Index-based Pagination: The `startIndex` and `count` query parameters are the pr
 
 *   Example: `GET /scim/v2/GroupMemberships?startIndex=1&count=1000`
 
-Cursor as defined in [RFC9865] for improved performance with very large data sets.
+Cursor-based Pagination: Cursor-based pagination, as defined in [RFC9865], is available as an alternative to index-based pagination.
 
 *   Example: `GET /scim/v2/GroupMemberships?count=1000&cursor=aW5kZXg9MTAx`
 
