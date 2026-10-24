@@ -294,7 +294,7 @@ A `GET` request to `/GroupMemberships` without a filter returns all memberships 
 Service providers MUST support filtering on the `group.value` and `member.value` attributes. This enables clients to perform critical queries, such as "find all members of a specific group" or "find all groups a specific user is a member of."
 
 To find all members of a group:
-: GET /scim/v2/GroupMemberships?filter=group.value eq e9e30db"
+: GET /scim/v2/GroupMemberships?filter=group.value eq "e9e30db"
 {: newline="true"}
 
 To find all groups for a member:
