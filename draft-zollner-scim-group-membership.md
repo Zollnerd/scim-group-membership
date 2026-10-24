@@ -183,6 +183,8 @@ A client can always construct the URI to query a group's memberships without rel
 
 The following is a `Group` with a large number of members. `externallyManaged` is `true` and the `members` attribute is omitted; the client queries `/GroupMemberships` for this group's membership.
 
+Example Request: `GET /scim/v2/Groups/e9e30dba-f08f-4139-944c-2e6949b80b05`
+
 ~~~
 {
   "schemas": [
@@ -205,6 +207,8 @@ The following is a `Group` with a large number of members. `externallyManaged` i
 ### Example of a Group with Inline Members
 
 The following is a `Group` with a small number of members. `externallyManaged` is `false`, indicating that the `members` attribute is this group's canonical membership representation.
+
+Example Request: `GET /scim/v2/Groups/a0b1c2d3-f08f-4139-944c-2e6949b80b05`
 
 ~~~
 {
