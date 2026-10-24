@@ -268,7 +268,7 @@ POST /GroupMemberships
 
 ## Retrieving GroupMembership Resources (GET)
 
-`GroupMembership` resources can be retrieved by sending a `GET` request to the `GroupMemberships` endpoint. Clients can retrieve an individual resource by its `id` or a list of resources.
+`GroupMembership` resources can be retrieved by sending a `GET` request to the `GroupMemberships` endpoint. Clients can retrieve an individual resource by its `id`, or retrieve a collection of resources that can be narrowed using a filter on attributes such as `group.value` or `member.value`.
 
 *   To get a specific membership: `GET /scim/v2/GroupMemberships/{id}`
 *   To get all memberships: `GET /scim/v2/GroupMemberships`
