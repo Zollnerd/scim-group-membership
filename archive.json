@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-09-08T04:12:51.614361+00:00",
+  "timestamp": "2026-10-25T04:18:16.298808+00:00",
   "repo": "Zollnerd/scim-group-membership",
   "labels": [
     {
@@ -296,6 +296,102 @@
           "updatedAt": "2026-09-04T20:18:27Z"
         }
       ]
+    },
+    {
+      "number": 16,
+      "id": "I_kwDORcubHc8AAAABZqyIww",
+      "title": "Fix missing opening quote in the group.value filter example",
+      "url": "https://github.com/Zollnerd/scim-group-membership/issues/16",
+      "state": "OPEN",
+      "author": "Zollnerd",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Reported by Paul Lanzi in his review of draft-zollner-scim-group-members-01 on the SCIM list (item 8), and acknowledged in the 2026-07-14 reply.\n\nThe \"find all members of a group\" example in the Filtering section is missing the opening quote before the filter value, so the example is not a valid SCIM filter. It should match the quoting used in the `member.type` example below it.\n\nhttps://github.com/Zollnerd/scim-group-membership/blob/8bfdd9e4cea8b17727cb6343ec854c967bf66679/draft-zollner-scim-group-membership.md?plain=1#L297",
+      "createdAt": "2026-10-24T20:58:54Z",
+      "updatedAt": "2026-10-24T20:58:54Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 17,
+      "id": "I_kwDORcubHc8AAAABZqyLnA",
+      "title": "Remove performance-only framing from cursor pagination description",
+      "url": "https://github.com/Zollnerd/scim-group-membership/issues/17",
+      "state": "OPEN",
+      "author": "Zollnerd",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Reported by Paul Lanzi (item 7), agreed in the 2026-07-14 reply.\n\nThe cursor pagination bullet says cursors are for \"improved performance with very large data sets.\" That implies cursors are only useful at scale. Cursor pagination also provides a stable result set while a client pages slowly through the data, which is relevant for any membership listing. The line is also a sentence fragment, unlike the index-based bullet above it.\n\nChange: state that cursor pagination per RFC9865 is available as an alternative to index-based pagination, without the performance qualifier.\n\nhttps://github.com/Zollnerd/scim-group-membership/blob/8bfdd9e4cea8b17727cb6343ec854c967bf66679/draft-zollner-scim-group-membership.md?plain=1#L284",
+      "createdAt": "2026-10-24T20:58:58Z",
+      "updatedAt": "2026-10-24T20:58:58Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 18,
+      "id": "I_kwDORcubHc8AAAABZqyO4w",
+      "title": "Clarify how clients retrieve collections of GroupMembership resources",
+      "url": "https://github.com/Zollnerd/scim-group-membership/issues/18",
+      "state": "OPEN",
+      "author": "Zollnerd",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Reported by Paul Lanzi (item 6), agreed in the 2026-07-14 reply.\n\nThe Retrieving section says clients can retrieve \"a list of resources,\" which implies a way to submit a list of memberships to fetch. No such mechanism exists. In practice a collection is retrieved by listing, typically narrowed with a filter on `group.value`, `member.value`, or other attributes. SCIM can OR multiple ids in a filter, but that is awkward at scale and not the primary use case.\n\nChange: say that clients retrieve a membership by `id`, or retrieve a collection that can be narrowed with a filter.\n\nhttps://github.com/Zollnerd/scim-group-membership/blob/8bfdd9e4cea8b17727cb6343ec854c967bf66679/draft-zollner-scim-group-membership.md?plain=1#L271",
+      "createdAt": "2026-10-24T20:59:03Z",
+      "updatedAt": "2026-10-24T20:59:03Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 19,
+      "id": "I_kwDORcubHc8AAAABZqyRXw",
+      "title": "Add member-side access guidance to Security Considerations",
+      "url": "https://github.com/Zollnerd/scim-group-membership/issues/19",
+      "state": "OPEN",
+      "author": "Zollnerd",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Reported by Paul Lanzi (item 9), agreed in the 2026-07-14 reply.\n\nSecurity Considerations covers one direction: access to a `Group` alone does not imply access to its member list. It does not cover the reverse. A client that can read a `User` (or any other member resource) but is not authorized to see that resource's group memberships could learn them by querying `/GroupMemberships?filter=member.value eq \"X\"`, including whether the member belongs to any group at all (`totalResults > 0`). The membership edge can be more sensitive than either the member or the group individually (for example, membership in a restricted investigation or privileged-admin group).\n\nChange: add a symmetric bullet stating that access to a member resource does not imply access to its memberships, and that `member.value` filtering is subject to the same authorization as reading `Group.members`. This applies to any member resource type, not only `User`.\n\nhttps://github.com/Zollnerd/scim-group-membership/blob/8bfdd9e4cea8b17727cb6343ec854c967bf66679/draft-zollner-scim-group-membership.md?plain=1#L541",
+      "createdAt": "2026-10-24T20:59:07Z",
+      "updatedAt": "2026-10-24T20:59:07Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 20,
+      "id": "I_kwDORcubHc8AAAABZq554A",
+      "title": "Show the request that produces each Group example response",
+      "url": "https://github.com/Zollnerd/scim-group-membership/issues/20",
+      "state": "OPEN",
+      "author": "Zollnerd",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Reported by Paul Lanzi (item 2), agreed in the 2026-07-14 reply.\n\nThe two Group examples in \"Example Group Resources\" show a response with no indication of the request that returned it. Paul's point was that readers benefit from seeing the URI that produced the output. His review predates the removal of the `policy` and `ref` attributes, so the original external and hybrid example references are gone, but the same point applies to the current two examples.\n\nChange: add the `GET /scim/v2/Groups/{id}` request above each example response.\n\nhttps://github.com/Zollnerd/scim-group-membership/blob/8bfdd9e4cea8b17727cb6343ec854c967bf66679/draft-zollner-scim-group-membership.md?plain=1#L180-L232",
+      "createdAt": "2026-10-24T21:13:14Z",
+      "updatedAt": "2026-10-24T21:13:14Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 21,
+      "id": "I_kwDORcubHc8AAAABZq58qQ",
+      "title": "Correct \"ResourceType schema\" wording in Resource Type Representation",
+      "url": "https://github.com/Zollnerd/scim-group-membership/issues/21",
+      "state": "OPEN",
+      "author": "Zollnerd",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Raised by Matthias Winter in his first review (item 13f), accepted as a prose consistency pass and deferred until the Service Provider Considerations restructuring landed.\n\nThe sentence conflates the `ResourceType` resource type with its own schema. The `/ResourceTypes` endpoint returns `ResourceType` resources; it does not return a \"schema.\" Fixing it here sets the precedent for the wider schema-versus-resource terminology check.\n\nhttps://github.com/Zollnerd/scim-group-membership/blob/8bfdd9e4cea8b17727cb6343ec854c967bf66679/draft-zollner-scim-group-membership.md?plain=1#L145",
+      "createdAt": "2026-10-24T21:13:18Z",
+      "updatedAt": "2026-10-24T21:13:18Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
   "pulls": [
