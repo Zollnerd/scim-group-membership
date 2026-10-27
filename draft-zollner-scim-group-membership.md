@@ -254,7 +254,7 @@ To add a new member to a group, the client sends a `POST` request to the `GroupM
 
 A service provider MUST ensure that both the group and the member referenced by their `id`s exist before creating the `GroupMembership` resource. If either the group or the member does not exist, the service provider SHOULD return a `400 Bad Request` error with a `scimType` of `invalidValue`.
 
-If the membership already exists, the service provider MUST return a `409 Conflict` error.
+If a `GroupMembership` resource with the same `group.value` and `member.value` already exists, the service provider MUST return a `409 Conflict` error with a `scimType` of `uniqueness`, as defined in [RFC7644] Section 3.3. The service provider MUST NOT create a second `GroupMembership` resource or return a successful response.
 
 Example Request Body:
 
