@@ -165,7 +165,7 @@ The service provider's `/ResourceTypes` endpoint MUST include a `ResourceType` r
 
 # groupMemberships Group Schema Extension
 
-This specification defines an extension schema for the `Group` resource with a single attribute, `membersEmbedded`, which states whether a group's full current membership is delivered in its `members` attribute. The extension lets a service provider add support for `GroupMembership` without changing how it returns `members`, so existing clients are unaffected, while clients that understand the extension get a per-group signal. A service provider that only exposes memberships through `GroupMembership` MAY omit `Group.members` and need not use this extension.
+This specification defines a schema extension for the `Group` resource with a single attribute, `membersEmbedded`, which states whether a group's full current membership is delivered in its `members` attribute. The extension lets a service provider add support for `GroupMembership` without changing how it returns `members`, so existing clients are unaffected, while clients that understand the extension get a per-group signal. A service provider that only exposes memberships through `GroupMembership` MAY omit `Group.members` and need not use this extension.
 
 The schema URN for the extension is `urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group`. A service provider that includes this extension on a `Group` MUST support the `GroupMembership` resource. A service provider that supports this extension SHOULD list its schema URN in the `schemaExtensions` attribute of its `Group` `ResourceType`, with `required` set to `false`.
 
