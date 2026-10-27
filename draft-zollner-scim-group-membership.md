@@ -553,6 +553,8 @@ Authentication and authorization for managing `GroupMembership` resources are th
 
 *   A service provider MUST apply authorization to `POST` and `DELETE` requests for a group's `GroupMembership` resources that is equivalent to the authorization it applies to adding or removing members of that `Group` through `PATCH`.
 
+*   Queries against `/GroupMemberships` without a filter or with a broad filter, and the work needed to populate the `group.display` and `member.display` sub-attributes, can be expensive at the scale this document targets, and can be used to degrade a service provider's availability. Service providers can mitigate this using per-page limits and the `tooMany` error defined in [RFC7644] Section 3.12.
+
 # Schema Registration Templates
 
 The following registration templates, as defined in Section 10.3.2 of [RFC7643], describe the schema URIs registered by this document.
