@@ -172,7 +172,15 @@ The schema URN for the extension is `urn:ietf:params:scim:schemas:extension:grou
 ## The `membersEmbedded` Attribute
 
 membersEmbedded
-: A boolean. A value of `true` is a guarantee by the service provider that the group's full current membership is present in the `members` attribute, so an omitted or empty `members` attribute means the group has no members. A value of `false` indicates that the service provider does not guarantee that `members` contains the full membership. The `members` attribute may in fact be full, partial, omitted, or empty; for example, a service provider that cannot return accurate membership above a certain size can always report `false`, even for a group whose `members` happens to be complete. Clients SHOULD use `/GroupMemberships` filtered on this group's `id`. If the attribute is absent, the service provider makes no statement, and `members` is interpreted as defined in [RFC7643]. This attribute does not affect which operations are supported on `members` or on `GroupMembership` resources, and does not indicate which is the preferred way to manage memberships.
+: A boolean that states whether the group's full current membership is present in the `members` attribute.
+
+    A value of `true` is a guarantee by the service provider that the group's full current membership is present in the `members` attribute, so an omitted or empty `members` attribute means the group has no members. This guarantee applies only to responses in which the `members` attribute would be returned given the request's `attributes` and `excludedAttributes` parameters ([RFC7644] Section 3.4.2.5). A client that excludes `members` from a response cannot conclude from a value of `true` that the group has no members.
+
+    A value of `false` indicates that the service provider does not guarantee that `members` contains the full membership. The `members` attribute may in fact be full, partial, omitted, or empty; for example, a service provider that cannot return accurate membership above a certain size can always report `false`, even for a group whose `members` happens to be complete. When the value is `false`, a client that needs the group's complete membership SHOULD retrieve it from `/GroupMemberships`, filtered on the group's `id`.
+
+    If the attribute is absent, the service provider makes no statement, and `members` is interpreted as defined in [RFC7643].
+
+    This attribute does not affect which operations are supported on `members` or on `GroupMembership` resources, and does not indicate which is the preferred way to manage memberships.
 {: newline="true"}
 
 A client can always construct the URI to query a group's memberships without relying on a service-provider-supplied value, using the pattern `/GroupMemberships?filter=group.value eq "[Group_ID]"`.
