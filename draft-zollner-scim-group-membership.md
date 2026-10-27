@@ -47,7 +47,7 @@ Currently, the "members" attribute of a Group resource is a multi-valued attribu
 
 These failure points have already led to workarounds that avoid the problem rather than solve it. Some service providers do not return the "members" attribute at all, instead exposing membership only through indirect filter queries against the Group resource. Some clients request that the "members" attribute be excluded from Group responses altogether, using the `excludedAttributes` query parameter defined in [RFC7644], for the same reason; this leaves those clients able to push membership additions and removals but unable to read back and reconcile the service provider's actual membership state.
 
-This document proposes the "GroupMembership" resource type. By treating a membership as a first-class, top-level resource, service providers can leverage existing SCIM query parameters including filter, count, and multiple pagination methods, allowing them to implement a scaleable and reliable interface for managing groups of any size.
+This document proposes the "GroupMembership" resource type. By treating a membership as a first-class, top-level resource, service providers can leverage existing SCIM query parameters including filter, count, and multiple pagination methods, allowing them to implement a scalable and reliable interface for managing groups of any size.
 
 # Notational Conventions
 
@@ -291,7 +291,7 @@ Cursor-based Pagination: Cursor-based pagination, as defined in [RFC9865], is av
 
 The response for a paginated request is a `ListResponse` containing the `GroupMembership` resources for the current page.
 
-A `GET` request to `/GroupMemberships` without a filter returns all memberships across all groups. Service providers SHOULD impose a reasonable per-page limit on such unconstrained listings (e.g., a maximum of 1000 results per page) to avoid unbounded computation over the full membership dataset. An implementation MAY sort results internally by `group.id` so that pagination can stream across group boundaries without materializing the entire membership dataset in memory.
+A `GET` request to `/GroupMemberships` without a filter returns all memberships across all groups. Service providers SHOULD impose a reasonable per-page limit on such unconstrained listings (e.g., a maximum of 1000 results per page) to avoid unbounded computation over the full membership dataset. An implementation MAY sort results internally by `group.value` so that pagination can stream across group boundaries without materializing the entire membership dataset in memory.
 
 ### Filtering
 
@@ -503,7 +503,7 @@ resource: `membersEmbedded`. This attribute is defined as follows. The
   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Schema"],
   "id": \
     "urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group",
-  "name": "GroupMembershipsExtension",
+  "name": "Group Memberships Extension",
   "description": "A schema extension for Group resources to \
     indicate whether all of a group's memberships are embedded \
     in the members attribute.",
@@ -539,7 +539,7 @@ Provider to the client.
 
 # Security Considerations
 
-The security considerations for the `GroupMembership` resource are substantially the same as those for the `User` and `Group` resources defined in Section 8 of the SCIM Protocol document [RFC7644]. All requests MUST be made over a secure channel such as Transport Layer Security (TLS).
+The security considerations for the `GroupMembership` resource are substantially the same as those for the `User` and `Group` resources defined in Section 7 of the SCIM Protocol document [RFC7644]. All requests MUST be made over a secure channel such as Transport Layer Security (TLS).
 
 Authentication and authorization for managing `GroupMembership` resources are the responsibility of the service provider. Implementers should consider the following:
 
