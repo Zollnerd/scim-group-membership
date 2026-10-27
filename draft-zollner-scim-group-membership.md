@@ -165,23 +165,23 @@ The service provider's `/ResourceTypes` endpoint MUST include a `ResourceType` r
 
 # groupMemberships Group Schema Extension
 
-To prevent ambiguity and provide a clear path for clients, this specification also defines an extension schema for the `Group` resource. This extension introduces a new attribute, `externallyManaged`, which signals that a group's membership is managed via `/GroupMemberships` rather than the `members` attribute.
+This specification defines an extension schema for the `Group` resource with a single attribute, `membersEmbedded`, which states whether a group's full current membership is delivered in its `members` attribute. The extension lets a service provider add support for `GroupMembership` without changing how it returns `members`, so existing clients are unaffected, while clients that understand the extension get a per-group signal. A service provider that only exposes memberships through `GroupMembership` MAY omit `Group.members` and need not use this extension.
 
-When a Service Provider supports the `/GroupMemberships` endpoint, it SHOULD include the `externallyManaged` attribute on `Group` resources to indicate this for each group. The schema URN for the extension is `urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group`.
+The schema URN for the extension is `urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group`. A service provider that includes this extension on a `Group` MUST support the `GroupMembership` resource. A service provider that supports this extension SHOULD list its schema URN in the `schemaExtensions` attribute of its `Group` `ResourceType`, with `required` set to `false`.
 
-## The `externallyManaged` Attribute
+## The `membersEmbedded` Attribute
 
-externallyManaged
-: A boolean indicating whether this group's membership is managed externally via `/GroupMemberships` rather than the `members` attribute. A value of `true` signals that the `/GroupMemberships` endpoint, filtered on this group's `id`, is the canonical and preferred source of this group's membership, regardless of whether the `members` attribute is also populated. A value of `false`, or the absence of this attribute, indicates that the `members` attribute is the group's canonical membership representation.
+membersEmbedded
+: A boolean. A value of `true` is a guarantee by the service provider that the group's full current membership is present in the `members` attribute, so an omitted or empty `members` attribute means the group has no members. A value of `false` indicates that the service provider does not guarantee that `members` contains the full membership. The `members` attribute may in fact be full, partial, omitted, or empty; for example, a service provider that cannot return accurate membership above a certain size can always report `false`, even for a group whose `members` happens to be complete. Clients SHOULD use `/GroupMemberships` filtered on this group's `id`. If the attribute is absent, the service provider makes no statement, and `members` is interpreted as defined in [RFC7643]. This attribute does not affect which operations are supported on `members` or on `GroupMembership` resources, and does not indicate which is the preferred way to manage memberships.
 {: newline="true"}
 
 A client can always construct the URI to query a group's memberships without relying on a service-provider-supplied value, using the pattern `/GroupMemberships?filter=group.value eq "[Group_ID]"`.
 
 ## Example Group Resources
 
-### Example of an Externally-Managed Group
+### Example of a Group with `membersEmbedded` Set to `false`
 
-The following is a `Group` with a large number of members. `externallyManaged` is `true` and the `members` attribute is omitted; the client queries `/GroupMemberships` for this group's membership.
+The following is a `Group` with a large number of members. `membersEmbedded` is `false` and the `members` attribute is omitted; the client queries `/GroupMemberships` for this group's membership.
 
 Example Request: `GET /scim/v2/Groups/e9e30dba-f08f-4139-944c-2e6949b80b05`
 
@@ -194,7 +194,7 @@ Example Request: `GET /scim/v2/Groups/e9e30dba-f08f-4139-944c-2e6949b80b05`
   "id": "e9e30dba-f08f-4139-944c-2e6949b80b05",
   "displayName": "All Employees",
   "urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group": {
-    "externallyManaged": true
+    "membersEmbedded": false
   },
   "meta": {
     "resourceType": "Group",
@@ -204,9 +204,9 @@ Example Request: `GET /scim/v2/Groups/e9e30dba-f08f-4139-944c-2e6949b80b05`
 }
 ~~~
 
-### Example of a Group with Inline Members
+### Example of a Group with `membersEmbedded` Set to `true`
 
-The following is a `Group` with a small number of members. `externallyManaged` is `false`, indicating that the `members` attribute is this group's canonical membership representation.
+The following is a `Group` with a small number of members. `membersEmbedded` is `true`, so the `members` attribute holds the group's full membership.
 
 Example Request: `GET /scim/v2/Groups/a0b1c2d3-f08f-4139-944c-2e6949b80b05`
 
@@ -225,7 +225,7 @@ Example Request: `GET /scim/v2/Groups/a0b1c2d3-f08f-4139-944c-2e6949b80b05`
     }
   ],
   "urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group": {
-    "externallyManaged": false
+    "membersEmbedded": true
   },
   "meta": {
     "resourceType": "Group",
@@ -487,14 +487,14 @@ inherited from [RFC7643] and are included here for completeness.
 
 ## groupMemberships Schema Extension
 
-This specification defines a schema extension for the SCIM `Group` resource to support the discoverability of externally-managed memberships.
+This specification defines a schema extension for the SCIM `Group` resource to indicate whether all of a group's memberships are embedded in its `members` attribute.
 
 **Schema URN:** `urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group`
 
-### The `externallyManaged` Attribute Definition
+### The `membersEmbedded` Attribute Definition
 
 The extension introduces a single boolean attribute to the `Group`
-resource: `externallyManaged`. This attribute is defined as follows. The
+resource: `membersEmbedded`. This attribute is defined as follows. The
 `schemas` and `meta` attributes are common attributes inherited from
 [RFC7643] and are included here for completeness.
 
@@ -505,18 +505,19 @@ resource: `externallyManaged`. This attribute is defined as follows. The
     "urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group",
   "name": "GroupMembershipsExtension",
   "description": "A schema extension for Group resources to \
-    indicate whether membership is managed externally.",
+    indicate whether all of a group's memberships are embedded \
+    in the members attribute.",
   "attributes": [
     {
-      "name": "externallyManaged",
+      "name": "membersEmbedded",
       "type": "boolean",
       "multiValued": false,
       "mutability": "readOnly",
       "returned": "default",
       "required": false,
-      "description": "Indicates whether this group's \
-        membership is managed via /GroupMemberships rather \
-        than the members attribute."
+      "description": "Indicates whether the full current \
+        membership of this group is delivered in the members \
+        attribute."
     }
   ],
   "meta": {
@@ -531,7 +532,7 @@ resource: `externallyManaged`. This attribute is defined as follows. The
 
 When a Service Provider uses this extension, it MUST add the schema URN
 `urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group` to
-the `schemas` attribute of the `Group` resource. The `externallyManaged`
+the `schemas` attribute of the `Group` resource. The `membersEmbedded`
 attribute is read-only, as it is metadata reported by the Service
 Provider to the client.
 
@@ -558,4 +559,4 @@ This document requests that IANA register the following URNs in the "SCIM Schema
 
 **URI:** `urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group`
 **Specification:** This document
-**Description:** Defines a schema extension for the Group resource that indicates whether membership is managed externally.
+**Description:** Defines a schema extension for the Group resource that indicates whether a group's membership is embedded in its `members` attribute.
