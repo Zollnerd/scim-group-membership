@@ -304,7 +304,11 @@ The response for a paginated request is a `ListResponse` containing the `GroupMe
 }
 ~~~
 
-A `GET` request to `/GroupMemberships` without a filter returns all memberships across all groups. Service providers SHOULD impose a reasonable per-page limit on such unconstrained listings (e.g., a maximum of 1000 results per page) to avoid unbounded computation over the full membership dataset. An implementation MAY sort results internally by `group.value` so that pagination can stream across group boundaries without materializing the entire membership dataset in memory.
+A `GET` request to `/GroupMemberships` without a filter returns all memberships across all groups. Service providers SHOULD impose a reasonable per-page limit on such unconstrained listings (e.g., a maximum of 1000 results per page) to avoid unbounded computation over the full membership dataset. A service provider MAY reject a request without a filter with a `400 Bad Request` error and a `scimType` of `tooMany`, as defined in [RFC7644] Section 3.12. Memberships remain available to clients in that case through requests filtered on `group.value` or `member.value`.
+
+Service providers MUST return `GroupMembership` resources in a stable order across the pages of a single query, so that a client paging through the results receives each matching membership exactly once, provided the underlying memberships do not change during the query.
+
+For example, a service provider can meet these requirements without materializing the entire membership dataset in memory by ordering results internally by `group.value`, so that pagination can stream across group boundaries.
 
 ### Filtering
 
