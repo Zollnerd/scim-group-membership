@@ -243,6 +243,8 @@ If a service provider supports the `GroupMembership` resource, it MUST make avai
 
 Service providers MAY also support management of group memberships through the existing `members` attribute of the `Group` resource as defined in [RFC7643] for the purpose of backwards compatibility with existing clients. When doing so, the service provider MUST maintain consistency between the state of the `members` attribute and the state of the corresponding `GroupMembership` resources. For example, if a `DELETE` request to a `/GroupMemberships/{id}` URI is successful, the corresponding member MUST also be removed from the `members` array of the parent `Group` resource. Conversely, if a member is removed from a `Group` via a `PATCH` request to the `/Groups/{id}` URI, the corresponding `GroupMembership` resource MUST be deleted.
 
+When a `Group` resource is deleted, the service provider MUST delete every `GroupMembership` resource whose `group.value` references that group. When a member resource is deleted, the service provider MUST delete every `GroupMembership` resource whose `member.value` references that resource. Deleted `GroupMembership` resources are subject to the requirements of [RFC7644] Section 3.6.
+
 ## Creating GroupMembership Resources (POST)
 
 To add a new member to a group, the client sends a `POST` request to the `GroupMemberships` endpoint. The request body MUST contain a `GroupMembership` resource, specifying the `group.value` and `member.value`.
