@@ -634,3 +634,8 @@ Name:
 Reference:
 : This document
 {: newline="true"}
+
+# Acknowledgments
+{:numbered="false"}
+
+The author would like to thank Matthias Winter, Hans-Joerg Happel, and Paul Lanzi for their detailed reviews and suggestions on the SCIM mailing list and in the draft's repository.
