@@ -9,24 +9,24 @@
 <meta content='
        This document extends the System for Cross-domain Identity Management (SCIM) 2.0 standard by defining a new "GroupMembership" top-level resource. Under the existing model defined in  , group memberships are represented as values in a multi-valued attribute within a Group resource. This architecture lacks native support for server-side pagination, filtering, or sorting of individual members. In deployments managing large-scale groups (e.g., 100,000 to 1,000,000 members or more), retrieving a Group resource results in massive HTTP response payloads that can exceed 100MB in size. This can lead to service timeouts, memory exhaustion, and network instability, and has led to many major SCIM implementations choosing to not support returning the value of the "members" attribute for Group resources. This extension introduces a flattened resource model that enables group memberships to benefit from pagination and other SCIM protocol features, ensuring interoperability and performance at scale. 
     ' name="description">
-<meta content="xml2rfc 3.34.0" name="generator">
+<meta content="xml2rfc 3.34.1" name="generator">
 <meta content="Internet-Draft" name="keyword">
 <meta content="SCIM" name="keyword">
 <meta content="draft-zollner-scim-group-membership-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.34.0
-    Python 3.14.7
-    ConfigArgParse 1.7.5
+  xml2rfc 3.34.1
+    Python 3.14.8
+    ConfigArgParse 1.8.0
     google-i18n-address 3.1.1
     intervaltree 3.2.1
     Jinja2 3.1.6
     lxml 6.1.1
     natsort 8.4.0
-    platformdirs 4.11.7
+    platformdirs 4.13.4
     pycountry 24.6.1
     PyYAML 6.0.3
     requests 2.33.1
-    wcwidth 0.8.3
+    wcwidth 0.9.2
 -->
 <link href="draft-zollner-scim-group-membership.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -1042,11 +1042,11 @@ svg {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">SCIM Group Membership Resource</td>
-<td class="right">September 2026</td>
+<td class="right">October 2026</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Zollner</td>
-<td class="center">Expires 8 March 2027</td>
+<td class="center">Expires 30 April 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1059,12 +1059,12 @@ svg {
 <dd class="internet-draft">draft-zollner-scim-group-membership-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-09-04" class="published">4 September 2026</time>
+<time datetime="2026-10-27" class="published">27 October 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2027-03-08">8 March 2027</time></dd>
+<dd class="expires"><time datetime="2027-04-30">30 April 2027</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1098,7 +1098,7 @@ svg {
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 8 March 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 30 April 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1390,7 +1390,7 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
         <h3 id="name-resource-type-representatio">
 <a href="#section-4.3" class="section-number selfRef">4.3. </a><a href="#name-resource-type-representatio" class="section-name selfRef">Resource Type Representation</a>
         </h3>
-<p id="section-4.3-1">The service provider's <code>ResourceType</code> schema, available at the <code>/ResourceTypes</code> endpoint, <span class="bcp14">MUST</span> include an entry for "GroupMembership".<a href="#section-4.3-1" class="pilcrow">¶</a></p>
+<p id="section-4.3-1">The service provider's <code>/ResourceTypes</code> endpoint <span class="bcp14">MUST</span> include a <code>ResourceType</code> resource for "GroupMembership".<a href="#section-4.3-1" class="pilcrow">¶</a></p>
 <p id="section-4.3-2"><strong>Example ResourceType entry:</strong><a href="#section-4.3-2" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.3-3">
 <pre>
@@ -1447,7 +1447,8 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
 <a href="#section-5.2.1" class="section-number selfRef">5.2.1. </a><a href="#name-example-of-an-externally-ma" class="section-name selfRef">Example of an Externally-Managed Group</a>
           </h4>
 <p id="section-5.2.1-1">The following is a <code>Group</code> with a large number of members. <code>externallyManaged</code> is <code>true</code> and the <code>members</code> attribute is omitted; the client queries <code>/GroupMemberships</code> for this group's membership.<a href="#section-5.2.1-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-5.2.1-2">
+<p id="section-5.2.1-2">Example Request: <code>GET /scim/v2/Groups/e9e30dba-f08f-4139-944c-2e6949b80b05</code><a href="#section-5.2.1-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-5.2.1-3">
 <pre>
 {
   "schemas": [
@@ -1465,7 +1466,7 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
       e9e30dba-f08f-4139-944c-2e6949b80b05"
   }
 }
-</pre><a href="#section-5.2.1-2" class="pilcrow">¶</a>
+</pre><a href="#section-5.2.1-3" class="pilcrow">¶</a>
 </div>
 </section>
 </div>
@@ -1475,7 +1476,8 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
 <a href="#section-5.2.2" class="section-number selfRef">5.2.2. </a><a href="#name-example-of-a-group-with-inl" class="section-name selfRef">Example of a Group with Inline Members</a>
           </h4>
 <p id="section-5.2.2-1">The following is a <code>Group</code> with a small number of members. <code>externallyManaged</code> is <code>false</code>, indicating that the <code>members</code> attribute is this group's canonical membership representation.<a href="#section-5.2.2-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-5.2.2-2">
+<p id="section-5.2.2-2">Example Request: <code>GET /scim/v2/Groups/a0b1c2d3-f08f-4139-944c-2e6949b80b05</code><a href="#section-5.2.2-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-5.2.2-3">
 <pre>
 {
   "schemas": [
@@ -1499,7 +1501,7 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
       a0b1c2d3-f08f-4139-944c-2e6949b80b05"
   }
 }
-</pre><a href="#section-5.2.2-2" class="pilcrow">¶</a>
+</pre><a href="#section-5.2.2-3" class="pilcrow">¶</a>
 </div>
 </section>
 </div>
@@ -1553,7 +1555,7 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
         <h3 id="name-retrieving-groupmembership-">
 <a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-retrieving-groupmembership-" class="section-name selfRef">Retrieving GroupMembership Resources (GET)</a>
         </h3>
-<p id="section-6.2-1"><code>GroupMembership</code> resources can be retrieved by sending a <code>GET</code> request to the <code>GroupMemberships</code> endpoint. Clients can retrieve an individual resource by its <code>id</code> or a list of resources.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
+<p id="section-6.2-1"><code>GroupMembership</code> resources can be retrieved by sending a <code>GET</code> request to the <code>GroupMemberships</code> endpoint. Clients can retrieve an individual resource by its <code>id</code>, or retrieve a collection of resources that can be narrowed using a filter on attributes such as <code>group.value</code> or <code>member.value</code>.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-6.2-2.1">
             <p id="section-6.2-2.1.1">To get a specific membership: <code>GET /scim/v2/GroupMemberships/{id}</code><a href="#section-6.2-2.1.1" class="pilcrow">¶</a></p>
@@ -1574,7 +1576,7 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
               <p id="section-6.2.1-3.1.1">Example: <code>GET /scim/v2/GroupMemberships?startIndex=1&amp;count=1000</code><a href="#section-6.2.1-3.1.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-6.2.1-4">Cursor as defined in <span>[<a href="#RFC9865" class="cite xref">RFC9865</a>]</span> for improved performance with very large data sets.<a href="#section-6.2.1-4" class="pilcrow">¶</a></p>
+<p id="section-6.2.1-4">Cursor-based Pagination: Cursor-based pagination, as defined in <span>[<a href="#RFC9865" class="cite xref">RFC9865</a>]</span>, is available as an alternative to index-based pagination.<a href="#section-6.2.1-4" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-6.2.1-5.1">
               <p id="section-6.2.1-5.1.1">Example: <code>GET /scim/v2/GroupMemberships?count=1000&amp;cursor=aW5kZXg9MTAx</code><a href="#section-6.2.1-5.1.1" class="pilcrow">¶</a></p>
@@ -1593,7 +1595,7 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
 <span class="break"></span><dl class="dlNewline" id="section-6.2.2-2">
             <dt id="section-6.2.2-2.1">To find all members of a group:</dt>
             <dd style="margin-left: 1.5em" id="section-6.2.2-2.2">
-              <p id="section-6.2.2-2.2.1">GET /scim/v2/GroupMemberships?filter=group.value eq e9e30db"<a href="#section-6.2.2-2.2.1" class="pilcrow">¶</a></p>
+              <p id="section-6.2.2-2.2.1">GET /scim/v2/GroupMemberships?filter=group.value eq "e9e30db"<a href="#section-6.2.2-2.2.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
 </dl>
@@ -1886,7 +1888,10 @@ Provider to the client.<a href="#section-7.2.2-1" class="pilcrow">¶</a></p>
             <p id="section-7.3-3.1.1">A client with permission to read a <code>Group</code> resource's <code>members</code> attribute <span class="bcp14">MUST</span> be granted permission to <code>GET</code> the corresponding <code>GroupMembership</code> resources for that group. Access to a <code>Group</code> resource alone does not imply access to its member list — a service provider <span class="bcp14">MAY</span> expose group metadata broadly while restricting membership details to privileged clients.<a href="#section-7.3-3.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-7.3-3.2">
-            <p id="section-7.3-3.2.1">A client authorized to add or remove members from a <code>Group</code> via a <code>PATCH</code> to the <code>Group</code> resource <span class="bcp14">MUST</span> have equivalent <code>POST</code> and <code>DELETE</code> permissions on <code>GroupMembership</code> resources for that same group.<a href="#section-7.3-3.2.1" class="pilcrow">¶</a></p>
+            <p id="section-7.3-3.2.1">Access to a member resource (such as a <code>User</code>) alone does not imply access to that resource's group memberships. A service provider <span class="bcp14">MUST</span> apply the same authorization to <code>GET /GroupMemberships</code> requests, including those filtered on <code>member.value</code>, that it applies to reading the <code>members</code> attribute of the corresponding <code>Group</code> resources. The membership relationship can be more sensitive than either the member or the group individually, regardless of the member's resource type.<a href="#section-7.3-3.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-7.3-3.3">
+            <p id="section-7.3-3.3.1">A client authorized to add or remove members from a <code>Group</code> via a <code>PATCH</code> to the <code>Group</code> resource <span class="bcp14">MUST</span> have equivalent <code>POST</code> and <code>DELETE</code> permissions on <code>GroupMembership</code> resources for that same group.<a href="#section-7.3-3.3.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>

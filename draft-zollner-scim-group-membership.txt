@@ -4,8 +4,8 @@
 
 SCIM                                                          D. Zollner
 Internet-Draft                                                      Okta
-Intended status: Standards Track                        4 September 2026
-Expires: 8 March 2027
+Intended status: Standards Track                         27 October 2026
+Expires: 30 April 2027
 
 
              SCIM Group Membership Resource Type Extension
@@ -45,7 +45,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 8 March 2027.
+   This Internet-Draft will expire on 30 April 2027.
 
 Copyright Notice
 
@@ -264,8 +264,8 @@ Table of Contents
 
 4.3.  Resource Type Representation
 
-   The service provider's ResourceType schema, available at the
-   /ResourceTypes endpoint, MUST include an entry for "GroupMembership".
+   The service provider's /ResourceTypes endpoint MUST include a
+   ResourceType resource for "GroupMembership".
 
    *Example ResourceType entry:*
 
@@ -321,6 +321,9 @@ Table of Contents
    externallyManaged is true and the members attribute is omitted; the
    client queries /GroupMemberships for this group's membership.
 
+   Example Request: GET /scim/v2/Groups/e9e30dba-f08f-4139-944c-
+   2e6949b80b05
+
 {
   "schemas": [
     "urn:ietf:params:scim:schemas:core:2.0:Group",
@@ -343,6 +346,9 @@ Table of Contents
    The following is a Group with a small number of members.
    externallyManaged is false, indicating that the members attribute is
    this group's canonical membership representation.
+
+   Example Request: GET /scim/v2/Groups/a0b1c2d3-f08f-4139-944c-
+   2e6949b80b05
 
 {
   "schemas": [
@@ -440,7 +446,9 @@ Table of Contents
 
    GroupMembership resources can be retrieved by sending a GET request
    to the GroupMemberships endpoint.  Clients can retrieve an individual
-   resource by its id or a list of resources.
+   resource by its id, or retrieve a collection of resources that can be
+   narrowed using a filter on attributes such as group.value or
+   member.value.
 
    *  To get a specific membership: GET /scim/v2/GroupMemberships/{id}
 
@@ -457,8 +465,8 @@ Table of Contents
 
    *  Example: GET /scim/v2/GroupMemberships?startIndex=1&count=1000
 
-   Cursor as defined in [RFC9865] for improved performance with very
-   large data sets.
+   Cursor-based Pagination: Cursor-based pagination, as defined in
+   [RFC9865], is available as an alternative to index-based pagination.
 
    *  Example: GET /scim/v2/
       GroupMemberships?count=1000&cursor=aW5kZXg9MTAx
@@ -483,7 +491,7 @@ Table of Contents
    groups a specific user is a member of."
 
    To find all members of a group:
-      GET /scim/v2/GroupMemberships?filter=group.value eq e9e30db"
+      GET /scim/v2/GroupMemberships?filter=group.value eq "e9e30db"
 
    To find all groups for a member:
       GET /scim/v2/GroupMemberships?filter=member.value eq "2819c22"
@@ -743,6 +751,15 @@ Table of Contents
       resource alone does not imply access to its member list — a
       service provider MAY expose group metadata broadly while
       restricting membership details to privileged clients.
+
+   *  Access to a member resource (such as a User) alone does not imply
+      access to that resource's group memberships.  A service provider
+      MUST apply the same authorization to GET /GroupMemberships
+      requests, including those filtered on member.value, that it
+      applies to reading the members attribute of the corresponding
+      Group resources.  The membership relationship can be more
+      sensitive than either the member or the group individually,
+      regardless of the member's resource type.
 
    *  A client authorized to add or remove members from a Group via a
       PATCH to the Group resource MUST have equivalent POST and DELETE
