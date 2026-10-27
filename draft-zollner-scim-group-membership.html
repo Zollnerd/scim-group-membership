@@ -1277,7 +1277,7 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
 <a href="#section-4" class="section-number selfRef">4. </a><a href="#name-the-groupmembership-resourc" class="section-name selfRef">The GroupMembership Resource</a>
       </h2>
 <p id="section-4-1">This section defines the <code>GroupMembership</code> resource, which represents a single membership relationship between a SCIM group and a member. By representing each membership as a distinct, top-level resource, service providers can manage group memberships individually, allowing for pagination, filtering, and other operations at scale.<a href="#section-4-1" class="pilcrow">¶</a></p>
-<p id="section-4-2">A <code>GroupMembership</code> resource represents a direct membership only. Indirect memberships, as defined in <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span> Section 4.1.2, <span class="bcp14">MUST NOT</span> be represented as <code>GroupMembership</code> resources.<a href="#section-4-2" class="pilcrow">¶</a></p>
+<p id="section-4-2">A <code>GroupMembership</code> resource represents a direct membership only. Indirect memberships, as defined in <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span> Section 4.1.2, <span class="bcp14">MUST NOT</span> be represented as <code>GroupMembership</code> resources. A service provider <span class="bcp14">MUST NOT</span> maintain more than one <code>GroupMembership</code> resource with the same <code>group.value</code> and <code>member.value</code>.<a href="#section-4-2" class="pilcrow">¶</a></p>
 <div id="resource-properties">
 <section id="section-4.1">
         <h3 id="name-resource-properties">
@@ -1359,7 +1359,7 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
 </dd>
         <dd class="break"></dd>
 </dl>
-<p id="section-4.1-8">If a service provider's implementation does not support creating or deleting <code>GroupMembership</code> resources, all attributes in the schema definition returned from <code>/Schemas</code> <span class="bcp14">MUST</span> have their <code>mutability</code> property set to <code>readOnly</code>.<a href="#section-4.1-8" class="pilcrow">¶</a></p>
+<p id="section-4.1-8">If a service provider supports neither creating nor deleting <code>GroupMembership</code> resources, all attributes in the schema definition returned from <code>/Schemas</code> <span class="bcp14">MUST</span> have their <code>mutability</code> property set to <code>readOnly</code>. A service provider that does not support <code>POST</code> or <code>DELETE</code> requests for <code>GroupMembership</code> resources <span class="bcp14">MUST</span> respond to them with <code>501 Not Implemented</code>, as defined in <span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span> Section 3.12. A service provider that supports these operations but does not permit them for the requesting client responds with <code>403 Forbidden</code>.<a href="#section-4.1-8" class="pilcrow">¶</a></p>
 <p id="section-4.1-9">The <code>ResourceType</code> and <code>Schema</code> resources that describe <code>GroupMembership</code> are discoverable via the <code>/ResourceTypes</code> and <code>/Schemas</code> endpoints, respectively, per <span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span>. Examples are provided in the Resource Type Representation and GroupMembership Core Schema sections.<a href="#section-4.1-9" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1440,7 +1440,11 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
 <span class="break"></span><dl class="dlNewline" id="section-5.1-1">
           <dt id="section-5.1-1.1">membersEmbedded</dt>
           <dd style="margin-left: 1.5em" id="section-5.1-1.2">
-            <p id="section-5.1-1.2.1">A boolean. A value of <code>true</code> is a guarantee by the service provider that the group's full current membership is present in the <code>members</code> attribute, so an omitted or empty <code>members</code> attribute means the group has no members. A value of <code>false</code> indicates that the service provider does not guarantee that <code>members</code> contains the full membership. The <code>members</code> attribute may in fact be full, partial, omitted, or empty; for example, a service provider that cannot return accurate membership above a certain size can always report <code>false</code>, even for a group whose <code>members</code> happens to be complete. Clients <span class="bcp14">SHOULD</span> use <code>/GroupMemberships</code> filtered on this group's <code>id</code>. If the attribute is absent, the service provider makes no statement, and <code>members</code> is interpreted as defined in <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span>. This attribute does not affect which operations are supported on <code>members</code> or on <code>GroupMembership</code> resources, and does not indicate which is the preferred way to manage memberships.<a href="#section-5.1-1.2.1" class="pilcrow">¶</a></p>
+            <p id="section-5.1-1.2.1">A boolean that states whether the group's full current membership is present in the <code>members</code> attribute.<a href="#section-5.1-1.2.1" class="pilcrow">¶</a></p>
+<p id="section-5.1-1.2.2">A value of <code>true</code> is a guarantee by the service provider that the group's full current membership is present in the <code>members</code> attribute, so an omitted or empty <code>members</code> attribute means the group has no members. This guarantee applies only to responses in which the <code>members</code> attribute would be returned given the request's <code>attributes</code> and <code>excludedAttributes</code> parameters (<span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span> Section 3.4.2.5). A client that excludes <code>members</code> from a response cannot conclude from a value of <code>true</code> that the group has no members.<a href="#section-5.1-1.2.2" class="pilcrow">¶</a></p>
+<p id="section-5.1-1.2.3">A value of <code>false</code> indicates that the service provider does not guarantee that <code>members</code> contains the full membership. The <code>members</code> attribute may in fact be full, partial, omitted, or empty; for example, a service provider that cannot return accurate membership above a certain size can always report <code>false</code>, even for a group whose <code>members</code> happens to be complete. When the value is <code>false</code>, a client that needs the group's complete membership <span class="bcp14">SHOULD</span> retrieve it from <code>/GroupMemberships</code>, filtered on the group's <code>id</code>.<a href="#section-5.1-1.2.3" class="pilcrow">¶</a></p>
+<p id="section-5.1-1.2.4">If the attribute is absent, the service provider makes no statement, and <code>members</code> is interpreted as defined in <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span>.<a href="#section-5.1-1.2.4" class="pilcrow">¶</a></p>
+<p id="section-5.1-1.2.5">This attribute does not affect which operations are supported on <code>members</code> or on <code>GroupMembership</code> resources, and does not indicate which is the preferred way to manage memberships.<a href="#section-5.1-1.2.5" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 </dl>
@@ -1528,6 +1532,8 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
 <p id="section-6-1">This section describes how <code>GroupMembership</code> resources are managed using the SCIM protocol. A <code>GroupMembership</code> is fundamentally a link between a group and a member, not a resource with independently editable state. The <code>group</code> and <code>member</code> attributes of the core schema are declared immutable, so a different <code>group</code> or <code>member</code> value represents a different membership, not an edit to the existing one; as a result, <code>PATCH</code> and <code>PUT</code> have nothing in the core schema to act on. This does not prohibit a service provider from supporting <code>PATCH</code> or <code>PUT</code> as methods; a service provider that adds its own mutable extension attributes to this resource <span class="bcp14">MAY</span> support <code>PATCH</code> for those attributes without contradicting this document.<a href="#section-6-1" class="pilcrow">¶</a></p>
 <p id="section-6-2">If a service provider supports the <code>GroupMembership</code> resource, it <span class="bcp14">MUST</span> make available via <code>/GroupMemberships</code> every membership the requesting client is authorized to view. This requirement is independent of whether <code>Group.members</code> is also supported or returned; a service provider <span class="bcp14">MAY</span> choose not to return <code>Group.members</code> for groups whose membership is exposed via <code>GroupMembership</code>, and this requirement does not mandate supporting <code>Group.members</code> at all.<a href="#section-6-2" class="pilcrow">¶</a></p>
 <p id="section-6-3">Service providers <span class="bcp14">MAY</span> also support management of group memberships through the existing <code>members</code> attribute of the <code>Group</code> resource as defined in <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span> for the purpose of backwards compatibility with existing clients. When doing so, the service provider <span class="bcp14">MUST</span> maintain consistency between the state of the <code>members</code> attribute and the state of the corresponding <code>GroupMembership</code> resources. For example, if a <code>DELETE</code> request to a <code>/GroupMemberships/{id}</code> URI is successful, the corresponding member <span class="bcp14">MUST</span> also be removed from the <code>members</code> array of the parent <code>Group</code> resource. Conversely, if a member is removed from a <code>Group</code> via a <code>PATCH</code> request to the <code>/Groups/{id}</code> URI, the corresponding <code>GroupMembership</code> resource <span class="bcp14">MUST</span> be deleted.<a href="#section-6-3" class="pilcrow">¶</a></p>
+<p id="section-6-4">When a <code>Group</code> resource is deleted, the service provider <span class="bcp14">MUST</span> delete every <code>GroupMembership</code> resource whose <code>group.value</code> references that group. When a member resource is deleted, the service provider <span class="bcp14">MUST</span> delete every <code>GroupMembership</code> resource whose <code>member.value</code> references that resource. Deleted <code>GroupMembership</code> resources are subject to the requirements of <span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span> Section 3.6.<a href="#section-6-4" class="pilcrow">¶</a></p>
+<p id="section-6-5">When a <code>GroupMembership</code> resource is created or deleted and the service provider supports the <code>members</code> attribute of the parent <code>Group</code>, the service provider <span class="bcp14">MUST</span> update the parent <code>Group</code> resource's <code>meta.lastModified</code> and, if it supports resource versioning (<span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span> Section 3.14), its <code>meta.version</code>. A change to a <code>Group</code> or member resource that does not create or delete a given <code>GroupMembership</code> resource does not modify that <code>GroupMembership</code> resource, and <span class="bcp14">MUST NOT</span> change its <code>meta.lastModified</code> or <code>meta.version</code>. This includes changes to the referenced resource's <code>displayName</code>, even when reflected in the derived <code>group.display</code> or <code>member.display</code> sub-attributes, and the addition or removal of other members of the same group.<a href="#section-6-5" class="pilcrow">¶</a></p>
 <div id="creating-groupmembership-resources-post">
 <section id="section-6.1">
         <h3 id="name-creating-groupmembership-re">
@@ -1542,11 +1548,22 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
             <p id="section-6.1-2.2.1">Response: 201 Created with the full <code>GroupMembership</code> resource in the body, including its newly generated <code>id</code> and <code>meta</code> attributes.<a href="#section-6.1-2.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-6.1-3">A service provider <span class="bcp14">MUST</span> ensure that both the group and the member referenced by their <code>id</code>s exist before creating the <code>GroupMembership</code> resource. If either the group or the member does not exist, the service provider <span class="bcp14">SHOULD</span> return a <code>400 Bad Request</code> error with a <code>scimType</code> of <code>invalidValue</code>.<a href="#section-6.1-3" class="pilcrow">¶</a></p>
-<p id="section-6.1-4">If the membership already exists, the service provider <span class="bcp14">MUST</span> return a <code>409 Conflict</code> error.<a href="#section-6.1-4" class="pilcrow">¶</a></p>
-<p id="section-6.1-5">Example Request Body:<a href="#section-6.1-5" class="pilcrow">¶</a></p>
-<p id="section-6.1-6">POST /GroupMemberships<a href="#section-6.1-6" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-6.1-7">
+<p id="section-6.1-3">A service provider <span class="bcp14">MUST</span> ensure that both the group and the member referenced by their <code>id</code>s exist before creating the <code>GroupMembership</code> resource. The service provider <span class="bcp14">MUST</span> return a <code>400 Bad Request</code> error with a <code>scimType</code> of <code>invalidValue</code> if any of the following is true:<a href="#section-6.1-3" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-6.1-4.1">
+            <p id="section-6.1-4.1.1">The referenced group or member does not exist.<a href="#section-6.1-4.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-6.1-4.2">
+            <p id="section-6.1-4.2.1">The referenced member is of a resource type that the service provider does not allow as a member of the referenced group, for example a <code>Group</code> when the service provider does not support nested groups.<a href="#section-6.1-4.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-6.1-4.3">
+            <p id="section-6.1-4.3.1">The service provider does not permit circular group nesting, and creating the membership would make a group a direct or indirect member of itself.<a href="#section-6.1-4.3.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-6.1-5">If a <code>GroupMembership</code> resource with the same <code>group.value</code> and <code>member.value</code> already exists, the service provider <span class="bcp14">MUST</span> return a <code>409 Conflict</code> error with a <code>scimType</code> of <code>uniqueness</code>, as defined in <span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span> Section 3.3. The service provider <span class="bcp14">MUST NOT</span> create a second <code>GroupMembership</code> resource or return a successful response.<a href="#section-6.1-5" class="pilcrow">¶</a></p>
+<p id="section-6.1-6">Example Request Body:<a href="#section-6.1-6" class="pilcrow">¶</a></p>
+<p id="section-6.1-7">POST /GroupMemberships<a href="#section-6.1-7" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-6.1-8">
 <pre>
 {
   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMembership"],
@@ -1557,7 +1574,7 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
     "value": "2819c22"
   }
 }
-</pre><a href="#section-6.1-7" class="pilcrow">¶</a>
+</pre><a href="#section-6.1-8" class="pilcrow">¶</a>
 </div>
 </section>
 </div>
@@ -1643,6 +1660,7 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
             <p id="section-6.3-2.2.1">Response: <code>204 No Content</code> on successful deletion.<a href="#section-6.3-2.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
+<p id="section-6.3-3">A client that does not know the <code>id</code> of the <code>GroupMembership</code> resource it wants to delete can obtain it with a query filtered on both <code>group.value</code> and <code>member.value</code> (see Filtering). Clients that create memberships with <code>POST</code> can avoid this lookup by retaining the <code>id</code> returned in the <code>201 Created</code> response. If the service provider supports modifying the <code>members</code> attribute of the <code>Group</code> resource, a client can instead remove the member with a <code>PATCH</code> request to the <code>Group</code>, using a <code>remove</code> operation whose <code>path</code> is <code>members[value eq "[Member_ID]"]</code>, as shown in <span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span> Section 3.5.2.2. This removes the membership without requiring the client to know the <code>id</code> of the <code>GroupMembership</code> resource.<a href="#section-6.3-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="bulk-operations">
@@ -1824,6 +1842,7 @@ inherited from <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span> a
 </pre><a href="#section-7.1-2" class="pilcrow">¶</a>
 </div>
 <p id="section-7.1-3">The <code>referenceTypes</code> values of <code>member.$ref</code> in the schema definition above are non-normative examples. A service provider <span class="bcp14">MAY</span> add or remove resource types to reflect the resource types it supports as members of a group.<a href="#section-7.1-3" class="pilcrow">¶</a></p>
+<p id="section-7.1-4">The <code>value</code> sub-attributes of <code>group</code> and <code>member</code> are defined with <code>caseExact</code> set to <code>true</code> because they contain resource <code>id</code> values, which <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span> Section 3.1 defines as case-exact. This intentionally differs from the <code>value</code> sub-attribute of the <code>members</code> attribute in the <code>Group</code> schema defined in <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span>, which is defined with <code>caseExact</code> set to <code>false</code>.<a href="#section-7.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="groupmemberships-schema-extension">
