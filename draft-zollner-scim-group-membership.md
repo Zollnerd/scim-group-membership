@@ -295,7 +295,7 @@ A `GET` request to `/GroupMemberships` without a filter returns all memberships 
 
 ### Filtering
 
-Service providers MUST support filtering on the `group.value` and `member.value` attributes. This enables clients to perform critical queries, such as "find all members of a specific group" or "find all groups a specific user is a member of."
+Service providers MUST support filtering on the `group.value` and `member.value` attributes using the `eq` operator. This enables clients to perform critical queries, such as "find all members of a specific group" or "find all groups a specific user is a member of." Service providers MUST also support combining these two filters with the `and` operator, so that a client can determine whether a specific membership exists and obtain its `id`.
 
 To find all members of a group:
 : GET /scim/v2/GroupMemberships?filter=group.value eq "e9e30db"
@@ -305,7 +305,11 @@ To find all groups for a member:
 : GET /scim/v2/GroupMemberships?filter=member.value eq "2819c22"
 {: newline="true"}
 
-If a service provider supports more than one resource type as a group member, it MUST also support filtering on `member.type`, so that clients can narrow queries to a specific member resource type without enumerating and filtering results client-side.
+To find a specific membership:
+: GET /scim/v2/GroupMemberships?filter=group.value eq "e9e30db" and member.value eq "2819c22"
+{: newline="true"}
+
+If a service provider supports more than one resource type as a group member, it MUST also support filtering on `member.type` using the `eq` operator, alone or combined with the filters above using `and`, so that clients can narrow queries to a specific member resource type without enumerating and filtering results client-side.
 
 To find all User members of a group:
 : GET /scim/v2/GroupMemberships?filter=group.value eq "e9e30db" and member.type eq "User"
