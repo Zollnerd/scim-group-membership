@@ -47,7 +47,7 @@ Currently, the "members" attribute of a Group resource is a multi-valued attribu
 
 These failure points have already led to workarounds that avoid the problem rather than solve it. Some service providers do not return the "members" attribute at all, instead exposing membership only through indirect filter queries against the Group resource. Some clients request that the "members" attribute be excluded from Group responses altogether, using the `excludedAttributes` query parameter defined in [RFC7644], for the same reason; this leaves those clients able to push membership additions and removals but unable to read back and reconcile the service provider's actual membership state.
 
-This document proposes the "GroupMembership" resource type. By treating a membership as a first-class, top-level resource, service providers can leverage existing SCIM query parameters including filter, count, and multiple pagination methods, allowing them to implement a scaleable and reliable interface for managing groups of any size.
+This document proposes the "GroupMembership" resource type. By treating a membership as a first-class, top-level resource, service providers can leverage existing SCIM query parameters including filter, count, and multiple pagination methods, allowing them to implement a scalable and reliable interface for managing groups of any size.
 
 # Notational Conventions
 
@@ -110,7 +110,7 @@ meta
 
 If a service provider's implementation does not support creating or deleting `GroupMembership` resources, all attributes in the schema definition returned from `/Schemas` MUST have their `mutability` property set to `readOnly`.
 
-This resource's `ResourceType` and `Schema` definitions are discoverable via the `/ResourceTypes` and `/Schemas` endpoints, respectively, per [RFC7644]. The definitions for both are provided below.
+The `ResourceType` and `Schema` resources that describe `GroupMembership` are discoverable via the `/ResourceTypes` and `/Schemas` endpoints, respectively, per [RFC7644]. Examples are provided in the Resource Type Representation and GroupMembership Core Schema sections.
 
 ## JSON Representation
 
@@ -165,7 +165,7 @@ The service provider's `/ResourceTypes` endpoint MUST include a `ResourceType` r
 
 # groupMemberships Group Schema Extension
 
-This specification defines an extension schema for the `Group` resource with a single attribute, `membersEmbedded`, which states whether a group's full current membership is delivered in its `members` attribute. The extension lets a service provider add support for `GroupMembership` without changing how it returns `members`, so existing clients are unaffected, while clients that understand the extension get a per-group signal. A service provider that only exposes memberships through `GroupMembership` MAY omit `Group.members` and need not use this extension.
+This specification defines a schema extension for the `Group` resource with a single attribute, `membersEmbedded`, which states whether a group's full current membership is delivered in its `members` attribute. The extension lets a service provider add support for `GroupMembership` without changing how it returns `members`, so existing clients are unaffected, while clients that understand the extension get a per-group signal. A service provider that only exposes memberships through `GroupMembership` MAY omit `Group.members` and need not use this extension.
 
 The schema URN for the extension is `urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group`. A service provider that includes this extension on a `Group` MUST support the `GroupMembership` resource. A service provider that supports this extension SHOULD list its schema URN in the `schemaExtensions` attribute of its `Group` `ResourceType`, with `required` set to `false`.
 
@@ -291,7 +291,7 @@ Cursor-based Pagination: Cursor-based pagination, as defined in [RFC9865], is av
 
 The response for a paginated request is a `ListResponse` containing the `GroupMembership` resources for the current page.
 
-A `GET` request to `/GroupMemberships` without a filter returns all memberships across all groups. Service providers SHOULD impose a reasonable per-page limit on such unconstrained listings (e.g., a maximum of 1000 results per page) to avoid unbounded computation over the full membership dataset. An implementation MAY sort results internally by `group.id` so that pagination can stream across group boundaries without materializing the entire membership dataset in memory.
+A `GET` request to `/GroupMemberships` without a filter returns all memberships across all groups. Service providers SHOULD impose a reasonable per-page limit on such unconstrained listings (e.g., a maximum of 1000 results per page) to avoid unbounded computation over the full membership dataset. An implementation MAY sort results internally by `group.value` so that pagination can stream across group boundaries without materializing the entire membership dataset in memory.
 
 ### Filtering
 
@@ -485,6 +485,8 @@ inherited from [RFC7643] and are included here for completeness.
 }
 ~~~
 
+The `referenceTypes` values of `member.$ref` in the schema definition above are non-normative examples. A service provider MAY add or remove resource types to reflect the resource types it supports as members of a group.
+
 ## groupMemberships Schema Extension
 
 This specification defines a schema extension for the SCIM `Group` resource to indicate whether all of a group's memberships are embedded in its `members` attribute.
@@ -503,7 +505,7 @@ resource: `membersEmbedded`. This attribute is defined as follows. The
   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Schema"],
   "id": \
     "urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group",
-  "name": "GroupMembershipsExtension",
+  "name": "Group Memberships Extension",
   "description": "A schema extension for Group resources to \
     indicate whether all of a group's memberships are embedded \
     in the members attribute.",
@@ -539,7 +541,7 @@ Provider to the client.
 
 # Security Considerations
 
-The security considerations for the `GroupMembership` resource are substantially the same as those for the `User` and `Group` resources defined in Section 8 of the SCIM Protocol document [RFC7644]. All requests MUST be made over a secure channel such as Transport Layer Security (TLS).
+The security considerations for the `GroupMembership` resource are substantially the same as those for the `User` and `Group` resources defined in Section 7 of the SCIM Protocol document [RFC7644]. All requests MUST be made over a secure channel such as Transport Layer Security (TLS).
 
 Authentication and authorization for managing `GroupMembership` resources are the responsibility of the service provider. Implementers should consider the following:
 
