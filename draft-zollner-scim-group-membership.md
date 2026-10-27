@@ -95,7 +95,7 @@ member
     : The URI of the referenced member resource. Read-only.
 
     type
-    : A string that specifies the resource type of the member, e.g., "User" or "Group". Read-only.
+    : A string that specifies the resource type of the member. The value MUST be the `name` of the member's `ResourceType`, as defined in [RFC7643] Section 6, e.g., "User" or "Group". Read-only.
 
     display
     : A human-readable name for the referenced member resource, generally corresponding to the member's `displayName` attribute. Read-only. When populated, this value MUST match the current `displayName` of the referenced resource.
@@ -461,7 +461,7 @@ inherited from [RFC7643] and are included here for completeness.
           "mutability": "readOnly",
           "returned": "default",
           "required": false,
-          "caseExact": false,
+          "caseExact": true,
           "uniqueness": "none",
           "description": "The resource type of the member."
         },
