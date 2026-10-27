@@ -1211,19 +1211,30 @@ svg {
 </li>
                 </ul>
 </li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.3">
-                <p id="section-toc.1-1.7.2.3.1"><a href="#section-7.3" class="auto internal xref">7.3</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.4">
-                <p id="section-toc.1-1.7.2.4.1"><a href="#section-7.4" class="auto internal xref">7.4</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
-</li>
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
-            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
-            <p id="section-toc.1-1.9.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-authors-address" class="internal xref">Author's Address</a></p>
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-schema-registration-templat" class="internal xref">Schema Registration Templates</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.1">
+                <p id="section-toc.1-1.9.2.1.1"><a href="#section-9.1" class="auto internal xref">9.1</a>.  <a href="#name-groupmembership-core-schema-" class="internal xref">GroupMembership Core Schema Registration</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.2">
+                <p id="section-toc.1-1.9.2.2.1"><a href="#section-9.2" class="auto internal xref">9.2</a>.  <a href="#name-groupmemberships-group-exte" class="internal xref">groupMemberships Group Extension Registration</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
+            <p id="section-toc.1-1.10.1"><a href="#section-10" class="auto internal xref">10</a>. <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11">
+            <p id="section-toc.1-1.11.1"><a href="#section-11" class="auto internal xref">11</a>. <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12">
+            <p id="section-toc.1-1.12.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-authors-address" class="internal xref">Author's Address</a></p>
 </li>
         </ul>
 </nav>
@@ -1877,46 +1888,188 @@ Provider to the client.<a href="#section-7.2.2-1" class="pilcrow">¶</a></p>
 </div>
 </section>
 </div>
+</section>
+</div>
 <div id="security-considerations">
-<section id="section-7.3">
-        <h3 id="name-security-considerations">
-<a href="#section-7.3" class="section-number selfRef">7.3. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
-        </h3>
-<p id="section-7.3-1">The security considerations for the <code>GroupMembership</code> resource are substantially the same as those for the <code>User</code> and <code>Group</code> resources defined in Section 8 of the SCIM Protocol document <span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span>. All requests <span class="bcp14">MUST</span> be made over a secure channel such as Transport Layer Security (TLS).<a href="#section-7.3-1" class="pilcrow">¶</a></p>
-<p id="section-7.3-2">Authentication and authorization for managing <code>GroupMembership</code> resources are the responsibility of the service provider. Implementers should consider the following:<a href="#section-7.3-2" class="pilcrow">¶</a></p>
+<section id="section-8">
+      <h2 id="name-security-considerations">
+<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+      </h2>
+<p id="section-8-1">The security considerations for the <code>GroupMembership</code> resource are substantially the same as those for the <code>User</code> and <code>Group</code> resources defined in Section 8 of the SCIM Protocol document <span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span>. All requests <span class="bcp14">MUST</span> be made over a secure channel such as Transport Layer Security (TLS).<a href="#section-8-1" class="pilcrow">¶</a></p>
+<p id="section-8-2">Authentication and authorization for managing <code>GroupMembership</code> resources are the responsibility of the service provider. Implementers should consider the following:<a href="#section-8-2" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-7.3-3.1">
-            <p id="section-7.3-3.1.1">A client with permission to read a <code>Group</code> resource's <code>members</code> attribute <span class="bcp14">MUST</span> be granted permission to <code>GET</code> the corresponding <code>GroupMembership</code> resources for that group. Access to a <code>Group</code> resource alone does not imply access to its member list — a service provider <span class="bcp14">MAY</span> expose group metadata broadly while restricting membership details to privileged clients.<a href="#section-7.3-3.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-8-3.1">
+          <p id="section-8-3.1.1">A client with permission to read a <code>Group</code> resource's <code>members</code> attribute <span class="bcp14">MUST</span> be granted permission to <code>GET</code> the corresponding <code>GroupMembership</code> resources for that group. Access to a <code>Group</code> resource alone does not imply access to its member list — a service provider <span class="bcp14">MAY</span> expose group metadata broadly while restricting membership details to privileged clients.<a href="#section-8-3.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-7.3-3.2">
-            <p id="section-7.3-3.2.1">Access to a member resource (such as a <code>User</code>) alone does not imply access to that resource's group memberships. A service provider <span class="bcp14">MUST</span> apply the same authorization to <code>GET /GroupMemberships</code> requests, including those filtered on <code>member.value</code>, that it applies to reading the <code>members</code> attribute of the corresponding <code>Group</code> resources. The membership relationship can be more sensitive than either the member or the group individually, regardless of the member's resource type.<a href="#section-7.3-3.2.1" class="pilcrow">¶</a></p>
+        <li class="normal" id="section-8-3.2">
+          <p id="section-8-3.2.1">Access to a member resource (such as a <code>User</code>) alone does not imply access to that resource's group memberships. A service provider <span class="bcp14">MUST</span> apply the same authorization to <code>GET /GroupMemberships</code> requests, including those filtered on <code>member.value</code>, that it applies to reading the <code>members</code> attribute of the corresponding <code>Group</code> resources. The membership relationship can be more sensitive than either the member or the group individually, regardless of the member's resource type.<a href="#section-8-3.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-7.3-3.3">
-            <p id="section-7.3-3.3.1">A client authorized to add or remove members from a <code>Group</code> via a <code>PATCH</code> to the <code>Group</code> resource <span class="bcp14">MUST</span> have equivalent <code>POST</code> and <code>DELETE</code> permissions on <code>GroupMembership</code> resources for that same group.<a href="#section-7.3-3.3.1" class="pilcrow">¶</a></p>
+        <li class="normal" id="section-8-3.3">
+          <p id="section-8-3.3.1">A client authorized to add or remove members from a <code>Group</code> via a <code>PATCH</code> to the <code>Group</code> resource <span class="bcp14">MUST</span> have equivalent <code>POST</code> and <code>DELETE</code> permissions on <code>GroupMembership</code> resources for that same group.<a href="#section-8-3.3.1" class="pilcrow">¶</a></p>
 </li>
-        </ul>
+      </ul>
+</section>
+</div>
+<div id="schema-registration-templates">
+<section id="section-9">
+      <h2 id="name-schema-registration-templat">
+<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-schema-registration-templat" class="section-name selfRef">Schema Registration Templates</a>
+      </h2>
+<p id="section-9-1">The following registration templates, as defined in Section 10.3.2 of <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span>, describe the schema URIs registered by this document.<a href="#section-9-1" class="pilcrow">¶</a></p>
+<div id="groupmembership-core-schema-registration">
+<section id="section-9.1">
+        <h3 id="name-groupmembership-core-schema-">
+<a href="#section-9.1" class="section-number selfRef">9.1. </a><a href="#name-groupmembership-core-schema-" class="section-name selfRef">GroupMembership Core Schema Registration</a>
+        </h3>
+<span class="break"></span><dl class="dlNewline" id="section-9.1-1">
+          <dt id="section-9.1-1.1">Schema URI:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.1-1.2">
+            <p id="section-9.1-1.2.1"><code>urn:ietf:params:scim:schemas:core:2.0:GroupMembership</code><a href="#section-9.1-1.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<span class="break"></span><dl class="dlNewline" id="section-9.1-2">
+          <dt id="section-9.1-2.1">Schema Name:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.1-2.2">
+            <p id="section-9.1-2.2.1">Group Membership<a href="#section-9.1-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<span class="break"></span><dl class="dlNewline" id="section-9.1-3">
+          <dt id="section-9.1-3.1">Intended or Associated Resource Type:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.1-3.2">
+            <p id="section-9.1-3.2.1">GroupMembership<a href="#section-9.1-3.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<span class="break"></span><dl class="dlNewline" id="section-9.1-4">
+          <dt id="section-9.1-4.1">Purpose:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.1-4.2">
+            <p id="section-9.1-4.2.1">Represents a single membership of a member (a <code>User</code>, a <code>Group</code>, or another resource type) in a <code>Group</code> as a top-level resource, so that memberships can be paginated, filtered, created, and deleted individually.<a href="#section-9.1-4.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<span class="break"></span><dl class="dlNewline" id="section-9.1-5">
+          <dt id="section-9.1-5.1">Single-value Attributes:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.1-5.2">
+            <p id="section-9.1-5.2.1"><code>id</code> (string); <code>group</code> (complex: <code>value</code>, <code>$ref</code>, <code>display</code>); <code>member</code> (complex: <code>value</code>, <code>$ref</code>, <code>type</code>, <code>display</code>); <code>meta</code> (complex).<a href="#section-9.1-5.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<span class="break"></span><dl class="dlNewline" id="section-9.1-6">
+          <dt id="section-9.1-6.1">Multi-valued Attributes:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.1-6.2">
+            <p id="section-9.1-6.2.1">None, other than the common <code>schemas</code> attribute.<a href="#section-9.1-6.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="groupmemberships-group-extension-registration">
+<section id="section-9.2">
+        <h3 id="name-groupmemberships-group-exte">
+<a href="#section-9.2" class="section-number selfRef">9.2. </a><a href="#name-groupmemberships-group-exte" class="section-name selfRef">groupMemberships Group Extension Registration</a>
+        </h3>
+<span class="break"></span><dl class="dlNewline" id="section-9.2-1">
+          <dt id="section-9.2-1.1">Schema URI:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.2-1.2">
+            <p id="section-9.2-1.2.1"><code>urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group</code><a href="#section-9.2-1.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<span class="break"></span><dl class="dlNewline" id="section-9.2-2">
+          <dt id="section-9.2-2.1">Schema Name:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.2-2.2">
+            <p id="section-9.2-2.2.1">Group Memberships Extension<a href="#section-9.2-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<span class="break"></span><dl class="dlNewline" id="section-9.2-3">
+          <dt id="section-9.2-3.1">Intended or Associated Resource Type:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.2-3.2">
+            <p id="section-9.2-3.2.1">Group<a href="#section-9.2-3.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<span class="break"></span><dl class="dlNewline" id="section-9.2-4">
+          <dt id="section-9.2-4.1">Purpose:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.2-4.2">
+            <p id="section-9.2-4.2.1">Indicates whether all of a group's memberships are embedded in its <code>members</code> attribute.<a href="#section-9.2-4.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<span class="break"></span><dl class="dlNewline" id="section-9.2-5">
+          <dt id="section-9.2-5.1">Single-value Attributes:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.2-5.2">
+            <p id="section-9.2-5.2.1"><code>membersEmbedded</code> (boolean).<a href="#section-9.2-5.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<span class="break"></span><dl class="dlNewline" id="section-9.2-6">
+          <dt id="section-9.2-6.1">Multi-valued Attributes:</dt>
+          <dd style="margin-left: 1.5em" id="section-9.2-6.2">
+            <p id="section-9.2-6.2.1">None.<a href="#section-9.2-6.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+</section>
+</div>
 </section>
 </div>
 <div id="iana-considerations">
-<section id="section-7.4">
-        <h3 id="name-iana-considerations">
-<a href="#section-7.4" class="section-number selfRef">7.4. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
-        </h3>
-<p id="section-7.4-1">This document requests that IANA register the following URNs in the "SCIM Schemas" registry.<a href="#section-7.4-1" class="pilcrow">¶</a></p>
-<p id="section-7.4-2"><strong>URI:</strong> <code>urn:ietf:params:scim:schemas:core:2.0:GroupMembership</code>
-          <strong>Specification:</strong> This document
-<strong>Description:</strong> Defines the schema for a resource representing a single group membership.<a href="#section-7.4-2" class="pilcrow">¶</a></p>
-<p id="section-7.4-3"><strong>URI:</strong> <code>urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group</code>
-          <strong>Specification:</strong> This document
-<strong>Description:</strong> Defines a schema extension for the Group resource that indicates whether a group's membership is embedded in its <code>members</code> attribute.<a href="#section-7.4-3" class="pilcrow">¶</a></p>
-</section>
-</div>
+<section id="section-10">
+      <h2 id="name-iana-considerations">
+<a href="#section-10" class="section-number selfRef">10. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+      </h2>
+<p id="section-10-1">This document requests that IANA register the following schema URIs in the "SCIM Schema URIs for Data Resources" registry, within the "System for Cross-domain Identity Management (SCIM) Schema URIs" registry group established by <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span>. The registration templates for both are provided in the Schema Registration Templates section.<a href="#section-10-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlNewline" id="section-10-2">
+        <dt id="section-10-2.1">Schema URI:</dt>
+        <dd style="margin-left: 1.5em" id="section-10-2.2">
+          <p id="section-10-2.2.1"><code>urn:ietf:params:scim:schemas:core:2.0:GroupMembership</code><a href="#section-10-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
+<span class="break"></span><dl class="dlNewline" id="section-10-3">
+        <dt id="section-10-3.1">Name:</dt>
+        <dd style="margin-left: 1.5em" id="section-10-3.2">
+          <p id="section-10-3.2.1">Group Membership<a href="#section-10-3.2.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
+<span class="break"></span><dl class="dlNewline" id="section-10-4">
+        <dt id="section-10-4.1">Reference:</dt>
+        <dd style="margin-left: 1.5em" id="section-10-4.2">
+          <p id="section-10-4.2.1">This document<a href="#section-10-4.2.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
+<span class="break"></span><dl class="dlNewline" id="section-10-5">
+        <dt id="section-10-5.1">Schema URI:</dt>
+        <dd style="margin-left: 1.5em" id="section-10-5.2">
+          <p id="section-10-5.2.1"><code>urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group</code><a href="#section-10-5.2.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
+<span class="break"></span><dl class="dlNewline" id="section-10-6">
+        <dt id="section-10-6.1">Name:</dt>
+        <dd style="margin-left: 1.5em" id="section-10-6.2">
+          <p id="section-10-6.2.1">Group Memberships Extension<a href="#section-10-6.2.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
+<span class="break"></span><dl class="dlNewline" id="section-10-7">
+        <dt id="section-10-7.1">Reference:</dt>
+        <dd style="margin-left: 1.5em" id="section-10-7.2">
+          <p id="section-10-7.2.1">This document<a href="#section-10-7.2.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
 </section>
 </div>
 <div id="sec-normative-references">
-<section id="section-8">
+<section id="section-11">
       <h2 id="name-normative-references">
-<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+<a href="#section-11" class="section-number selfRef">11. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
       </h2>
 <dl class="references">
 <dt id="RFC2119">[RFC2119]</dt>

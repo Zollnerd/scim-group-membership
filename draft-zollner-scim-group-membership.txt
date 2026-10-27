@@ -87,9 +87,12 @@ Table of Contents
      7.2.  groupMemberships Schema Extension
        7.2.1.  The membersEmbedded Attribute Definition
        7.2.2.  Usage
-     7.3.  Security Considerations
-     7.4.  IANA Considerations
-   8.  Normative References
+   8.  Security Considerations
+   9.  Schema Registration Templates
+     9.1.  GroupMembership Core Schema Registration
+     9.2.  groupMemberships Group Extension Registration
+   10. IANA Considerations
+   11. Normative References
    Author's Address
 
 1.  Discussion Venues
@@ -747,7 +750,7 @@ Table of Contents
    attribute is read-only, as it is metadata reported by the Service
    Provider to the client.
 
-7.3.  Security Considerations
+8.  Security Considerations
 
    The security considerations for the GroupMembership resource are
    substantially the same as those for the User and Group resources
@@ -779,22 +782,83 @@ Table of Contents
       PATCH to the Group resource MUST have equivalent POST and DELETE
       permissions on GroupMembership resources for that same group.
 
-7.4.  IANA Considerations
+9.  Schema Registration Templates
 
-   This document requests that IANA register the following URNs in the
-   "SCIM Schemas" registry.
+   The following registration templates, as defined in Section 10.3.2 of
+   [RFC7643], describe the schema URIs registered by this document.
 
-   *URI:* urn:ietf:params:scim:schemas:core:2.0:GroupMembership
-   *Specification:* This document *Description:* Defines the schema for
-   a resource representing a single group membership.
+9.1.  GroupMembership Core Schema Registration
 
-   *URI:*
-   urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group
-   *Specification:* This document *Description:* Defines a schema
-   extension for the Group resource that indicates whether a group's
-   membership is embedded in its members attribute.
+   Schema URI:
+      urn:ietf:params:scim:schemas:core:2.0:GroupMembership
 
-8.  Normative References
+   Schema Name:
+      Group Membership
+
+   Intended or Associated Resource Type:
+      GroupMembership
+
+   Purpose:
+      Represents a single membership of a member (a User, a Group, or
+      another resource type) in a Group as a top-level resource, so that
+      memberships can be paginated, filtered, created, and deleted
+      individually.
+
+   Single-value Attributes:
+      id (string); group (complex: value, $ref, display); member
+      (complex: value, $ref, type, display); meta (complex).
+
+   Multi-valued Attributes:
+      None, other than the common schemas attribute.
+
+9.2.  groupMemberships Group Extension Registration
+
+   Schema URI:
+      urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group
+
+   Schema Name:
+      Group Memberships Extension
+
+   Intended or Associated Resource Type:
+      Group
+
+   Purpose:
+      Indicates whether all of a group's memberships are embedded in its
+      members attribute.
+
+   Single-value Attributes:
+      membersEmbedded (boolean).
+
+   Multi-valued Attributes:
+      None.
+
+10.  IANA Considerations
+
+   This document requests that IANA register the following schema URIs
+   in the "SCIM Schema URIs for Data Resources" registry, within the
+   "System for Cross-domain Identity Management (SCIM) Schema URIs"
+   registry group established by [RFC7643].  The registration templates
+   for both are provided in the Schema Registration Templates section.
+
+   Schema URI:
+      urn:ietf:params:scim:schemas:core:2.0:GroupMembership
+
+   Name:
+      Group Membership
+
+   Reference:
+      This document
+
+   Schema URI:
+      urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group
+
+   Name:
+      Group Memberships Extension
+
+   Reference:
+      This document
+
+11.  Normative References
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
