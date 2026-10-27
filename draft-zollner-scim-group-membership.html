@@ -1154,16 +1154,16 @@ svg {
             <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-groupmemberships-group-sche" class="internal xref">groupMemberships Group Schema Extension</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1">
-                <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="auto internal xref">5.1</a>.  <a href="#name-the-externallymanaged-attri" class="internal xref">The <code>externallyManaged</code> Attribute</a></p>
+                <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="auto internal xref">5.1</a>.  <a href="#name-the-membersembedded-attribu" class="internal xref">The <code>membersEmbedded</code> Attribute</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2">
                 <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="auto internal xref">5.2</a>.  <a href="#name-example-group-resources" class="internal xref">Example Group Resources</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2.2.1">
-                    <p id="section-toc.1-1.5.2.2.2.1.1"><a href="#section-5.2.1" class="auto internal xref">5.2.1</a>.  <a href="#name-example-of-an-externally-ma" class="internal xref">Example of an Externally-Managed Group</a></p>
+                    <p id="section-toc.1-1.5.2.2.2.1.1"><a href="#section-5.2.1" class="auto internal xref">5.2.1</a>.  <a href="#name-example-of-a-group-with-mem" class="internal xref">Example of a Group with <code>membersEmbedded</code> Set to <code>false</code></a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2.2.2">
-                    <p id="section-toc.1-1.5.2.2.2.2.1"><a href="#section-5.2.2" class="auto internal xref">5.2.2</a>.  <a href="#name-example-of-a-group-with-inl" class="internal xref">Example of a Group with Inline Members</a></p>
+                    <p id="section-toc.1-1.5.2.2.2.2.1"><a href="#section-5.2.2" class="auto internal xref">5.2.2</a>.  <a href="#name-example-of-a-group-with-memb" class="internal xref">Example of a Group with <code>membersEmbedded</code> Set to <code>true</code></a></p>
 </li>
                 </ul>
 </li>
@@ -1204,7 +1204,7 @@ svg {
                 <p id="section-toc.1-1.7.2.2.1"><a href="#section-7.2" class="auto internal xref">7.2</a>.  <a href="#name-groupmemberships-schema-ext" class="internal xref">groupMemberships Schema Extension</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.2.2.1">
-                    <p id="section-toc.1-1.7.2.2.2.1.1"><a href="#section-7.2.1" class="auto internal xref">7.2.1</a>.  <a href="#name-the-externallymanaged-attrib" class="internal xref">The <code>externallyManaged</code> Attribute Definition</a></p>
+                    <p id="section-toc.1-1.7.2.2.2.1.1"><a href="#section-7.2.1" class="auto internal xref">7.2.1</a>.  <a href="#name-the-membersembedded-attribut" class="internal xref">The <code>membersEmbedded</code> Attribute Definition</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.2.2.2">
                     <p id="section-toc.1-1.7.2.2.2.2.1"><a href="#section-7.2.2" class="auto internal xref">7.2.2</a>.  <a href="#name-usage" class="internal xref">Usage</a></p>
@@ -1419,17 +1419,17 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
       <h2 id="name-groupmemberships-group-sche">
 <a href="#section-5" class="section-number selfRef">5. </a><a href="#name-groupmemberships-group-sche" class="section-name selfRef">groupMemberships Group Schema Extension</a>
       </h2>
-<p id="section-5-1">To prevent ambiguity and provide a clear path for clients, this specification also defines an extension schema for the <code>Group</code> resource. This extension introduces a new attribute, <code>externallyManaged</code>, which signals that a group's membership is managed via <code>/GroupMemberships</code> rather than the <code>members</code> attribute.<a href="#section-5-1" class="pilcrow">¶</a></p>
-<p id="section-5-2">When a Service Provider supports the <code>/GroupMemberships</code> endpoint, it <span class="bcp14">SHOULD</span> include the <code>externallyManaged</code> attribute on <code>Group</code> resources to indicate this for each group. The schema URN for the extension is <code>urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group</code>.<a href="#section-5-2" class="pilcrow">¶</a></p>
-<div id="the-externallymanaged-attribute">
+<p id="section-5-1">This specification defines an extension schema for the <code>Group</code> resource with a single attribute, <code>membersEmbedded</code>, which states whether a group's full current membership is delivered in its <code>members</code> attribute. The extension lets a service provider add support for <code>GroupMembership</code> without changing how it returns <code>members</code>, so existing clients are unaffected, while clients that understand the extension get a per-group signal. A service provider that only exposes memberships through <code>GroupMembership</code> <span class="bcp14">MAY</span> omit <code>Group.members</code> and need not use this extension.<a href="#section-5-1" class="pilcrow">¶</a></p>
+<p id="section-5-2">The schema URN for the extension is <code>urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group</code>. A service provider that includes this extension on a <code>Group</code> <span class="bcp14">MUST</span> support the <code>GroupMembership</code> resource. A service provider that supports this extension <span class="bcp14">SHOULD</span> list its schema URN in the <code>schemaExtensions</code> attribute of its <code>Group</code> <code>ResourceType</code>, with <code>required</code> set to <code>false</code>.<a href="#section-5-2" class="pilcrow">¶</a></p>
+<div id="the-membersembedded-attribute">
 <section id="section-5.1">
-        <h3 id="name-the-externallymanaged-attri">
-<a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-the-externallymanaged-attri" class="section-name selfRef">The <code>externallyManaged</code> Attribute</a>
+        <h3 id="name-the-membersembedded-attribu">
+<a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-the-membersembedded-attribu" class="section-name selfRef">The <code>membersEmbedded</code> Attribute</a>
         </h3>
 <span class="break"></span><dl class="dlNewline" id="section-5.1-1">
-          <dt id="section-5.1-1.1">externallyManaged</dt>
+          <dt id="section-5.1-1.1">membersEmbedded</dt>
           <dd style="margin-left: 1.5em" id="section-5.1-1.2">
-            <p id="section-5.1-1.2.1">A boolean indicating whether this group's membership is managed externally via <code>/GroupMemberships</code> rather than the <code>members</code> attribute. A value of <code>true</code> signals that the <code>/GroupMemberships</code> endpoint, filtered on this group's <code>id</code>, is the canonical and preferred source of this group's membership, regardless of whether the <code>members</code> attribute is also populated. A value of <code>false</code>, or the absence of this attribute, indicates that the <code>members</code> attribute is the group's canonical membership representation.<a href="#section-5.1-1.2.1" class="pilcrow">¶</a></p>
+            <p id="section-5.1-1.2.1">A boolean. A value of <code>true</code> is a guarantee by the service provider that the group's full current membership is present in the <code>members</code> attribute, so an omitted or empty <code>members</code> attribute means the group has no members. A value of <code>false</code> indicates that the service provider does not guarantee that <code>members</code> contains the full membership. The <code>members</code> attribute may in fact be full, partial, omitted, or empty; for example, a service provider that cannot return accurate membership above a certain size can always report <code>false</code>, even for a group whose <code>members</code> happens to be complete. Clients <span class="bcp14">SHOULD</span> use <code>/GroupMemberships</code> filtered on this group's <code>id</code>. If the attribute is absent, the service provider makes no statement, and <code>members</code> is interpreted as defined in <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span>. This attribute does not affect which operations are supported on <code>members</code> or on <code>GroupMembership</code> resources, and does not indicate which is the preferred way to manage memberships.<a href="#section-5.1-1.2.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 </dl>
@@ -1441,12 +1441,12 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
         <h3 id="name-example-group-resources">
 <a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-example-group-resources" class="section-name selfRef">Example Group Resources</a>
         </h3>
-<div id="example-of-an-externally-managed-group">
+<div id="example-of-a-group-with-membersembedded-set-to-false">
 <section id="section-5.2.1">
-          <h4 id="name-example-of-an-externally-ma">
-<a href="#section-5.2.1" class="section-number selfRef">5.2.1. </a><a href="#name-example-of-an-externally-ma" class="section-name selfRef">Example of an Externally-Managed Group</a>
+          <h4 id="name-example-of-a-group-with-mem">
+<a href="#section-5.2.1" class="section-number selfRef">5.2.1. </a><a href="#name-example-of-a-group-with-mem" class="section-name selfRef">Example of a Group with <code>membersEmbedded</code> Set to <code>false</code></a>
           </h4>
-<p id="section-5.2.1-1">The following is a <code>Group</code> with a large number of members. <code>externallyManaged</code> is <code>true</code> and the <code>members</code> attribute is omitted; the client queries <code>/GroupMemberships</code> for this group's membership.<a href="#section-5.2.1-1" class="pilcrow">¶</a></p>
+<p id="section-5.2.1-1">The following is a <code>Group</code> with a large number of members. <code>membersEmbedded</code> is <code>false</code> and the <code>members</code> attribute is omitted; the client queries <code>/GroupMemberships</code> for this group's membership.<a href="#section-5.2.1-1" class="pilcrow">¶</a></p>
 <p id="section-5.2.1-2">Example Request: <code>GET /scim/v2/Groups/e9e30dba-f08f-4139-944c-2e6949b80b05</code><a href="#section-5.2.1-2" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-5.2.1-3">
 <pre>
@@ -1458,7 +1458,7 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
   "id": "e9e30dba-f08f-4139-944c-2e6949b80b05",
   "displayName": "All Employees",
   "urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group": {
-    "externallyManaged": true
+    "membersEmbedded": false
   },
   "meta": {
     "resourceType": "Group",
@@ -1470,12 +1470,12 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
 </div>
 </section>
 </div>
-<div id="example-of-a-group-with-inline-members">
+<div id="example-of-a-group-with-membersembedded-set-to-true">
 <section id="section-5.2.2">
-          <h4 id="name-example-of-a-group-with-inl">
-<a href="#section-5.2.2" class="section-number selfRef">5.2.2. </a><a href="#name-example-of-a-group-with-inl" class="section-name selfRef">Example of a Group with Inline Members</a>
+          <h4 id="name-example-of-a-group-with-memb">
+<a href="#section-5.2.2" class="section-number selfRef">5.2.2. </a><a href="#name-example-of-a-group-with-memb" class="section-name selfRef">Example of a Group with <code>membersEmbedded</code> Set to <code>true</code></a>
           </h4>
-<p id="section-5.2.2-1">The following is a <code>Group</code> with a small number of members. <code>externallyManaged</code> is <code>false</code>, indicating that the <code>members</code> attribute is this group's canonical membership representation.<a href="#section-5.2.2-1" class="pilcrow">¶</a></p>
+<p id="section-5.2.2-1">The following is a <code>Group</code> with a small number of members. <code>membersEmbedded</code> is <code>true</code>, so the <code>members</code> attribute holds the group's full membership.<a href="#section-5.2.2-1" class="pilcrow">¶</a></p>
 <p id="section-5.2.2-2">Example Request: <code>GET /scim/v2/Groups/a0b1c2d3-f08f-4139-944c-2e6949b80b05</code><a href="#section-5.2.2-2" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-5.2.2-3">
 <pre>
@@ -1493,7 +1493,7 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
     }
   ],
   "urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group": {
-    "externallyManaged": false
+    "membersEmbedded": true
   },
   "meta": {
     "resourceType": "Group",
@@ -1819,15 +1819,15 @@ inherited from <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span> a
         <h3 id="name-groupmemberships-schema-ext">
 <a href="#section-7.2" class="section-number selfRef">7.2. </a><a href="#name-groupmemberships-schema-ext" class="section-name selfRef">groupMemberships Schema Extension</a>
         </h3>
-<p id="section-7.2-1">This specification defines a schema extension for the SCIM <code>Group</code> resource to support the discoverability of externally-managed memberships.<a href="#section-7.2-1" class="pilcrow">¶</a></p>
+<p id="section-7.2-1">This specification defines a schema extension for the SCIM <code>Group</code> resource to indicate whether all of a group's memberships are embedded in its <code>members</code> attribute.<a href="#section-7.2-1" class="pilcrow">¶</a></p>
 <p id="section-7.2-2"><strong>Schema URN:</strong> <code>urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group</code><a href="#section-7.2-2" class="pilcrow">¶</a></p>
-<div id="the-externallymanaged-attribute-definition">
+<div id="the-membersembedded-attribute-definition">
 <section id="section-7.2.1">
-          <h4 id="name-the-externallymanaged-attrib">
-<a href="#section-7.2.1" class="section-number selfRef">7.2.1. </a><a href="#name-the-externallymanaged-attrib" class="section-name selfRef">The <code>externallyManaged</code> Attribute Definition</a>
+          <h4 id="name-the-membersembedded-attribut">
+<a href="#section-7.2.1" class="section-number selfRef">7.2.1. </a><a href="#name-the-membersembedded-attribut" class="section-name selfRef">The <code>membersEmbedded</code> Attribute Definition</a>
           </h4>
 <p id="section-7.2.1-1">The extension introduces a single boolean attribute to the <code>Group</code>
-resource: <code>externallyManaged</code>. This attribute is defined as follows. The
+resource: <code>membersEmbedded</code>. This attribute is defined as follows. The
 <code>schemas</code> and <code>meta</code> attributes are common attributes inherited from
 <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span> and are included here for completeness.<a href="#section-7.2.1-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-7.2.1-2">
@@ -1838,18 +1838,19 @@ resource: <code>externallyManaged</code>. This attribute is defined as follows. 
     "urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group",
   "name": "GroupMembershipsExtension",
   "description": "A schema extension for Group resources to \
-    indicate whether membership is managed externally.",
+    indicate whether all of a group's memberships are embedded \
+    in the members attribute.",
   "attributes": [
     {
-      "name": "externallyManaged",
+      "name": "membersEmbedded",
       "type": "boolean",
       "multiValued": false,
       "mutability": "readOnly",
       "returned": "default",
       "required": false,
-      "description": "Indicates whether this group's \
-        membership is managed via /GroupMemberships rather \
-        than the members attribute."
+      "description": "Indicates whether the full current \
+        membership of this group is delivered in the members \
+        attribute."
     }
   ],
   "meta": {
@@ -1869,7 +1870,7 @@ resource: <code>externallyManaged</code>. This attribute is defined as follows. 
           </h4>
 <p id="section-7.2.2-1">When a Service Provider uses this extension, it <span class="bcp14">MUST</span> add the schema URN
 <code>urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group</code> to
-the <code>schemas</code> attribute of the <code>Group</code> resource. The <code>externallyManaged</code>
+the <code>schemas</code> attribute of the <code>Group</code> resource. The <code>membersEmbedded</code>
 attribute is read-only, as it is metadata reported by the Service
 Provider to the client.<a href="#section-7.2.2-1" class="pilcrow">¶</a></p>
 </section>
@@ -1907,7 +1908,7 @@ Provider to the client.<a href="#section-7.2.2-1" class="pilcrow">¶</a></p>
 <strong>Description:</strong> Defines the schema for a resource representing a single group membership.<a href="#section-7.4-2" class="pilcrow">¶</a></p>
 <p id="section-7.4-3"><strong>URI:</strong> <code>urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group</code>
           <strong>Specification:</strong> This document
-<strong>Description:</strong> Defines a schema extension for the Group resource that indicates whether membership is managed externally.<a href="#section-7.4-3" class="pilcrow">¶</a></p>
+<strong>Description:</strong> Defines a schema extension for the Group resource that indicates whether a group's membership is embedded in its <code>members</code> attribute.<a href="#section-7.4-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
