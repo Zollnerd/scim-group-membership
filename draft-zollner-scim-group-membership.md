@@ -505,6 +505,8 @@ inherited from [RFC7643] and are included here for completeness.
 
 The `referenceTypes` values of `member.$ref` in the schema definition above are non-normative examples. A service provider MAY add or remove resource types to reflect the resource types it supports as members of a group.
 
+The `value` sub-attributes of `group` and `member` are defined with `caseExact` set to `true` because they contain resource `id` values, which [RFC7643] Section 3.1 defines as case-exact. This intentionally differs from the `value` sub-attribute of the `members` attribute in the `Group` schema defined in [RFC7643], which is defined with `caseExact` set to `false`.
+
 ## groupMemberships Schema Extension
 
 This specification defines a schema extension for the SCIM `Group` resource to indicate whether all of a group's memberships are embedded in its `members` attribute.
