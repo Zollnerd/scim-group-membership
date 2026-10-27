@@ -1339,7 +1339,7 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
               <dd class="break"></dd>
 <dt id="section-4.1-5.2.2.5">type</dt>
               <dd style="margin-left: 1.5em" id="section-4.1-5.2.2.6">
-                <p id="section-4.1-5.2.2.6.1">A string that specifies the resource type of the member, e.g., "User" or "Group". Read-only.<a href="#section-4.1-5.2.2.6.1" class="pilcrow">¶</a></p>
+                <p id="section-4.1-5.2.2.6.1">A string that specifies the resource type of the member. The value <span class="bcp14">MUST</span> be the <code>name</code> of the member's <code>ResourceType</code>, as defined in <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span> Section 6, e.g., "User" or "Group". Read-only.<a href="#section-4.1-5.2.2.6.1" class="pilcrow">¶</a></p>
 </dd>
               <dd class="break"></dd>
 <dt id="section-4.1-5.2.2.7">display</dt>
@@ -1637,7 +1637,7 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
           <h4 id="name-filtering">
 <a href="#section-6.2.2" class="section-number selfRef">6.2.2. </a><a href="#name-filtering" class="section-name selfRef">Filtering</a>
           </h4>
-<p id="section-6.2.2-1">Service providers <span class="bcp14">MUST</span> support filtering on the <code>group.value</code> and <code>member.value</code> attributes. This enables clients to perform critical queries, such as "find all members of a specific group" or "find all groups a specific user is a member of."<a href="#section-6.2.2-1" class="pilcrow">¶</a></p>
+<p id="section-6.2.2-1">Service providers <span class="bcp14">MUST</span> support filtering on the <code>group.value</code> and <code>member.value</code> attributes using the <code>eq</code> operator. This enables clients to perform critical queries, such as "find all members of a specific group" or "find all groups a specific user is a member of." Service providers <span class="bcp14">MUST</span> also support combining these two filters with the <code>and</code> operator, so that a client can determine whether a specific membership exists and obtain its <code>id</code>.<a href="#section-6.2.2-1" class="pilcrow">¶</a></p>
 <span class="break"></span><dl class="dlNewline" id="section-6.2.2-2">
             <dt id="section-6.2.2-2.1">To find all members of a group:</dt>
             <dd style="margin-left: 1.5em" id="section-6.2.2-2.2">
@@ -1652,11 +1652,18 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
 </dd>
           <dd class="break"></dd>
 </dl>
-<p id="section-6.2.2-4">If a service provider supports more than one resource type as a group member, it <span class="bcp14">MUST</span> also support filtering on <code>member.type</code>, so that clients can narrow queries to a specific member resource type without enumerating and filtering results client-side.<a href="#section-6.2.2-4" class="pilcrow">¶</a></p>
-<span class="break"></span><dl class="dlNewline" id="section-6.2.2-5">
-            <dt id="section-6.2.2-5.1">To find all User members of a group:</dt>
-            <dd style="margin-left: 1.5em" id="section-6.2.2-5.2">
-              <p id="section-6.2.2-5.2.1">GET /scim/v2/GroupMemberships?filter=group.value eq "e9e30db" and member.type eq "User"<a href="#section-6.2.2-5.2.1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlNewline" id="section-6.2.2-4">
+            <dt id="section-6.2.2-4.1">To find a specific membership:</dt>
+            <dd style="margin-left: 1.5em" id="section-6.2.2-4.2">
+              <p id="section-6.2.2-4.2.1">GET /scim/v2/GroupMemberships?filter=group.value eq "e9e30db" and member.value eq "2819c22"<a href="#section-6.2.2-4.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+</dl>
+<p id="section-6.2.2-5">If a service provider supports more than one resource type as a group member, it <span class="bcp14">MUST</span> also support filtering on <code>member.type</code> using the <code>eq</code> operator, alone or combined with the filters above using <code>and</code>, so that clients can narrow queries to a specific member resource type without enumerating and filtering results client-side.<a href="#section-6.2.2-5" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlNewline" id="section-6.2.2-6">
+            <dt id="section-6.2.2-6.1">To find all User members of a group:</dt>
+            <dd style="margin-left: 1.5em" id="section-6.2.2-6.2">
+              <p id="section-6.2.2-6.2.1">GET /scim/v2/GroupMemberships?filter=group.value eq "e9e30db" and member.type eq "User"<a href="#section-6.2.2-6.2.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
 </dl>
@@ -1831,7 +1838,7 @@ inherited from <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span> a
           "mutability": "readOnly",
           "returned": "default",
           "required": false,
-          "caseExact": false,
+          "caseExact": true,
           "uniqueness": "none",
           "description": "The resource type of the member."
         },
