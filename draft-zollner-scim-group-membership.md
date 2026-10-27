@@ -549,6 +549,8 @@ Authentication and authorization for managing `GroupMembership` resources are th
 
 *   Access to a member resource (such as a `User`) alone does not imply access to that resource's group memberships. A service provider MUST apply the same authorization to `GET /GroupMemberships` requests, including those filtered on `member.value`, that it applies to reading the `members` attribute of the corresponding `Group` resources. The membership relationship can be more sensitive than either the member or the group individually, regardless of the member's resource type.
 
+*   A service provider MUST NOT reveal, through error responses or through the `totalResults` value of a query response, the existence of `Group` resources, member resources, or `GroupMembership` resources that the requesting client is not authorized to read. When a client is not authorized to read a group or member referenced in a `POST` request, the service provider SHOULD return the same response it would return if the referenced resource did not exist.
+
 *   A service provider MUST apply authorization to `POST` and `DELETE` requests for a group's `GroupMembership` resources that is equivalent to the authorization it applies to adding or removing members of that `Group` through `PATCH`.
 
 # Schema Registration Templates
