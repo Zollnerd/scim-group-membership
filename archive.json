@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-10-25T04:18:16.298808+00:00",
+  "timestamp": "2026-10-27T04:40:56.074537+00:00",
   "repo": "Zollnerd/scim-group-membership",
   "labels": [
     {
@@ -392,6 +392,22 @@
       "updatedAt": "2026-10-24T21:13:18Z",
       "closedAt": null,
       "comments": []
+    },
+    {
+      "number": 22,
+      "id": "I_kwDORcubHc8AAAABaCnB_A",
+      "title": "Replace `externallyManaged` with a `membersEmbedded` delivery guarantee",
+      "url": "https://github.com/Zollnerd/scim-group-membership/issues/22",
+      "state": "OPEN",
+      "author": "Zollnerd",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Raised by Matthias Winter in the thread on draft-zollner-scim-group-members-01 (2026-09-04 and 2026-09-07).\n\nMatthias asked which of two goals `externallyManaged` serves: per-group authority over where memberships are managed, or a signal that helps clients that don't support `GroupMembership`. The draft's text mixes the two. The attribute name and the \"canonical and preferred source\" wording read as per-group management authority. The completeness requirement for `/GroupMemberships` reads as the compatibility goal. A per-group authority split also conflicts with that requirement.\n\nThe intent is the compatibility goal. The attribute is replaced by `membersEmbedded`, a statement of what the service provider guarantees about `members` for each group:\n- `true`: the full current membership is in `members`, so an omitted or empty `members` means no members.\n- `false`: `members` is not guaranteed to hold the full membership; use `/GroupMemberships`.\n- absent: no statement (plain RFC7643 behavior).\n\nThe draft currently says absence means `members` is canonical, which is wrong for legacy service providers that return partial lists. The change also states that the attribute says nothing about mutability or authority, that a service provider returning the extension MUST support `GroupMembership`, that service providers using only `GroupMembership` may omit both `Group.members` and the extension, and that a service provider supporting the extension SHOULD list it in its Group resource type's `schemaExtensions`.\n\nhttps://github.com/Zollnerd/scim-group-membership/blob/8bfdd9e4cea8b17727cb6343ec854c967bf66679/draft-zollner-scim-group-membership.md?plain=1#L166-L178",
+      "createdAt": "2026-10-26T15:14:13Z",
+      "updatedAt": "2026-10-26T15:14:13Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
   "pulls": [
@@ -538,6 +554,58 @@
       "mergeCommit": {
         "oid": "8bfdd9e4cea8b17727cb6343ec854c967bf66679"
       },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 23,
+      "id": "PR_kwDORcubHc8AAAABKzoLqA",
+      "title": "Address Paul Lanzi review feedback",
+      "url": "https://github.com/Zollnerd/scim-group-membership/pull/23",
+      "state": "OPEN",
+      "author": "Zollnerd",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Addresses the remaining actionable items from Paul Lanzi's review of draft-zollner-scim-group-members-01 (acknowledged in the 2026-07-14 list reply), plus one terminology fix from Matthias Winter's first review.\n\n- Fixes #16: add missing opening quote in the group.value filter example\n- Fixes #17: remove performance-only framing from the cursor pagination description\n- Fixes #18: clarify how clients retrieve collections of GroupMembership resources\n- Fixes #19: add member-side access guidance to Security Considerations\n- Fixes #20: show the request that produces each Group example response\n- Fixes #21: correct the ResourceType wording in Resource Type Representation\n\nPaul's items 1 and 4 no longer apply (memberCount and allowedMemberTypes were removed). Item 5 (member.value uniqueness across member types) is not addressed here.\n\nThis branch and members-embedded-rename both edit the Group example section; whichever merges second will need a small conflict resolution.",
+      "createdAt": "2026-10-26T15:36:26Z",
+      "updatedAt": "2026-10-26T15:36:26Z",
+      "baseRepository": "Zollnerd/scim-group-membership",
+      "baseRefName": "main",
+      "baseRefOid": "8bfdd9e4cea8b17727cb6343ec854c967bf66679",
+      "headRepository": "Zollnerd/scim-group-membership",
+      "headRefName": "paul-lanzi-review-feedback",
+      "headRefOid": "d297b5614d68b292296327ade3dadb3e62aea15d",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 24,
+      "id": "PR_kwDORcubHc8AAAABKzoOdw",
+      "title": "Replace externallyManaged with membersEmbedded delivery guarantee",
+      "url": "https://github.com/Zollnerd/scim-group-membership/pull/24",
+      "state": "OPEN",
+      "author": "Zollnerd",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Fixes #22.\n\nResponds to Matthias Winter's 2026-09-07 question on the list about what externallyManaged is for. The old name and text read as per-group management authority, which conflicts with the requirement that /GroupMemberships expose every membership. The attribute is now `membersEmbedded`, a statement of what the service provider guarantees about `members` for each group:\n\n- `true`: the full current membership is in `members`; omitted or empty means no members\n- `false`: `members` is not guaranteed to hold the full membership; use /GroupMemberships\n- absent: no statement (plain RFC7643 behavior)\n\nAlso: a service provider including the extension MUST support GroupMembership, SHOULD list the extension in its Group ResourceType's schemaExtensions, and the text no longer treats absence as \"canonical\". The attribute does not affect mutability or indicate a preferred management method.\n\nThis branch and paul-lanzi-review-feedback both edit the Group example section; whichever merges second will need a small conflict resolution.",
+      "createdAt": "2026-10-26T15:36:29Z",
+      "updatedAt": "2026-10-26T17:12:55Z",
+      "baseRepository": "Zollnerd/scim-group-membership",
+      "baseRefName": "main",
+      "baseRefOid": "8bfdd9e4cea8b17727cb6343ec854c967bf66679",
+      "headRepository": "Zollnerd/scim-group-membership",
+      "headRefName": "members-embedded-rename",
+      "headRefOid": "7328c08ca78bc26f514466d6f24cdb7e524ab3d6",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
       "comments": [],
       "reviews": []
     }
