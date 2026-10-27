@@ -320,6 +320,8 @@ To remove a member from a group, the client sends a `DELETE` request to the URI 
 *   Request: `DELETE /scim/v2/GroupMemberships/{id}`
 *   Response: `204 No Content` on successful deletion.
 
+A client that does not know the `id` of the `GroupMembership` resource it wants to delete can obtain it with a query filtered on both `group.value` and `member.value` (see Filtering). Clients that create memberships with `POST` can avoid this lookup by retaining the `id` returned in the `201 Created` response. If the service provider supports modifying the `members` attribute of the `Group` resource, a client can instead remove the member with a `PATCH` request to the `Group`, using a `remove` operation whose `path` is `members[value eq "[Member_ID]"]`, as shown in [RFC7644] Section 3.5.2.2. This removes the membership without requiring the client to know the `id` of the `GroupMembership` resource.
+
 ## Bulk Operations
 
 Clients can create and delete multiple `GroupMembership` resources in a single request using the `/Bulk` endpoint as defined in [RFC7644]. This is highly efficient for synchronizing memberships for a group with many changes.
