@@ -95,7 +95,7 @@ member
     : The URI of the referenced member resource. Read-only.
 
     type
-    : A string that specifies the resource type of the member, e.g., "User" or "Group". Read-only.
+    : A string that specifies the resource type of the member. The value MUST be the `name` of the member's `ResourceType`, as defined in [RFC7643] Section 6, e.g., "User" or "Group". Read-only.
 
     display
     : A human-readable name for the referenced member resource, generally corresponding to the member's `displayName` attribute. Read-only. When populated, this value MUST match the current `displayName` of the referenced resource.
@@ -328,7 +328,7 @@ For example, a service provider can meet these requirements without materializin
 
 ### Filtering
 
-Service providers MUST support filtering on the `group.value` and `member.value` attributes. This enables clients to perform critical queries, such as "find all members of a specific group" or "find all groups a specific user is a member of."
+Service providers MUST support filtering on the `group.value` and `member.value` attributes using the `eq` operator. This enables clients to perform critical queries, such as "find all members of a specific group" or "find all groups a specific user is a member of." Service providers MUST also support combining these two filters with the `and` operator, so that a client can determine whether a specific membership exists and obtain its `id`.
 
 To find all members of a group:
 : GET /scim/v2/GroupMemberships?filter=group.value eq "e9e30db"
@@ -338,7 +338,11 @@ To find all groups for a member:
 : GET /scim/v2/GroupMemberships?filter=member.value eq "2819c22"
 {: newline="true"}
 
-If a service provider supports more than one resource type as a group member, it MUST also support filtering on `member.type`, so that clients can narrow queries to a specific member resource type without enumerating and filtering results client-side.
+To find a specific membership:
+: GET /scim/v2/GroupMemberships?filter=group.value eq "e9e30db" and member.value eq "2819c22"
+{: newline="true"}
+
+If a service provider supports more than one resource type as a group member, it MUST also support filtering on `member.type` using the `eq` operator, alone or combined with the filters above using `and`, so that clients can narrow queries to a specific member resource type without enumerating and filtering results client-side.
 
 To find all User members of a group:
 : GET /scim/v2/GroupMemberships?filter=group.value eq "e9e30db" and member.type eq "User"
@@ -492,7 +496,7 @@ inherited from [RFC7643] and are included here for completeness.
           "mutability": "readOnly",
           "returned": "default",
           "required": false,
-          "caseExact": false,
+          "caseExact": true,
           "uniqueness": "none",
           "description": "The resource type of the member."
         },
