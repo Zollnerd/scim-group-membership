@@ -133,7 +133,7 @@ Table of Contents
    treating a membership as a first-class, top-level resource, service
    providers can leverage existing SCIM query parameters including
    filter, count, and multiple pagination methods, allowing them to
-   implement a scaleable and reliable interface for managing groups of
+   implement a scalable and reliable interface for managing groups of
    any size.
 
 3.  Notational Conventions
@@ -234,9 +234,10 @@ Table of Contents
    definition returned from /Schemas MUST have their mutability property
    set to readOnly.
 
-   This resource's ResourceType and Schema definitions are discoverable
-   via the /ResourceTypes and /Schemas endpoints, respectively, per
-   [RFC7644].  The definitions for both are provided below.
+   The ResourceType and Schema resources that describe GroupMembership
+   are discoverable via the /ResourceTypes and /Schemas endpoints,
+   respectively, per [RFC7644].  Examples are provided in the Resource
+   Type Representation and GroupMembership Core Schema sections.
 
 4.2.  JSON Representation
 
@@ -289,7 +290,7 @@ Table of Contents
 
 5.  groupMemberships Group Schema Extension
 
-   This specification defines an extension schema for the Group resource
+   This specification defines a schema extension for the Group resource
    with a single attribute, membersEmbedded, which states whether a
    group's full current membership is delivered in its members
    attribute.  The extension lets a service provider add support for
@@ -495,7 +496,7 @@ Table of Contents
    reasonable per-page limit on such unconstrained listings (e.g., a
    maximum of 1000 results per page) to avoid unbounded computation over
    the full membership dataset.  An implementation MAY sort results
-   internally by group.id so that pagination can stream across group
+   internally by group.value so that pagination can stream across group
    boundaries without materializing the entire membership dataset in
    memory.
 
@@ -698,6 +699,11 @@ Table of Contents
   }
 }
 
+   The referenceTypes values of member.$ref in the schema definition
+   above are non-normative examples.  A service provider MAY add or
+   remove resource types to reflect the resource types it supports as
+   members of a group.
+
 7.2.  groupMemberships Schema Extension
 
    This specification defines a schema extension for the SCIM Group
@@ -718,7 +724,7 @@ Table of Contents
   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Schema"],
   "id": \
     "urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group",
-  "name": "GroupMembershipsExtension",
+  "name": "Group Memberships Extension",
   "description": "A schema extension for Group resources to \
     indicate whether all of a group's memberships are embedded \
     in the members attribute.",
@@ -754,7 +760,7 @@ Table of Contents
 
    The security considerations for the GroupMembership resource are
    substantially the same as those for the User and Group resources
-   defined in Section 8 of the SCIM Protocol document [RFC7644].  All
+   defined in Section 7 of the SCIM Protocol document [RFC7644].  All
    requests MUST be made over a secure channel such as Transport Layer
    Security (TLS).
 
