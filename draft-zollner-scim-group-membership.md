@@ -108,7 +108,7 @@ meta
 : A complex attribute containing metadata about the resource. This includes the `resourceType` (which MUST be "GroupMembership"), `created`, `lastModified`, and `location` attributes. This is a REQUIRED, read-only attribute. This attribute is a common attribute inherited from [RFC7643].
 {: newline="true"}
 
-If a service provider's implementation does not support creating or deleting `GroupMembership` resources, all attributes in the schema definition returned from `/Schemas` MUST have their `mutability` property set to `readOnly`.
+If a service provider supports neither creating nor deleting `GroupMembership` resources, all attributes in the schema definition returned from `/Schemas` MUST have their `mutability` property set to `readOnly`. A service provider that does not support `POST` or `DELETE` requests for `GroupMembership` resources MUST respond to them with `501 Not Implemented`, as defined in [RFC7644] Section 3.12. A service provider that supports these operations but does not permit them for the requesting client responds with `403 Forbidden`.
 
 The `ResourceType` and `Schema` resources that describe `GroupMembership` are discoverable via the `/ResourceTypes` and `/Schemas` endpoints, respectively, per [RFC7644]. Examples are provided in the Resource Type Representation and GroupMembership Core Schema sections.
 
