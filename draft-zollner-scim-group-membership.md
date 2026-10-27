@@ -142,7 +142,7 @@ The following is an example of a `GroupMembership` resource in JSON format. This
 
 ## Resource Type Representation
 
-The service provider's `ResourceType` schema, available at the `/ResourceTypes` endpoint, MUST include an entry for "GroupMembership".
+The service provider's `/ResourceTypes` endpoint MUST include a `ResourceType` resource for "GroupMembership".
 
 **Example ResourceType entry:**
 
@@ -183,6 +183,8 @@ A client can always construct the URI to query a group's memberships without rel
 
 The following is a `Group` with a large number of members. `externallyManaged` is `true` and the `members` attribute is omitted; the client queries `/GroupMemberships` for this group's membership.
 
+Example Request: `GET /scim/v2/Groups/e9e30dba-f08f-4139-944c-2e6949b80b05`
+
 ~~~
 {
   "schemas": [
@@ -205,6 +207,8 @@ The following is a `Group` with a large number of members. `externallyManaged` i
 ### Example of a Group with Inline Members
 
 The following is a `Group` with a small number of members. `externallyManaged` is `false`, indicating that the `members` attribute is this group's canonical membership representation.
+
+Example Request: `GET /scim/v2/Groups/a0b1c2d3-f08f-4139-944c-2e6949b80b05`
 
 ~~~
 {
@@ -268,7 +272,7 @@ POST /GroupMemberships
 
 ## Retrieving GroupMembership Resources (GET)
 
-`GroupMembership` resources can be retrieved by sending a `GET` request to the `GroupMemberships` endpoint. Clients can retrieve an individual resource by its `id` or a list of resources.
+`GroupMembership` resources can be retrieved by sending a `GET` request to the `GroupMemberships` endpoint. Clients can retrieve an individual resource by its `id`, or retrieve a collection of resources that can be narrowed using a filter on attributes such as `group.value` or `member.value`.
 
 *   To get a specific membership: `GET /scim/v2/GroupMemberships/{id}`
 *   To get all memberships: `GET /scim/v2/GroupMemberships`
@@ -281,7 +285,7 @@ Index-based Pagination: The `startIndex` and `count` query parameters are the pr
 
 *   Example: `GET /scim/v2/GroupMemberships?startIndex=1&count=1000`
 
-Cursor as defined in [RFC9865] for improved performance with very large data sets.
+Cursor-based Pagination: Cursor-based pagination, as defined in [RFC9865], is available as an alternative to index-based pagination.
 
 *   Example: `GET /scim/v2/GroupMemberships?count=1000&cursor=aW5kZXg9MTAx`
 
@@ -294,7 +298,7 @@ A `GET` request to `/GroupMemberships` without a filter returns all memberships 
 Service providers MUST support filtering on the `group.value` and `member.value` attributes. This enables clients to perform critical queries, such as "find all members of a specific group" or "find all groups a specific user is a member of."
 
 To find all members of a group:
-: GET /scim/v2/GroupMemberships?filter=group.value eq e9e30db"
+: GET /scim/v2/GroupMemberships?filter=group.value eq "e9e30db"
 {: newline="true"}
 
 To find all groups for a member:
@@ -539,6 +543,8 @@ The security considerations for the `GroupMembership` resource are substantially
 Authentication and authorization for managing `GroupMembership` resources are the responsibility of the service provider. Implementers should consider the following:
 
 *   A client with permission to read a `Group` resource's `members` attribute MUST be granted permission to `GET` the corresponding `GroupMembership` resources for that group. Access to a `Group` resource alone does not imply access to its member list — a service provider MAY expose group metadata broadly while restricting membership details to privileged clients.
+
+*   Access to a member resource (such as a `User`) alone does not imply access to that resource's group memberships. A service provider MUST apply the same authorization to `GET /GroupMemberships` requests, including those filtered on `member.value`, that it applies to reading the `members` attribute of the corresponding `Group` resources. The membership relationship can be more sensitive than either the member or the group individually, regardless of the member's resource type.
 
 *   A client authorized to add or remove members from a `Group` via a `PATCH` to the `Group` resource MUST have equivalent `POST` and `DELETE` permissions on `GroupMembership` resources for that same group.
 
