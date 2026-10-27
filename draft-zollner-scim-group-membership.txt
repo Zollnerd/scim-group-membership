@@ -880,12 +880,13 @@ Table of Contents
    resources are the responsibility of the service provider.
    Implementers should consider the following:
 
-   *  A client with permission to read a Group resource's members
-      attribute MUST be granted permission to GET the corresponding
-      GroupMembership resources for that group.  Access to a Group
-      resource alone does not imply access to its member list — a
-      service provider MAY expose group metadata broadly while
-      restricting membership details to privileged clients.
+   *  A service provider MUST apply authorization to GET requests for a
+      group's GroupMembership resources that is equivalent to the
+      authorization it applies to reading that Group resource's members
+      attribute.  Access to a Group resource alone does not imply access
+      to its member list; a service provider MAY expose group metadata
+      broadly while restricting membership details to privileged
+      clients.
 
    *  Access to a member resource (such as a User) alone does not imply
       access to that resource's group memberships.  A service provider
@@ -896,9 +897,25 @@ Table of Contents
       sensitive than either the member or the group individually,
       regardless of the member's resource type.
 
-   *  A client authorized to add or remove members from a Group via a
-      PATCH to the Group resource MUST have equivalent POST and DELETE
-      permissions on GroupMembership resources for that same group.
+   *  A service provider MUST NOT reveal, through error responses or
+      through the totalResults value of a query response, the existence
+      of Group resources, member resources, or GroupMembership resources
+      that the requesting client is not authorized to read.  When a
+      client is not authorized to read a group or member referenced in a
+      POST request, the service provider SHOULD return the same response
+      it would return if the referenced resource did not exist.
+
+   *  A service provider MUST apply authorization to POST and DELETE
+      requests for a group's GroupMembership resources that is
+      equivalent to the authorization it applies to adding or removing
+      members of that Group through PATCH.
+
+   *  Queries against /GroupMemberships without a filter or with a broad
+      filter, and the work needed to populate the group.display and
+      member.display sub-attributes, can be expensive at the scale this
+      document targets, and can be used to degrade a service provider's
+      availability.  Service providers can mitigate this using per-page
+      limits and the tooMany error defined in [RFC7644] Section 3.12.
 
 9.  Schema Registration Templates
 
