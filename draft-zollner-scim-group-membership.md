@@ -110,7 +110,7 @@ meta
 
 If a service provider's implementation does not support creating or deleting `GroupMembership` resources, all attributes in the schema definition returned from `/Schemas` MUST have their `mutability` property set to `readOnly`.
 
-This resource's `ResourceType` and `Schema` definitions are discoverable via the `/ResourceTypes` and `/Schemas` endpoints, respectively, per [RFC7644]. The definitions for both are provided below.
+The `ResourceType` and `Schema` resources that describe `GroupMembership` are discoverable via the `/ResourceTypes` and `/Schemas` endpoints, respectively, per [RFC7644]. Examples are provided in the Resource Type Representation and GroupMembership Core Schema sections.
 
 ## JSON Representation
 
@@ -484,6 +484,8 @@ inherited from [RFC7643] and are included here for completeness.
   }
 }
 ~~~
+
+The `referenceTypes` values of `member.$ref` in the schema definition above are non-normative examples. A service provider MAY add or remove resource types to reflect the resource types it supports as members of a group.
 
 ## groupMemberships Schema Extension
 
