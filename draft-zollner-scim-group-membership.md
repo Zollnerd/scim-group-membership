@@ -57,7 +57,7 @@ This document proposes the "GroupMembership" resource type. By treating a member
 
 This section defines the `GroupMembership` resource, which represents a single membership relationship between a SCIM group and a member. By representing each membership as a distinct, top-level resource, service providers can manage group memberships individually, allowing for pagination, filtering, and other operations at scale.
 
-A `GroupMembership` resource represents a direct membership only. Indirect memberships, as defined in [RFC7643] Section 4.1.2, MUST NOT be represented as `GroupMembership` resources.
+A `GroupMembership` resource represents a direct membership only. Indirect memberships, as defined in [RFC7643] Section 4.1.2, MUST NOT be represented as `GroupMembership` resources. A service provider MUST NOT maintain more than one `GroupMembership` resource with the same `group.value` and `member.value`.
 
 ## Resource Properties
 
