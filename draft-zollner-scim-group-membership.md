@@ -252,7 +252,11 @@ To add a new member to a group, the client sends a `POST` request to the `GroupM
 *   Request: POST /scim/v2/GroupMemberships
 *   Response: 201 Created with the full `GroupMembership` resource in the body, including its newly generated `id` and `meta` attributes.
 
-A service provider MUST ensure that both the group and the member referenced by their `id`s exist before creating the `GroupMembership` resource. If either the group or the member does not exist, the service provider SHOULD return a `400 Bad Request` error with a `scimType` of `invalidValue`.
+A service provider MUST ensure that both the group and the member referenced by their `id`s exist before creating the `GroupMembership` resource. The service provider MUST return a `400 Bad Request` error with a `scimType` of `invalidValue` if any of the following is true:
+
+*   The referenced group or member does not exist.
+*   The referenced member is of a resource type that the service provider does not allow as a member of the referenced group, for example a `Group` when the service provider does not support nested groups.
+*   The service provider does not permit circular group nesting, and creating the membership would make a group a direct or indirect member of itself.
 
 If a `GroupMembership` resource with the same `group.value` and `member.value` already exists, the service provider MUST return a `409 Conflict` error with a `scimType` of `uniqueness`, as defined in [RFC7644] Section 3.3. The service provider MUST NOT create a second `GroupMembership` resource or return a successful response.
 
