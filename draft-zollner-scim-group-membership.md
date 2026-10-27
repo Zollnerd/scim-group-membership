@@ -537,7 +537,7 @@ attribute is read-only, as it is metadata reported by the Service
 Provider to the client.
 
 
-## Security Considerations
+# Security Considerations
 
 The security considerations for the `GroupMembership` resource are substantially the same as those for the `User` and `Group` resources defined in Section 8 of the SCIM Protocol document [RFC7644]. All requests MUST be made over a secure channel such as Transport Layer Security (TLS).
 
@@ -549,14 +549,86 @@ Authentication and authorization for managing `GroupMembership` resources are th
 
 *   A client authorized to add or remove members from a `Group` via a `PATCH` to the `Group` resource MUST have equivalent `POST` and `DELETE` permissions on `GroupMembership` resources for that same group.
 
-## IANA Considerations
+# Schema Registration Templates
 
-This document requests that IANA register the following URNs in the "SCIM Schemas" registry.
+The following registration templates, as defined in Section 10.3.2 of [RFC7643], describe the schema URIs registered by this document.
 
-**URI:** `urn:ietf:params:scim:schemas:core:2.0:GroupMembership`
-**Specification:** This document
-**Description:** Defines the schema for a resource representing a single group membership.
+## GroupMembership Core Schema Registration
 
-**URI:** `urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group`
-**Specification:** This document
-**Description:** Defines a schema extension for the Group resource that indicates whether a group's membership is embedded in its `members` attribute.
+Schema URI:
+: `urn:ietf:params:scim:schemas:core:2.0:GroupMembership`
+{: newline="true"}
+
+Schema Name:
+: Group Membership
+{: newline="true"}
+
+Intended or Associated Resource Type:
+: GroupMembership
+{: newline="true"}
+
+Purpose:
+: Represents a single membership of a member (a `User`, a `Group`, or another resource type) in a `Group` as a top-level resource, so that memberships can be paginated, filtered, created, and deleted individually.
+{: newline="true"}
+
+Single-value Attributes:
+: `id` (string); `group` (complex: `value`, `$ref`, `display`); `member` (complex: `value`, `$ref`, `type`, `display`); `meta` (complex).
+{: newline="true"}
+
+Multi-valued Attributes:
+: None, other than the common `schemas` attribute.
+{: newline="true"}
+
+## groupMemberships Group Extension Registration
+
+Schema URI:
+: `urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group`
+{: newline="true"}
+
+Schema Name:
+: Group Memberships Extension
+{: newline="true"}
+
+Intended or Associated Resource Type:
+: Group
+{: newline="true"}
+
+Purpose:
+: Indicates whether all of a group's memberships are embedded in its `members` attribute.
+{: newline="true"}
+
+Single-value Attributes:
+: `membersEmbedded` (boolean).
+{: newline="true"}
+
+Multi-valued Attributes:
+: None.
+{: newline="true"}
+
+# IANA Considerations
+
+This document requests that IANA register the following schema URIs in the "SCIM Schema URIs for Data Resources" registry, within the "System for Cross-domain Identity Management (SCIM) Schema URIs" registry group established by [RFC7643]. The registration templates for both are provided in the Schema Registration Templates section.
+
+Schema URI:
+: `urn:ietf:params:scim:schemas:core:2.0:GroupMembership`
+{: newline="true"}
+
+Name:
+: Group Membership
+{: newline="true"}
+
+Reference:
+: This document
+{: newline="true"}
+
+Schema URI:
+: `urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group`
+{: newline="true"}
+
+Name:
+: Group Memberships Extension
+{: newline="true"}
+
+Reference:
+: This document
+{: newline="true"}
