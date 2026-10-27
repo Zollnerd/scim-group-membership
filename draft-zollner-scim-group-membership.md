@@ -57,7 +57,7 @@ This document proposes the "GroupMembership" resource type. By treating a member
 
 This section defines the `GroupMembership` resource, which represents a single membership relationship between a SCIM group and a member. By representing each membership as a distinct, top-level resource, service providers can manage group memberships individually, allowing for pagination, filtering, and other operations at scale.
 
-A `GroupMembership` resource represents a direct membership only. Indirect memberships, as defined in [RFC7643] Section 4.1.2, MUST NOT be represented as `GroupMembership` resources.
+A `GroupMembership` resource represents a direct membership only. Indirect memberships, as defined in [RFC7643] Section 4.1.2, MUST NOT be represented as `GroupMembership` resources. A service provider MUST NOT maintain more than one `GroupMembership` resource with the same `group.value` and `member.value`.
 
 ## Resource Properties
 
@@ -108,7 +108,7 @@ meta
 : A complex attribute containing metadata about the resource. This includes the `resourceType` (which MUST be "GroupMembership"), `created`, `lastModified`, and `location` attributes. This is a REQUIRED, read-only attribute. This attribute is a common attribute inherited from [RFC7643].
 {: newline="true"}
 
-If a service provider's implementation does not support creating or deleting `GroupMembership` resources, all attributes in the schema definition returned from `/Schemas` MUST have their `mutability` property set to `readOnly`.
+If a service provider supports neither creating nor deleting `GroupMembership` resources, all attributes in the schema definition returned from `/Schemas` MUST have their `mutability` property set to `readOnly`. A service provider that does not support `POST` or `DELETE` requests for `GroupMembership` resources MUST respond to them with `501 Not Implemented`, as defined in [RFC7644] Section 3.12. A service provider that supports these operations but does not permit them for the requesting client responds with `403 Forbidden`.
 
 The `ResourceType` and `Schema` resources that describe `GroupMembership` are discoverable via the `/ResourceTypes` and `/Schemas` endpoints, respectively, per [RFC7644]. Examples are provided in the Resource Type Representation and GroupMembership Core Schema sections.
 
@@ -172,7 +172,15 @@ The schema URN for the extension is `urn:ietf:params:scim:schemas:extension:grou
 ## The `membersEmbedded` Attribute
 
 membersEmbedded
-: A boolean. A value of `true` is a guarantee by the service provider that the group's full current membership is present in the `members` attribute, so an omitted or empty `members` attribute means the group has no members. A value of `false` indicates that the service provider does not guarantee that `members` contains the full membership. The `members` attribute may in fact be full, partial, omitted, or empty; for example, a service provider that cannot return accurate membership above a certain size can always report `false`, even for a group whose `members` happens to be complete. Clients SHOULD use `/GroupMemberships` filtered on this group's `id`. If the attribute is absent, the service provider makes no statement, and `members` is interpreted as defined in [RFC7643]. This attribute does not affect which operations are supported on `members` or on `GroupMembership` resources, and does not indicate which is the preferred way to manage memberships.
+: A boolean that states whether the group's full current membership is present in the `members` attribute.
+
+    A value of `true` is a guarantee by the service provider that the group's full current membership is present in the `members` attribute, so an omitted or empty `members` attribute means the group has no members. This guarantee applies only to responses in which the `members` attribute would be returned given the request's `attributes` and `excludedAttributes` parameters ([RFC7644] Section 3.4.2.5). A client that excludes `members` from a response cannot conclude from a value of `true` that the group has no members.
+
+    A value of `false` indicates that the service provider does not guarantee that `members` contains the full membership. The `members` attribute may in fact be full, partial, omitted, or empty; for example, a service provider that cannot return accurate membership above a certain size can always report `false`, even for a group whose `members` happens to be complete. When the value is `false`, a client that needs the group's complete membership SHOULD retrieve it from `/GroupMemberships`, filtered on the group's `id`.
+
+    If the attribute is absent, the service provider makes no statement, and `members` is interpreted as defined in [RFC7643].
+
+    This attribute does not affect which operations are supported on `members` or on `GroupMembership` resources, and does not indicate which is the preferred way to manage memberships.
 {: newline="true"}
 
 A client can always construct the URI to query a group's memberships without relying on a service-provider-supplied value, using the pattern `/GroupMemberships?filter=group.value eq "[Group_ID]"`.
@@ -243,6 +251,10 @@ If a service provider supports the `GroupMembership` resource, it MUST make avai
 
 Service providers MAY also support management of group memberships through the existing `members` attribute of the `Group` resource as defined in [RFC7643] for the purpose of backwards compatibility with existing clients. When doing so, the service provider MUST maintain consistency between the state of the `members` attribute and the state of the corresponding `GroupMembership` resources. For example, if a `DELETE` request to a `/GroupMemberships/{id}` URI is successful, the corresponding member MUST also be removed from the `members` array of the parent `Group` resource. Conversely, if a member is removed from a `Group` via a `PATCH` request to the `/Groups/{id}` URI, the corresponding `GroupMembership` resource MUST be deleted.
 
+When a `Group` resource is deleted, the service provider MUST delete every `GroupMembership` resource whose `group.value` references that group. When a member resource is deleted, the service provider MUST delete every `GroupMembership` resource whose `member.value` references that resource. Deleted `GroupMembership` resources are subject to the requirements of [RFC7644] Section 3.6.
+
+When a `GroupMembership` resource is created or deleted and the service provider supports the `members` attribute of the parent `Group`, the service provider MUST update the parent `Group` resource's `meta.lastModified` and, if it supports resource versioning ([RFC7644] Section 3.14), its `meta.version`. A change to a `Group` or member resource that does not create or delete a given `GroupMembership` resource does not modify that `GroupMembership` resource, and MUST NOT change its `meta.lastModified` or `meta.version`. This includes changes to the referenced resource's `displayName`, even when reflected in the derived `group.display` or `member.display` sub-attributes, and the addition or removal of other members of the same group.
+
 ## Creating GroupMembership Resources (POST)
 
 To add a new member to a group, the client sends a `POST` request to the `GroupMemberships` endpoint. The request body MUST contain a `GroupMembership` resource, specifying the `group.value` and `member.value`.
@@ -250,9 +262,13 @@ To add a new member to a group, the client sends a `POST` request to the `GroupM
 *   Request: POST /scim/v2/GroupMemberships
 *   Response: 201 Created with the full `GroupMembership` resource in the body, including its newly generated `id` and `meta` attributes.
 
-A service provider MUST ensure that both the group and the member referenced by their `id`s exist before creating the `GroupMembership` resource. If either the group or the member does not exist, the service provider SHOULD return a `400 Bad Request` error with a `scimType` of `invalidValue`.
+A service provider MUST ensure that both the group and the member referenced by their `id`s exist before creating the `GroupMembership` resource. The service provider MUST return a `400 Bad Request` error with a `scimType` of `invalidValue` if any of the following is true:
 
-If the membership already exists, the service provider MUST return a `409 Conflict` error.
+*   The referenced group or member does not exist.
+*   The referenced member is of a resource type that the service provider does not allow as a member of the referenced group, for example a `Group` when the service provider does not support nested groups.
+*   The service provider does not permit circular group nesting, and creating the membership would make a group a direct or indirect member of itself.
+
+If a `GroupMembership` resource with the same `group.value` and `member.value` already exists, the service provider MUST return a `409 Conflict` error with a `scimType` of `uniqueness`, as defined in [RFC7644] Section 3.3. The service provider MUST NOT create a second `GroupMembership` resource or return a successful response.
 
 Example Request Body:
 
@@ -317,6 +333,8 @@ To remove a member from a group, the client sends a `DELETE` request to the URI 
 
 *   Request: `DELETE /scim/v2/GroupMemberships/{id}`
 *   Response: `204 No Content` on successful deletion.
+
+A client that does not know the `id` of the `GroupMembership` resource it wants to delete can obtain it with a query filtered on both `group.value` and `member.value` (see Filtering). Clients that create memberships with `POST` can avoid this lookup by retaining the `id` returned in the `201 Created` response. If the service provider supports modifying the `members` attribute of the `Group` resource, a client can instead remove the member with a `PATCH` request to the `Group`, using a `remove` operation whose `path` is `members[value eq "[Member_ID]"]`, as shown in [RFC7644] Section 3.5.2.2. This removes the membership without requiring the client to know the `id` of the `GroupMembership` resource.
 
 ## Bulk Operations
 
@@ -486,6 +504,8 @@ inherited from [RFC7643] and are included here for completeness.
 ~~~
 
 The `referenceTypes` values of `member.$ref` in the schema definition above are non-normative examples. A service provider MAY add or remove resource types to reflect the resource types it supports as members of a group.
+
+The `value` sub-attributes of `group` and `member` are defined with `caseExact` set to `true` because they contain resource `id` values, which [RFC7643] Section 3.1 defines as case-exact. This intentionally differs from the `value` sub-attribute of the `members` attribute in the `Group` schema defined in [RFC7643], which is defined with `caseExact` set to `false`.
 
 ## groupMemberships Schema Extension
 
