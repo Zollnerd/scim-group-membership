@@ -295,19 +295,36 @@ POST /GroupMemberships
 
 ### Pagination
 
-Service providers MUST support pagination of `GroupMembership` resources to allow clients to retrieve large sets of memberships in manageable chunks.
+Service providers MUST support pagination of `GroupMembership` resources using at least one of index-based pagination, as defined in [RFC7644] Section 3.4.2.4, or cursor-based pagination, as defined in [RFC9865]. Service providers SHOULD support cursor-based pagination for `GroupMembership` resources, because index-based pagination can return inconsistent results when memberships change while a client is paging through them ([RFC7644] Section 3.4.2.4). Service providers MUST indicate which pagination methods they support using the `pagination` attribute of `/ServiceProviderConfig`, as defined in [RFC9865] Section 4.
 
-Index-based Pagination: The `startIndex` and `count` query parameters are the primary method for pagination, as defined in [RFC7644].
+Index-based Pagination: The `startIndex` and `count` query parameters, as defined in [RFC7644].
 
 *   Example: `GET /scim/v2/GroupMemberships?startIndex=1&count=1000`
 
-Cursor-based Pagination: Cursor-based pagination, as defined in [RFC9865], is available as an alternative to index-based pagination.
+Cursor-based Pagination: The `cursor` and `count` query parameters, as defined in [RFC9865]. The first request includes an empty `cursor` parameter, and each subsequent request sets `cursor` to the `nextCursor` value from the previous response.
 
-*   Example: `GET /scim/v2/GroupMemberships?count=1000&cursor=aW5kZXg9MTAx`
+*   Example (first page): `GET /scim/v2/GroupMemberships?count=1000&cursor`
+*   Example (next page): `GET /scim/v2/GroupMemberships?count=1000&cursor=aW5kZXg9MTAx`
 
-The response for a paginated request is a `ListResponse` containing the `GroupMembership` resources for the current page.
+The response for a paginated request is a `ListResponse` containing the `GroupMembership` resources for the current page. The following is an example of a cursor-paginated response:
 
-A `GET` request to `/GroupMemberships` without a filter returns all memberships across all groups. Service providers SHOULD impose a reasonable per-page limit on such unconstrained listings (e.g., a maximum of 1000 results per page) to avoid unbounded computation over the full membership dataset. An implementation MAY sort results internally by `group.value` so that pagination can stream across group boundaries without materializing the entire membership dataset in memory.
+~~~
+{
+  "schemas": ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+  "totalResults": 250000,
+  "itemsPerPage": 1000,
+  "nextCursor": "aW5kZXg9MTAx",
+  "Resources": [
+    ...
+  ]
+}
+~~~
+
+A `GET` request to `/GroupMemberships` without a filter returns all memberships across all groups. Service providers SHOULD impose a reasonable per-page limit on such unconstrained listings (e.g., a maximum of 1000 results per page) to avoid unbounded computation over the full membership dataset. A service provider MAY reject a request without a filter with a `400 Bad Request` error and a `scimType` of `tooMany`, as defined in [RFC7644] Section 3.12. Memberships remain available to clients in that case through requests filtered on `group.value` or `member.value`.
+
+Service providers MUST return `GroupMembership` resources in a stable order across the pages of a single query, so that a client paging through the results receives each matching membership exactly once, provided the underlying memberships do not change during the query.
+
+For example, a service provider can meet these requirements without materializing the entire membership dataset in memory by ordering results internally by `group.value`, so that pagination can stream across group boundaries.
 
 ### Filtering
 
