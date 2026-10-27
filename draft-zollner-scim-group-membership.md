@@ -102,11 +102,11 @@ member
     {: newline="true"}
 {: newline="true"}
 
-Service providers MAY optimize payload size by omitting the `group.display` and `member.display` sub-attributes entirely, or by configuring them as `returned: "request"` (available only when explicitly requested via the `attributes` query parameter). Because these sub-attributes are optional and read-only, a service provider that never implements them is fully conformant.
-
 meta
 : A complex attribute containing metadata about the resource. This includes the `resourceType` (which MUST be "GroupMembership"), `created`, `lastModified`, and `location` attributes. This is a REQUIRED, read-only attribute. This attribute is a common attribute inherited from [RFC7643].
 {: newline="true"}
+
+Service providers MAY optimize payload size by omitting the `group.display` and `member.display` sub-attributes entirely, or by configuring them as `returned: "request"` (available only when explicitly requested via the `attributes` query parameter). Because these sub-attributes are optional and read-only, a service provider that never implements them is fully conformant.
 
 If a service provider supports neither creating nor deleting `GroupMembership` resources, all attributes in the schema definition returned from `/Schemas` MUST have their `mutability` property set to `readOnly`. A service provider that does not support `POST` or `DELETE` requests for `GroupMembership` resources MUST respond to them with `501 Not Implemented`, as defined in [RFC7644] Section 3.12. A service provider that supports these operations but does not permit them for the requesting client responds with `403 Forbidden`.
 
@@ -167,7 +167,7 @@ The service provider's `/ResourceTypes` endpoint MUST include a `ResourceType` r
 
 This specification defines a schema extension for the `Group` resource with a single attribute, `membersEmbedded`, which states whether a group's full current membership is delivered in its `members` attribute. The extension lets a service provider add support for `GroupMembership` without changing how it returns `members`, so existing clients are unaffected, while clients that understand the extension get a per-group signal. A service provider that only exposes memberships through `GroupMembership` MAY omit `Group.members` and need not use this extension.
 
-The schema URN for the extension is `urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group`. A service provider that includes this extension on a `Group` MUST support the `GroupMembership` resource. A service provider that supports this extension SHOULD list its schema URN in the `schemaExtensions` attribute of its `Group` `ResourceType`, with `required` set to `false`.
+The schema URN for the extension is `urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group`. A service provider that includes this extension on a `Group` MUST support the `GroupMembership` resource. A service provider that supports this extension SHOULD list its schema URN in the `schemaExtensions` attribute of its `Group` `ResourceType`, with `required` set to `false`. As with any schema extension, a `Group` that includes the extension lists its URN in the `schemas` attribute, per [RFC7643] Section 3.
 
 ## The `membersEmbedded` Attribute
 
@@ -183,7 +183,7 @@ membersEmbedded
     This attribute does not affect which operations are supported on `members` or on `GroupMembership` resources, and does not indicate which is the preferred way to manage memberships.
 {: newline="true"}
 
-A client can always construct the URI to query a group's memberships without relying on a service-provider-supplied value, using the pattern `/GroupMemberships?filter=group.value eq "[Group_ID]"`.
+A client retrieves a group's memberships from `/GroupMemberships` using a filter on the group's `id`, for example `/GroupMemberships?filter=group.value eq "[Group_ID]"`.
 
 ## Example Group Resources
 
@@ -229,6 +229,9 @@ Example Request: `GET /scim/v2/Groups/a0b1c2d3-f08f-4139-944c-2e6949b80b05`
   "members": [
     {
       "value": "2819c223-7f76-453a-919d-413861904646",
+      "$ref": "https://example.com/scim/v2/Users/ \
+        2819c223-7f76-453a-919d-413861904646",
+      "type": "User",
       "display": "Babs Jensen"
     }
   ],
@@ -270,9 +273,7 @@ A service provider MUST ensure that both the group and the member referenced by 
 
 If a `GroupMembership` resource with the same `group.value` and `member.value` already exists, the service provider MUST return a `409 Conflict` error with a `scimType` of `uniqueness`, as defined in [RFC7644] Section 3.3. The service provider MUST NOT create a second `GroupMembership` resource or return a successful response.
 
-Example Request Body:
-
-POST /GroupMemberships
+Example Request: `POST /scim/v2/GroupMemberships`
 
 ~~~
 {
@@ -529,7 +530,7 @@ The `value` sub-attributes of `group` and `member` are defined with `caseExact` 
 
 ## groupMemberships Schema Extension
 
-This specification defines a schema extension for the SCIM `Group` resource to indicate whether all of a group's memberships are embedded in its `members` attribute.
+The schema definition for the `groupMemberships` schema extension, described in the groupMemberships Group Schema Extension section, is as follows.
 
 **Schema URN:** `urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group`
 
@@ -569,15 +570,6 @@ resource: `membersEmbedded`. This attribute is defined as follows. The
   }
 }
 ~~~
-
-### Usage
-
-When a Service Provider uses this extension, it MUST add the schema URN
-`urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group` to
-the `schemas` attribute of the `Group` resource. The `membersEmbedded`
-attribute is read-only, as it is metadata reported by the Service
-Provider to the client.
-
 
 # Security Considerations
 
