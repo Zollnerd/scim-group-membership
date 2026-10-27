@@ -1597,21 +1597,39 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
           <h4 id="name-pagination">
 <a href="#section-6.2.1" class="section-number selfRef">6.2.1. </a><a href="#name-pagination" class="section-name selfRef">Pagination</a>
           </h4>
-<p id="section-6.2.1-1">Service providers <span class="bcp14">MUST</span> support pagination of <code>GroupMembership</code> resources to allow clients to retrieve large sets of memberships in manageable chunks.<a href="#section-6.2.1-1" class="pilcrow">¶</a></p>
-<p id="section-6.2.1-2">Index-based Pagination: The <code>startIndex</code> and <code>count</code> query parameters are the primary method for pagination, as defined in <span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span>.<a href="#section-6.2.1-2" class="pilcrow">¶</a></p>
+<p id="section-6.2.1-1">Service providers <span class="bcp14">MUST</span> support pagination of <code>GroupMembership</code> resources using at least one of index-based pagination, as defined in <span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span> Section 3.4.2.4, or cursor-based pagination, as defined in <span>[<a href="#RFC9865" class="cite xref">RFC9865</a>]</span>. Service providers <span class="bcp14">SHOULD</span> support cursor-based pagination for <code>GroupMembership</code> resources, because index-based pagination can return inconsistent results when memberships change while a client is paging through them (<span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span> Section 3.4.2.4). Service providers <span class="bcp14">MUST</span> indicate which pagination methods they support using the <code>pagination</code> attribute of <code>/ServiceProviderConfig</code>, as defined in <span>[<a href="#RFC9865" class="cite xref">RFC9865</a>]</span> Section 4.<a href="#section-6.2.1-1" class="pilcrow">¶</a></p>
+<p id="section-6.2.1-2">Index-based Pagination: The <code>startIndex</code> and <code>count</code> query parameters, as defined in <span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span>.<a href="#section-6.2.1-2" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-6.2.1-3.1">
               <p id="section-6.2.1-3.1.1">Example: <code>GET /scim/v2/GroupMemberships?startIndex=1&amp;count=1000</code><a href="#section-6.2.1-3.1.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-6.2.1-4">Cursor-based Pagination: Cursor-based pagination, as defined in <span>[<a href="#RFC9865" class="cite xref">RFC9865</a>]</span>, is available as an alternative to index-based pagination.<a href="#section-6.2.1-4" class="pilcrow">¶</a></p>
+<p id="section-6.2.1-4">Cursor-based Pagination: The <code>cursor</code> and <code>count</code> query parameters, as defined in <span>[<a href="#RFC9865" class="cite xref">RFC9865</a>]</span>. The first request includes an empty <code>cursor</code> parameter, and each subsequent request sets <code>cursor</code> to the <code>nextCursor</code> value from the previous response.<a href="#section-6.2.1-4" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-6.2.1-5.1">
-              <p id="section-6.2.1-5.1.1">Example: <code>GET /scim/v2/GroupMemberships?count=1000&amp;cursor=aW5kZXg9MTAx</code><a href="#section-6.2.1-5.1.1" class="pilcrow">¶</a></p>
+              <p id="section-6.2.1-5.1.1">Example (first page): <code>GET /scim/v2/GroupMemberships?count=1000&amp;cursor</code><a href="#section-6.2.1-5.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-6.2.1-5.2">
+              <p id="section-6.2.1-5.2.1">Example (next page): <code>GET /scim/v2/GroupMemberships?count=1000&amp;cursor=aW5kZXg9MTAx</code><a href="#section-6.2.1-5.2.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-6.2.1-6">The response for a paginated request is a <code>ListResponse</code> containing the <code>GroupMembership</code> resources for the current page.<a href="#section-6.2.1-6" class="pilcrow">¶</a></p>
-<p id="section-6.2.1-7">A <code>GET</code> request to <code>/GroupMemberships</code> without a filter returns all memberships across all groups. Service providers <span class="bcp14">SHOULD</span> impose a reasonable per-page limit on such unconstrained listings (e.g., a maximum of 1000 results per page) to avoid unbounded computation over the full membership dataset. An implementation <span class="bcp14">MAY</span> sort results internally by <code>group.value</code> so that pagination can stream across group boundaries without materializing the entire membership dataset in memory.<a href="#section-6.2.1-7" class="pilcrow">¶</a></p>
+<p id="section-6.2.1-6">The response for a paginated request is a <code>ListResponse</code> containing the <code>GroupMembership</code> resources for the current page. The following is an example of a cursor-paginated response:<a href="#section-6.2.1-6" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-6.2.1-7">
+<pre>
+{
+  "schemas": ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+  "totalResults": 250000,
+  "itemsPerPage": 1000,
+  "nextCursor": "aW5kZXg9MTAx",
+  "Resources": [
+    ...
+  ]
+}
+</pre><a href="#section-6.2.1-7" class="pilcrow">¶</a>
+</div>
+<p id="section-6.2.1-8">A <code>GET</code> request to <code>/GroupMemberships</code> without a filter returns all memberships across all groups. Service providers <span class="bcp14">SHOULD</span> impose a reasonable per-page limit on such unconstrained listings (e.g., a maximum of 1000 results per page) to avoid unbounded computation over the full membership dataset. A service provider <span class="bcp14">MAY</span> reject a request without a filter with a <code>400 Bad Request</code> error and a <code>scimType</code> of <code>tooMany</code>, as defined in <span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span> Section 3.12. Memberships remain available to clients in that case through requests filtered on <code>group.value</code> or <code>member.value</code>.<a href="#section-6.2.1-8" class="pilcrow">¶</a></p>
+<p id="section-6.2.1-9">Service providers <span class="bcp14">MUST</span> return <code>GroupMembership</code> resources in a stable order across the pages of a single query, so that a client paging through the results receives each matching membership exactly once, provided the underlying memberships do not change during the query.<a href="#section-6.2.1-9" class="pilcrow">¶</a></p>
+<p id="section-6.2.1-10">For example, a service provider can meet these requirements without materializing the entire membership dataset in memory by ordering results internally by <code>group.value</code>, so that pagination can stream across group boundaries.<a href="#section-6.2.1-10" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="filtering">
