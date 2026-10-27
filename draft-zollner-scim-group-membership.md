@@ -353,8 +353,7 @@ Example Bulk Request:
 },
 {
   "method": "DELETE",
-  "path": "/GroupMemberships/gm12345",
-  "bulkId": "delete-user-3"
+  "path": "/GroupMemberships/gm12345"
 }
 ]
 }
