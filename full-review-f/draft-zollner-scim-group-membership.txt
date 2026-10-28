@@ -4,8 +4,8 @@
 
 SCIM                                                          D. Zollner
 Internet-Draft                                                      Okta
-Intended status: Standards Track                         27 October 2026
-Expires: 30 April 2027
+Intended status: Standards Track                         28 October 2026
+Expires: 1 May 2027
 
 
              SCIM Group Membership Resource Type Extension
@@ -45,7 +45,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 30 April 2027.
+   This Internet-Draft will expire on 1 May 2027.
 
 Copyright Notice
 
@@ -153,7 +153,9 @@ Table of Contents
 
    A GroupMembership resource represents a direct membership only.
    Indirect memberships, as defined in [RFC7643] Section 4.1.2, MUST NOT
-   be represented as GroupMembership resources.
+   be represented as GroupMembership resources.  A service provider MUST
+   NOT maintain more than one GroupMembership resource with the same
+   group.value and member.value.
 
 4.1.  Resource Properties
 
@@ -205,8 +207,9 @@ Table of Contents
          The URI of the referenced member resource.  Read-only.
 
       type
-         A string that specifies the resource type of the member, e.g.,
-         "User" or "Group".  Read-only.
+         A string that specifies the resource type of the member.  The
+         value MUST be the name of the member's ResourceType, as defined
+         in [RFC7643] Section 6, e.g., "User" or "Group".  Read-only.
 
       display
          A human-readable name for the referenced member resource,
@@ -228,10 +231,14 @@ Table of Contents
    these sub-attributes are optional and read-only, a service provider
    that never implements them is fully conformant.
 
-   If a service provider's implementation does not support creating or
-   deleting GroupMembership resources, all attributes in the schema
-   definition returned from /Schemas MUST have their mutability property
-   set to readOnly.
+   If a service provider supports neither creating nor deleting
+   GroupMembership resources, all attributes in the schema definition
+   returned from /Schemas MUST have their mutability property set to
+   readOnly.  A service provider that does not support POST or DELETE
+   requests for GroupMembership resources MUST respond to them with 501
+   Not Implemented, as defined in [RFC7644] Section 3.12.  A service
+   provider that supports these operations but does not permit them for
+   the requesting client responds with 403 Forbidden.
 
    The ResourceType and Schema resources that describe GroupMembership
    are discoverable via the /ResourceTypes and /Schemas endpoints,
@@ -311,18 +318,31 @@ Table of Contents
 5.1.  The membersEmbedded Attribute
 
    membersEmbedded
-      A boolean.  A value of true is a guarantee by the service provider
-      that the group's full current membership is present in the members
+      A boolean that states whether the group's full current membership
+      is present in the members attribute.
+
+      A value of true is a guarantee by the service provider that the
+      group's full current membership is present in the members
       attribute, so an omitted or empty members attribute means the
-      group has no members.  A value of false indicates that the service
-      provider does not guarantee that members contains the full
-      membership.  The members attribute may in fact be full, partial,
-      omitted, or empty; for example, a service provider that cannot
-      return accurate membership above a certain size can always report
-      false, even for a group whose members happens to be complete.
-      Clients SHOULD use /GroupMemberships filtered on this group's id.
+      group has no members.  This guarantee applies only to responses in
+      which the members attribute would be returned given the request's
+      attributes and excludedAttributes parameters ([RFC7644]
+      Section 3.4.2.5).  A client that excludes members from a response
+      cannot conclude from a value of true that the group has no
+      members.
+
+      A value of false indicates that the service provider does not
+      guarantee that members contains the full membership.  The members
+      attribute may in fact be full, partial, omitted, or empty; for
+      example, a service provider that cannot return accurate membership
+      above a certain size can always report false, even for a group
+      whose members happens to be complete.  When the value is false, a
+      client that needs the group's complete membership SHOULD retrieve
+      it from /GroupMemberships, filtered on the group's id.
+
       If the attribute is absent, the service provider makes no
       statement, and members is interpreted as defined in [RFC7643].
+
       This attribute does not affect which operations are supported on
       members or on GroupMembership resources, and does not indicate
       which is the preferred way to manage memberships.
@@ -428,6 +448,25 @@ Table of Contents
    Group via a PATCH request to the /Groups/{id} URI, the corresponding
    GroupMembership resource MUST be deleted.
 
+   When a Group resource is deleted, the service provider MUST delete
+   every GroupMembership resource whose group.value references that
+   group.  When a member resource is deleted, the service provider MUST
+   delete every GroupMembership resource whose member.value references
+   that resource.  Deleted GroupMembership resources are subject to the
+   requirements of [RFC7644] Section 3.6.
+
+   When a GroupMembership resource is created or deleted and the service
+   provider supports the members attribute of the parent Group, the
+   service provider MUST update the parent Group resource's
+   meta.lastModified and, if it supports resource versioning ([RFC7644]
+   Section 3.14), its meta.version.  A change to a Group or member
+   resource that does not create or delete a given GroupMembership
+   resource does not modify that GroupMembership resource, and MUST NOT
+   change its meta.lastModified or meta.version.  This includes changes
+   to the referenced resource's displayName, even when reflected in the
+   derived group.display or member.display sub-attributes, and the
+   addition or removal of other members of the same group.
+
 6.1.  Creating GroupMembership Resources (POST)
 
    To add a new member to a group, the client sends a POST request to
@@ -442,12 +481,25 @@ Table of Contents
 
    A service provider MUST ensure that both the group and the member
    referenced by their ids exist before creating the GroupMembership
-   resource.  If either the group or the member does not exist, the
-   service provider SHOULD return a 400 Bad Request error with a
-   scimType of invalidValue.
+   resource.  The service provider MUST return a 400 Bad Request error
+   with a scimType of invalidValue if any of the following is true:
 
-   If the membership already exists, the service provider MUST return a
-   409 Conflict error.
+   *  The referenced group or member does not exist.
+
+   *  The referenced member is of a resource type that the service
+      provider does not allow as a member of the referenced group, for
+      example a Group when the service provider does not support nested
+      groups.
+
+   *  The service provider does not permit circular group nesting, and
+      creating the membership would make a group a direct or indirect
+      member of itself.
+
+   If a GroupMembership resource with the same group.value and
+   member.value already exists, the service provider MUST return a 409
+   Conflict error with a scimType of uniqueness, as defined in [RFC7644]
+   Section 3.3.  The service provider MUST NOT create a second
+   GroupMembership resource or return a successful response.
 
    Example Request: POST /scim/v2/GroupMemberships
 
@@ -476,38 +528,75 @@ Table of Contents
 6.2.1.  Pagination
 
    Service providers MUST support pagination of GroupMembership
-   resources to allow clients to retrieve large sets of memberships in
-   manageable chunks.
+   resources using at least one of index-based pagination, as defined in
+   [RFC7644] Section 3.4.2.4, or cursor-based pagination, as defined in
+   [RFC9865].  Service providers SHOULD support cursor-based pagination
+   for GroupMembership resources, because index-based pagination can
+   return inconsistent results when memberships change while a client is
+   paging through them ([RFC7644] Section 3.4.2.4).  Service providers
+   MUST indicate which pagination methods they support using the
+   pagination attribute of /ServiceProviderConfig, as defined in
+   [RFC9865] Section 4.
 
-   Index-based Pagination: The startIndex and count query parameters are
-   the primary method for pagination, as defined in [RFC7644].
+   Index-based Pagination: The startIndex and count query parameters, as
+   defined in [RFC7644].
 
    *  Example: GET /scim/v2/GroupMemberships?startIndex=1&count=1000
 
-   Cursor-based Pagination: Cursor-based pagination, as defined in
-   [RFC9865], is available as an alternative to index-based pagination.
+   Cursor-based Pagination: The cursor and count query parameters, as
+   defined in [RFC9865].  The first request includes an empty cursor
+   parameter, and each subsequent request sets cursor to the nextCursor
+   value from the previous response.
 
-   *  Example: GET /scim/v2/
+   *  Example (first page): GET /scim/v2/
+      GroupMemberships?count=1000&cursor
+
+   *  Example (next page): GET /scim/v2/
       GroupMemberships?count=1000&cursor=aW5kZXg9MTAx
 
    The response for a paginated request is a ListResponse containing the
-   GroupMembership resources for the current page.
+   GroupMembership resources for the current page.  The following is an
+   example of a cursor-paginated response:
+
+   {
+     "schemas": ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+     "totalResults": 250000,
+     "itemsPerPage": 1000,
+     "nextCursor": "aW5kZXg9MTAx",
+     "Resources": [
+       ...
+     ]
+   }
 
    A GET request to /GroupMemberships without a filter returns all
    memberships across all groups.  Service providers SHOULD impose a
    reasonable per-page limit on such unconstrained listings (e.g., a
    maximum of 1000 results per page) to avoid unbounded computation over
-   the full membership dataset.  An implementation MAY sort results
-   internally by group.value so that pagination can stream across group
-   boundaries without materializing the entire membership dataset in
-   memory.
+   the full membership dataset.  A service provider MAY reject a request
+   without a filter with a 400 Bad Request error and a scimType of
+   tooMany, as defined in [RFC7644] Section 3.12.  Memberships remain
+   available to clients in that case through requests filtered on
+   group.value or member.value.
+
+   Service providers MUST return GroupMembership resources in a stable
+   order across the pages of a single query, so that a client paging
+   through the results receives each matching membership exactly once,
+   provided the underlying memberships do not change during the query.
+
+   For example, a service provider can meet these requirements without
+   materializing the entire membership dataset in memory by ordering
+   results internally by group.value, so that pagination can stream
+   across group boundaries.
 
 6.2.2.  Filtering
 
    Service providers MUST support filtering on the group.value and
-   member.value attributes.  This enables clients to perform critical
-   queries, such as "find all members of a specific group" or "find all
-   groups a specific user is a member of."
+   member.value attributes using the eq operator.  This enables clients
+   to perform critical queries, such as "find all members of a specific
+   group" or "find all groups a specific user is a member of."  Service
+   providers MUST also support combining these two filters with the and
+   operator, so that a client can determine whether a specific
+   membership exists and obtain its id.
 
    To find all members of a group:
       GET /scim/v2/GroupMemberships?filter=group.value eq "e9e30db"
@@ -515,8 +604,13 @@ Table of Contents
    To find all groups for a member:
       GET /scim/v2/GroupMemberships?filter=member.value eq "2819c22"
 
+   To find a specific membership:
+      GET /scim/v2/GroupMemberships?filter=group.value eq "e9e30db" and
+      member.value eq "2819c22"
+
    If a service provider supports more than one resource type as a group
-   member, it MUST also support filtering on member.type, so that
+   member, it MUST also support filtering on member.type using the eq
+   operator, alone or combined with the filters above using and, so that
    clients can narrow queries to a specific member resource type without
    enumerating and filtering results client-side.
 
@@ -532,6 +626,18 @@ Table of Contents
    *  Request: DELETE /scim/v2/GroupMemberships/{id}
 
    *  Response: 204 No Content on successful deletion.
+
+   A client that does not know the id of the GroupMembership resource it
+   wants to delete can obtain it with a query filtered on both
+   group.value and member.value (see Filtering).  Clients that create
+   memberships with POST can avoid this lookup by retaining the id
+   returned in the 201 Created response.  If the service provider
+   supports modifying the members attribute of the Group resource, a
+   client can instead remove the member with a PATCH request to the
+   Group, using a remove operation whose path is members[value eq
+   "[Member_ID]"], as shown in [RFC7644] Section 3.5.2.2.  This removes
+   the membership without requiring the client to know the id of the
+   GroupMembership resource.
 
 6.4.  Bulk Operations
 
@@ -571,8 +677,7 @@ Table of Contents
 },
 {
   "method": "DELETE",
-  "path": "/GroupMemberships/gm12345",
-  "bulkId": "delete-user-3"
+  "path": "/GroupMemberships/gm12345"
 }
 ]
 }
@@ -674,7 +779,7 @@ Table of Contents
           "mutability": "readOnly",
           "returned": "default",
           "required": false,
-          "caseExact": false,
+          "caseExact": true,
           "uniqueness": "none",
           "description": "The resource type of the member."
         },
@@ -705,6 +810,13 @@ Table of Contents
    above are non-normative examples.  A service provider MAY add or
    remove resource types to reflect the resource types it supports as
    members of a group.
+
+   The value sub-attributes of group and member are defined with
+   caseExact set to true because they contain resource id values, which
+   [RFC7643] Section 3.1 defines as case-exact.  This intentionally
+   differs from the value sub-attribute of the members attribute in the
+   Group schema defined in [RFC7643], which is defined with caseExact
+   set to false.
 
 7.2.  groupMemberships Schema Extension
 
@@ -762,12 +874,13 @@ Table of Contents
    resources are the responsibility of the service provider.
    Implementers should consider the following:
 
-   *  A client with permission to read a Group resource's members
-      attribute MUST be granted permission to GET the corresponding
-      GroupMembership resources for that group.  Access to a Group
-      resource alone does not imply access to its member list — a
-      service provider MAY expose group metadata broadly while
-      restricting membership details to privileged clients.
+   *  A service provider MUST apply authorization to GET requests for a
+      group's GroupMembership resources that is equivalent to the
+      authorization it applies to reading that Group resource's members
+      attribute.  Access to a Group resource alone does not imply access
+      to its member list; a service provider MAY expose group metadata
+      broadly while restricting membership details to privileged
+      clients.
 
    *  Access to a member resource (such as a User) alone does not imply
       access to that resource's group memberships.  A service provider
@@ -778,9 +891,25 @@ Table of Contents
       sensitive than either the member or the group individually,
       regardless of the member's resource type.
 
-   *  A client authorized to add or remove members from a Group via a
-      PATCH to the Group resource MUST have equivalent POST and DELETE
-      permissions on GroupMembership resources for that same group.
+   *  A service provider MUST NOT reveal, through error responses or
+      through the totalResults value of a query response, the existence
+      of Group resources, member resources, or GroupMembership resources
+      that the requesting client is not authorized to read.  When a
+      client is not authorized to read a group or member referenced in a
+      POST request, the service provider SHOULD return the same response
+      it would return if the referenced resource did not exist.
+
+   *  A service provider MUST apply authorization to POST and DELETE
+      requests for a group's GroupMembership resources that is
+      equivalent to the authorization it applies to adding or removing
+      members of that Group through PATCH.
+
+   *  Queries against /GroupMemberships without a filter or with a broad
+      filter, and the work needed to populate the group.display and
+      member.display sub-attributes, can be expensive at the scale this
+      document targets, and can be used to degrade a service provider's
+      availability.  Service providers can mitigate this using per-page
+      limits and the tooMany error defined in [RFC7644] Section 3.12.
 
 9.  Schema Registration Templates
 
