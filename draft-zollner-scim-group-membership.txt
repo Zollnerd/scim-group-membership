@@ -4,8 +4,8 @@
 
 SCIM                                                          D. Zollner
 Internet-Draft                                                      Okta
-Intended status: Standards Track                         27 October 2026
-Expires: 30 April 2027
+Intended status: Standards Track                         28 October 2026
+Expires: 1 May 2027
 
 
              SCIM Group Membership Resource Type Extension
@@ -45,7 +45,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 30 April 2027.
+   This Internet-Draft will expire on 1 May 2027.
 
 Copyright Notice
 
@@ -86,13 +86,13 @@ Table of Contents
      7.1.  GroupMembership Core Schema
      7.2.  groupMemberships Schema Extension
        7.2.1.  The membersEmbedded Attribute Definition
-       7.2.2.  Usage
    8.  Security Considerations
    9.  Schema Registration Templates
      9.1.  GroupMembership Core Schema Registration
      9.2.  groupMemberships Group Extension Registration
    10. IANA Considerations
-   11. Normative References
+   Acknowledgments
+   Normative References
    Author's Address
 
 1.  Discussion Venues
@@ -218,19 +218,19 @@ Table of Contents
          Read-only.  When populated, this value MUST match the current
          displayName of the referenced resource.
 
-   Service providers MAY optimize payload size by omitting the
-   group.display and member.display sub-attributes entirely, or by
-   configuring them as returned: "request" (available only when
-   explicitly requested via the attributes query parameter).  Because
-   these sub-attributes are optional and read-only, a service provider
-   that never implements them is fully conformant.
-
    meta
       A complex attribute containing metadata about the resource.  This
       includes the resourceType (which MUST be "GroupMembership"),
       created, lastModified, and location attributes.  This is a
       REQUIRED, read-only attribute.  This attribute is a common
       attribute inherited from [RFC7643].
+
+   Service providers MAY optimize payload size by omitting the
+   group.display and member.display sub-attributes entirely, or by
+   configuring them as returned: "request" (available only when
+   explicitly requested via the attributes query parameter).  Because
+   these sub-attributes are optional and read-only, a service provider
+   that never implements them is fully conformant.
 
    If a service provider supports neither creating nor deleting
    GroupMembership resources, all attributes in the schema definition
@@ -312,7 +312,9 @@ Table of Contents
    service provider that includes this extension on a Group MUST support
    the GroupMembership resource.  A service provider that supports this
    extension SHOULD list its schema URN in the schemaExtensions
-   attribute of its Group ResourceType, with required set to false.
+   attribute of its Group ResourceType, with required set to false.  As
+   with any schema extension, a Group that includes the extension lists
+   its URN in the schemas attribute, per [RFC7643] Section 3.
 
 5.1.  The membersEmbedded Attribute
 
@@ -346,9 +348,9 @@ Table of Contents
       members or on GroupMembership resources, and does not indicate
       which is the preferred way to manage memberships.
 
-   A client can always construct the URI to query a group's memberships
-   without relying on a service-provider-supplied value, using the
-   pattern /GroupMemberships?filter=group.value eq "[Group_ID]".
+   A client retrieves a group's memberships from /GroupMemberships using
+   a filter on the group's id, for example
+   /GroupMemberships?filter=group.value eq "[Group_ID]".
 
 5.2.  Example Group Resources
 
@@ -397,6 +399,9 @@ Table of Contents
   "members": [
     {
       "value": "2819c223-7f76-453a-919d-413861904646",
+      "$ref": "https://example.com/scim/v2/Users/ \
+        2819c223-7f76-453a-919d-413861904646",
+      "type": "User",
       "display": "Babs Jensen"
     }
   ],
@@ -497,9 +502,7 @@ Table of Contents
    Section 3.3.  The service provider MUST NOT create a second
    GroupMembership resource or return a successful response.
 
-   Example Request Body:
-
-   POST /GroupMemberships
+   Example Request: POST /scim/v2/GroupMemberships
 
  {
    "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMembership"],
@@ -818,9 +821,9 @@ Table of Contents
 
 7.2.  groupMemberships Schema Extension
 
-   This specification defines a schema extension for the SCIM Group
-   resource to indicate whether all of a group's memberships are
-   embedded in its members attribute.
+   The schema definition for the groupMemberships schema extension,
+   described in the groupMemberships Group Schema Extension section, is
+   as follows.
 
    *Schema URN:*
    urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group
@@ -859,14 +862,6 @@ Table of Contents
       urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group"
   }
 }
-
-7.2.2.  Usage
-
-   When a Service Provider uses this extension, it MUST add the schema
-   URN urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group
-   to the schemas attribute of the Group resource.  The membersEmbedded
-   attribute is read-only, as it is metadata reported by the Service
-   Provider to the client.
 
 8.  Security Considerations
 
@@ -993,7 +988,13 @@ Table of Contents
    Reference:
       This document
 
-11.  Normative References
+Acknowledgments
+
+   The author would like to thank Matthias Winter, Hans-Joerg Happel,
+   and Paul Lanzi for their detailed reviews and suggestions on the SCIM
+   mailing list and in the draft's repository.
+
+Normative References
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
