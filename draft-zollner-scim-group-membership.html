@@ -7,7 +7,7 @@
 <title>SCIM Group Membership Resource Type Extension</title>
 <meta content="Danny Zollner" name="author">
 <meta content='
-       This document extends the System for Cross-domain Identity Management (SCIM) 2.0 standard by defining a new "GroupMembership" top-level resource. Under the existing model defined in  , group memberships are represented as values in a multi-valued attribute within a Group resource. This architecture lacks native support for server-side pagination, filtering, or sorting of individual members. In deployments managing large-scale groups (e.g., 100,000 to 1,000,000 members or more), retrieving a Group resource results in massive HTTP response payloads that can exceed 100MB in size. This can lead to service timeouts, memory exhaustion, and network instability, and has led to many major SCIM implementations choosing to not support returning the value of the "members" attribute for Group resources. This extension introduces a flattened resource model that enables group memberships to benefit from pagination and other SCIM protocol features, ensuring interoperability and performance at scale. 
+       This document extends the System for Cross-domain Identity Management (SCIM) 2.0 standard by defining a new "GroupMembership" top-level resource. Under the existing model defined in RFC 7643, group memberships are represented as values in a multi-valued attribute within a Group resource. This architecture lacks native support for server-side pagination, filtering, or sorting of individual members. In deployments managing large-scale groups (e.g., 100,000 to 1,000,000 members or more), retrieving a Group resource results in massive HTTP response payloads that can exceed 100MB in size. This can lead to service timeouts, memory exhaustion, and network instability, and has led to many major SCIM implementations choosing to not support returning the value of the "members" attribute for Group resources. This extension introduces a flattened resource model that enables group memberships to benefit from pagination and other SCIM protocol features, ensuring interoperability and performance at scale. 
     ' name="description">
 <meta content="xml2rfc 3.34.1" name="generator">
 <meta content="Internet-Draft" name="keyword">
@@ -1077,7 +1077,7 @@ svg {
 <h1 id="title">SCIM Group Membership Resource Type Extension</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
-<p id="section-abstract-1">This document extends the System for Cross-domain Identity Management (SCIM) 2.0 standard by defining a new "GroupMembership" top-level resource. Under the existing model defined in <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span>, group memberships are represented as values in a multi-valued attribute within a Group resource. This architecture lacks native support for server-side pagination, filtering, or sorting of individual members. In deployments managing large-scale groups (e.g., 100,000 to 1,000,000 members or more), retrieving a Group resource results in massive HTTP response payloads that can exceed 100MB in size. This can lead to service timeouts, memory exhaustion, and network instability, and has led to many major SCIM implementations choosing to not support returning the value of the "members" attribute for Group resources. This extension introduces a flattened resource model that enables group memberships to benefit from pagination and other SCIM protocol features, ensuring interoperability and performance at scale.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-1">This document extends the System for Cross-domain Identity Management (SCIM) 2.0 standard by defining a new "GroupMembership" top-level resource. Under the existing model defined in RFC 7643, group memberships are represented as values in a multi-valued attribute within a Group resource. This architecture lacks native support for server-side pagination, filtering, or sorting of individual members. In deployments managing large-scale groups (e.g., 100,000 to 1,000,000 members or more), retrieving a Group resource results in massive HTTP response payloads that can exceed 100MB in size. This can lead to service timeouts, memory exhaustion, and network instability, and has led to many major SCIM implementations choosing to not support returning the value of the "members" attribute for Group resources. This extension introduces a flattened resource model that enables group memberships to benefit from pagination and other SCIM protocol features, ensuring interoperability and performance at scale.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <div id="status-of-memo">
 <section id="section-boilerplate.1">
@@ -1294,7 +1294,7 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
 <span class="break"></span><dl class="dlNewline" id="section-4.1-3">
           <dt id="section-4.1-3.1">id</dt>
           <dd style="margin-left: 1.5em" id="section-4.1-3.2">
-            <p id="section-4.1-3.2.1">A unique identifier for the <code>GroupMembership</code> resource, generated by the service provider. This is a <strong><span class="bcp14">REQUIRED</span></strong>, read-only attribute. Clients <span class="bcp14">MUST</span> treat this value as opaque. The <code>id</code> serves as the stable identifier for a membership link — it uniquely identifies the relationship between a specific group and a specific member, and is the value used to address the resource at the <code>/GroupMemberships/{id}</code> URI. This attribute is a common attribute inherited from <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span>.<a href="#section-4.1-3.2.1" class="pilcrow">¶</a></p>
+            <p id="section-4.1-3.2.1">A unique identifier for the <code>GroupMembership</code> resource, generated by the service provider. This is a <strong><span class="bcp14">REQUIRED</span></strong>, read-only attribute. Clients <span class="bcp14">MUST</span> treat this value as opaque. The <code>id</code> serves as the stable identifier for a membership link; it uniquely identifies the relationship between a specific group and a specific member, and is the value used to address the resource at the <code>/GroupMemberships/{id}</code> URI. This attribute is a common attribute inherited from <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span>.<a href="#section-4.1-3.2.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 </dl>
@@ -1416,7 +1416,8 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
     "resourceType": "ResourceType",
     "created": "2026-02-20T13:43:00Z",
     "lastModified": "2026-02-20T13:43:00Z",
-    "location": "https://example.com/scim/v2/ResourceTypes/GroupMembership"
+    "location": "https://example.com/scim/v2/ResourceTypes/ \
+      GroupMembership"
   }
 }
 </pre><a href="#section-4.3-3" class="pilcrow">¶</a>
@@ -1536,7 +1537,7 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
 <p id="section-6-2">If a service provider supports the <code>GroupMembership</code> resource, it <span class="bcp14">MUST</span> make available via <code>/GroupMemberships</code> every membership the requesting client is authorized to view. This requirement is independent of whether <code>Group.members</code> is also supported or returned; a service provider <span class="bcp14">MAY</span> choose not to return <code>Group.members</code> for groups whose membership is exposed via <code>GroupMembership</code>, and this requirement does not mandate supporting <code>Group.members</code> at all.<a href="#section-6-2" class="pilcrow">¶</a></p>
 <p id="section-6-3">Service providers <span class="bcp14">MAY</span> also support management of group memberships through the existing <code>members</code> attribute of the <code>Group</code> resource as defined in <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span> for the purpose of backwards compatibility with existing clients. When doing so, the service provider <span class="bcp14">MUST</span> maintain consistency between the state of the <code>members</code> attribute and the state of the corresponding <code>GroupMembership</code> resources. For example, if a <code>DELETE</code> request to a <code>/GroupMemberships/{id}</code> URI is successful, the corresponding member <span class="bcp14">MUST</span> also be removed from the <code>members</code> array of the parent <code>Group</code> resource. Conversely, if a member is removed from a <code>Group</code> via a <code>PATCH</code> request to the <code>/Groups/{id}</code> URI, the corresponding <code>GroupMembership</code> resource <span class="bcp14">MUST</span> be deleted.<a href="#section-6-3" class="pilcrow">¶</a></p>
 <p id="section-6-4">When a <code>Group</code> resource is deleted, the service provider <span class="bcp14">MUST</span> delete every <code>GroupMembership</code> resource whose <code>group.value</code> references that group. When a member resource is deleted, the service provider <span class="bcp14">MUST</span> delete every <code>GroupMembership</code> resource whose <code>member.value</code> references that resource. Deleted <code>GroupMembership</code> resources are subject to the requirements of <span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span> Section 3.6.<a href="#section-6-4" class="pilcrow">¶</a></p>
-<p id="section-6-5">When a <code>GroupMembership</code> resource is created or deleted and the service provider supports the <code>members</code> attribute of the parent <code>Group</code>, the service provider <span class="bcp14">MUST</span> update the parent <code>Group</code> resource's <code>meta.lastModified</code> and, if it supports resource versioning (<span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span> Section 3.14), its <code>meta.version</code>. A change to a <code>Group</code> or member resource that does not create or delete a given <code>GroupMembership</code> resource does not modify that <code>GroupMembership</code> resource, and <span class="bcp14">MUST NOT</span> change its <code>meta.lastModified</code> or <code>meta.version</code>. This includes changes to the referenced resource's <code>displayName</code>, even when reflected in the derived <code>group.display</code> or <code>member.display</code> sub-attributes, and the addition or removal of other members of the same group.<a href="#section-6-5" class="pilcrow">¶</a></p>
+<p id="section-6-5">When a <code>GroupMembership</code> resource is created or deleted and the service provider supports the <code>members</code> attribute of the parent <code>Group</code>, the service provider <span class="bcp14">MUST</span> update the parent <code>Group</code> resource's <code>meta.lastModified</code> and, if it supports resource versioning (<span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span> Section 3.14), its <code>meta.version</code>. A change to a <code>Group</code> or member resource that does not create or delete a given <code>GroupMembership</code> resource does not modify that <code>GroupMembership</code> resource, and <span class="bcp14">MUST NOT</span> change its <code>meta.lastModified</code> or <code>meta.version</code>. This includes changes to the referenced resource's <code>displayName</code>, even when reflected in the derived <code>group.display</code> or <code>member.display</code> sub-attributes, and the addition or removal of other members of the same group. The <code>display</code> sub-attributes are values derived from the referenced resources, not state of the <code>GroupMembership</code> resource itself.<a href="#section-6-5" class="pilcrow">¶</a></p>
 <div id="creating-groupmembership-resources-post">
 <section id="section-6.1">
         <h3 id="name-creating-groupmembership-re">
@@ -1545,10 +1546,10 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
 <p id="section-6.1-1">To add a new member to a group, the client sends a <code>POST</code> request to the <code>GroupMemberships</code> endpoint. The request body <span class="bcp14">MUST</span> contain a <code>GroupMembership</code> resource, specifying the <code>group.value</code> and <code>member.value</code>.<a href="#section-6.1-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-6.1-2.1">
-            <p id="section-6.1-2.1.1">Request: POST /scim/v2/GroupMemberships<a href="#section-6.1-2.1.1" class="pilcrow">¶</a></p>
+            <p id="section-6.1-2.1.1">Request: <code>POST /scim/v2/GroupMemberships</code><a href="#section-6.1-2.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-6.1-2.2">
-            <p id="section-6.1-2.2.1">Response: 201 Created with the full <code>GroupMembership</code> resource in the body, including its newly generated <code>id</code> and <code>meta</code> attributes.<a href="#section-6.1-2.2.1" class="pilcrow">¶</a></p>
+            <p id="section-6.1-2.2.1">Response: <code>201 Created</code> with the full <code>GroupMembership</code> resource in the body, including its newly generated <code>id</code> and <code>meta</code> attributes.<a href="#section-6.1-2.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <p id="section-6.1-3">A service provider <span class="bcp14">MUST</span> ensure that both the group and the member referenced by their <code>id</code>s exist before creating the <code>GroupMembership</code> resource. The service provider <span class="bcp14">MUST</span> return a <code>400 Bad Request</code> error with a <code>scimType</code> of <code>invalidValue</code> if any of the following is true:<a href="#section-6.1-3" class="pilcrow">¶</a></p>
@@ -1701,34 +1702,38 @@ appear in all capitals, as shown here.<a href="#section-3-1" class="pilcrow">¶<
 <div class="alignLeft art-text artwork" id="section-6.4-4">
 <pre>
 {
-"schemas": ["urn:ietf:params:scim:api:messages:2.0:BulkRequest"],
-"failOnErrors": 1,
-"Operations": [
-{
-  "method": "POST",
-  "path": "/GroupMemberships",
-  "bulkId": "add-user-1",
-  "data": {
-    "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMembership"],
-    "group": { "value": "e9e30db" },
-    "member": { "value": "aed987" }
-  }
-},
-{
-  "method": "POST",
-  "path": "/GroupMemberships",
-  "bulkId": "add-user-2",
-  "data": {
-    "schemas": ["urn:ietf:params:scim:schemas:core:2.0:GroupMembership"],
-    "group": { "value": "e9e30db" },
-    "member": { "value": "bce5231" }
-  }
-},
-{
-  "method": "DELETE",
-  "path": "/GroupMemberships/gm12345"
-}
-]
+  "schemas": ["urn:ietf:params:scim:api:messages:2.0:BulkRequest"],
+  "failOnErrors": 1,
+  "Operations": [
+    {
+      "method": "POST",
+      "path": "/GroupMemberships",
+      "bulkId": "add-user-1",
+      "data": {
+        "schemas": [
+          "urn:ietf:params:scim:schemas:core:2.0:GroupMembership"
+        ],
+        "group": { "value": "e9e30db" },
+        "member": { "value": "aed987" }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/GroupMemberships",
+      "bulkId": "add-user-2",
+      "data": {
+        "schemas": [
+          "urn:ietf:params:scim:schemas:core:2.0:GroupMembership"
+        ],
+        "group": { "value": "e9e30db" },
+        "member": { "value": "bce5231" }
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/GroupMemberships/gm12345"
+    }
+  ]
 }
 </pre><a href="#section-6.4-4" class="pilcrow">¶</a>
 </div>
@@ -1755,7 +1760,8 @@ inherited from <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span> a
   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Schema"],
   "id": "urn:ietf:params:scim:schemas:core:2.0:GroupMembership",
   "name": "Group Membership",
-  "description": "SCIM resource representing a single group membership.",
+  "description": "SCIM resource representing a single group \
+    membership.",
   "attributes": [
     {
       "name": "group",
@@ -1876,7 +1882,7 @@ inherited from <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span> a
         <h3 id="name-groupmemberships-schema-ext">
 <a href="#section-7.2" class="section-number selfRef">7.2. </a><a href="#name-groupmemberships-schema-ext" class="section-name selfRef">groupMemberships Schema Extension</a>
         </h3>
-<p id="section-7.2-1">The schema definition for the <code>groupMemberships</code> schema extension, described in the groupMemberships Group Schema Extension section, is as follows.<a href="#section-7.2-1" class="pilcrow">¶</a></p>
+<p id="section-7.2-1">This section contains the schema definition for the <code>groupMemberships</code> schema extension, described in the groupMemberships Group Schema Extension section.<a href="#section-7.2-1" class="pilcrow">¶</a></p>
 <p id="section-7.2-2"><strong>Schema URN:</strong> <code>urn:ietf:params:scim:schemas:extension:groupMemberships:2.0:Group</code><a href="#section-7.2-2" class="pilcrow">¶</a></p>
 <div id="the-membersembedded-attribute-definition">
 <section id="section-7.2.1">
@@ -1884,9 +1890,9 @@ inherited from <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span> a
 <a href="#section-7.2.1" class="section-number selfRef">7.2.1. </a><a href="#name-the-membersembedded-attribut" class="section-name selfRef">The <code>membersEmbedded</code> Attribute Definition</a>
           </h4>
 <p id="section-7.2.1-1">The extension introduces a single boolean attribute to the <code>Group</code>
-resource: <code>membersEmbedded</code>. This attribute is defined as follows. The
-<code>schemas</code> and <code>meta</code> attributes are common attributes inherited from
-<span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span> and are included here for completeness.<a href="#section-7.2.1-1" class="pilcrow">¶</a></p>
+resource, <code>membersEmbedded</code>, defined below. The <code>schemas</code> and <code>meta</code>
+attributes are common attributes inherited from <span>[<a href="#RFC7643" class="cite xref">RFC7643</a>]</span> and are
+included here for completeness.<a href="#section-7.2.1-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-7.2.1-2">
 <pre>
 {
@@ -1933,19 +1939,16 @@ resource: <code>membersEmbedded</code>. This attribute is defined as follows. Th
 <p id="section-8-2">Authentication and authorization for managing <code>GroupMembership</code> resources are the responsibility of the service provider. Implementers should consider the following:<a href="#section-8-2" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-8-3.1">
-          <p id="section-8-3.1.1">A service provider <span class="bcp14">MUST</span> apply authorization to <code>GET</code> requests for a group's <code>GroupMembership</code> resources that is equivalent to the authorization it applies to reading that <code>Group</code> resource's <code>members</code> attribute. Access to a <code>Group</code> resource alone does not imply access to its member list; a service provider <span class="bcp14">MAY</span> expose group metadata broadly while restricting membership details to privileged clients.<a href="#section-8-3.1.1" class="pilcrow">¶</a></p>
+          <p id="section-8-3.1.1">A service provider <span class="bcp14">MUST</span> apply authorization to <code>GET</code> requests for <code>GroupMembership</code> resources, including requests filtered on <code>group.value</code> or <code>member.value</code>, that is equivalent to the authorization it applies to reading the <code>members</code> attribute of the corresponding <code>Group</code> resources. Access to a <code>Group</code> resource alone does not imply access to its member list, and access to a member resource (such as a <code>User</code>) alone does not imply access to that resource's group memberships; a service provider <span class="bcp14">MAY</span> expose group or member metadata broadly while restricting membership details to privileged clients. The membership relationship can be more sensitive than either the member or the group individually, regardless of the member's resource type.<a href="#section-8-3.1.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-8-3.2">
-          <p id="section-8-3.2.1">Access to a member resource (such as a <code>User</code>) alone does not imply access to that resource's group memberships. A service provider <span class="bcp14">MUST</span> apply the same authorization to <code>GET /GroupMemberships</code> requests, including those filtered on <code>member.value</code>, that it applies to reading the <code>members</code> attribute of the corresponding <code>Group</code> resources. The membership relationship can be more sensitive than either the member or the group individually, regardless of the member's resource type.<a href="#section-8-3.2.1" class="pilcrow">¶</a></p>
+          <p id="section-8-3.2.1">A service provider <span class="bcp14">MUST NOT</span> reveal, through error responses or through the <code>totalResults</code> value of a query response, the existence of <code>Group</code> resources, member resources, or <code>GroupMembership</code> resources that the requesting client is not authorized to read. A client authorized to add members to a group can learn from a <code>409 Conflict</code> response whether a member already belongs to that group; this is inherent in the operation and does not violate this requirement. When a client is not authorized to read a group or member referenced in a <code>POST</code> request, the service provider <span class="bcp14">SHOULD</span> return the same response it would return if the referenced resource did not exist.<a href="#section-8-3.2.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-8-3.3">
-          <p id="section-8-3.3.1">A service provider <span class="bcp14">MUST NOT</span> reveal, through error responses or through the <code>totalResults</code> value of a query response, the existence of <code>Group</code> resources, member resources, or <code>GroupMembership</code> resources that the requesting client is not authorized to read. When a client is not authorized to read a group or member referenced in a <code>POST</code> request, the service provider <span class="bcp14">SHOULD</span> return the same response it would return if the referenced resource did not exist.<a href="#section-8-3.3.1" class="pilcrow">¶</a></p>
+          <p id="section-8-3.3.1">A service provider <span class="bcp14">MUST</span> apply authorization to <code>POST</code> and <code>DELETE</code> requests for a group's <code>GroupMembership</code> resources that is equivalent to the authorization it applies to adding or removing members of that <code>Group</code> through <code>PATCH</code>.<a href="#section-8-3.3.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-8-3.4">
-          <p id="section-8-3.4.1">A service provider <span class="bcp14">MUST</span> apply authorization to <code>POST</code> and <code>DELETE</code> requests for a group's <code>GroupMembership</code> resources that is equivalent to the authorization it applies to adding or removing members of that <code>Group</code> through <code>PATCH</code>.<a href="#section-8-3.4.1" class="pilcrow">¶</a></p>
-</li>
-        <li class="normal" id="section-8-3.5">
-          <p id="section-8-3.5.1">Queries against <code>/GroupMemberships</code> without a filter or with a broad filter, and the work needed to populate the <code>group.display</code> and <code>member.display</code> sub-attributes, can be expensive at the scale this document targets, and can be used to degrade a service provider's availability. Service providers can mitigate this using per-page limits and the <code>tooMany</code> error defined in <span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span> Section 3.12.<a href="#section-8-3.5.1" class="pilcrow">¶</a></p>
+          <p id="section-8-3.4.1">Queries against <code>/GroupMemberships</code> without a filter or with a broad filter, and the work needed to populate the <code>group.display</code> and <code>member.display</code> sub-attributes, can be expensive at the scale this document targets, and can be used to degrade a service provider's availability. Service providers can mitigate this using per-page limits and the <code>tooMany</code> error defined in <span>[<a href="#RFC7644" class="cite xref">RFC7644</a>]</span> Section 3.12.<a href="#section-8-3.4.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
 </section>
